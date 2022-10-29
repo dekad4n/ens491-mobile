@@ -1,16 +1,17 @@
 # tickrypt
 
-A new Flutter project.
+Tested Android API versions: 29 (Q), 30 (R)
 
-## Getting Started
+## Important Versions
 
-This project is a starting point for a Flutter application.
+### Development Environment
+Flutter: 3.5.0-10.0.pre.84
+Windows 10+
+Android SDK version 33.0.0
+Android Studio (version 2021.3)
 
-A few resources to get you started if this is your first Flutter project:
+### Used APIs & Libraries
+WalletConnect API: ^0.0.11
+URL_Launcher: ^6.1.6
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
