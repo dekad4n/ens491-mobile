@@ -1,0 +1,77 @@
+import 'package:flutter/material.dart';
+import 'package:walletconnect_dart/walletconnect_dart.dart';
+import 'package:url_launcher/url_launcher_string.dart';
+
+class MetamaskProvider extends ChangeNotifier {
+  // Variables
+  var _uri = '';
+  SessionStatus? _session;
+  var currentAddress = '';
+  var chainId = -1;
+
+  // Connector
+  var connector = WalletConnect(
+      bridge: 'https://bridge.walletconnect.org',
+      clientMeta:
+          const PeerMeta(name: 'Cryptick', url: 'https://cryptick.com', icons: [
+        // our logo
+        'https://files.gitbook.com/v0/b/gitbook-legacy-files/o/spaces%2F-LJJeCjcLrr53DcT1Ml7%2Favatar.png?alt=media'
+      ]));
+
+  bool get isConnected => connector.connected && currentAddress.isNotEmpty;
+
+  Future<void> loginUsingMetamask() async {
+    if (!connector.connected) {
+      try {
+        var session = await connector.createSession(onDisplayUri: (uri) async {
+          _uri = uri;
+          await launchUrlString(uri, mode: LaunchMode.externalApplication);
+        });
+        chainId = session.chainId;
+        currentAddress = session.accounts[0];
+        _session = session;
+        notifyListeners();
+      } catch (exp) {
+        print(exp);
+      }
+    }
+  }
+
+  Future<void> logout() async {
+    if (connector.connected) {
+      try {
+        connector.killSession();
+        chainId = -1;
+        currentAddress = '';
+        connector = WalletConnect(
+            bridge: 'https://bridge.walletconnect.org',
+            clientMeta: const PeerMeta(
+                name: 'Cryptick',
+                url: 'https://cryptick.com',
+                icons: [
+                  // our logo
+                  'https://files.gitbook.com/v0/b/gitbook-legacy-files/o/spaces%2F-LJJeCjcLrr53DcT1Ml7%2Favatar.png?alt=media'
+                ]));
+        notifyListeners();
+      } catch (exp) {
+        print("Couldnt kill sry");
+      }
+    }
+  }
+
+  clear() {
+    _uri = '';
+    chainId = -1;
+    currentAddress = '';
+    notifyListeners();
+  }
+
+  init() {
+    connector.on('SessionUpdate', (event) {
+      clear();
+    });
+    connector.on('Disconnect', (event) {
+      clear();
+    });
+  }
+}
