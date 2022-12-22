@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:tickrypt/pages/home.dart';
+import 'package:tickrypt/pages/search.dart';
 import 'utils/routes.dart';
-import 'pages/login_page.dart';
+import 'pages/wrapper.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-void main() {
+Future<void> main() async {
+  await dotenv.load(fileName: "lib/.env");
   runApp(const MyApp());
 }
 
@@ -18,9 +22,11 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.blue,
       ),
       routes: {
-        MainRoutes.login: (context) => const LoginPage(),
+        MainRoutes.wrapper: (context) => const MetamaskWrapper(),
+        MainRoutes.home: (context) => const Home(),
+        MainRoutes.search: (context) => const Search()
       },
-      home: const LoginPage(),
+      home: const MetamaskWrapper(),
     );
   }
 }

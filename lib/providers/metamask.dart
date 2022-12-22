@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:walletconnect_dart/walletconnect_dart.dart';
 import 'package:url_launcher/url_launcher_string.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class MetamaskProvider extends ChangeNotifier {
   // Variables
   var _uri = '';
-  SessionStatus? _session;
+  var _session;
   var currentAddress = '';
   var chainId = -1;
 
@@ -35,6 +36,20 @@ class MetamaskProvider extends ChangeNotifier {
         print(exp);
       }
     }
+  }
+
+  Future<String> sign(nonce) async {
+    List<String?> params = [currentAddress.toLowerCase(), nonce];
+    String method = "personal_sign";
+
+    await launchUrl(Uri.parse(connector.session.toUri()),
+        mode: LaunchMode.externalApplication);
+    final signature = await connector.sendCustomRequest(
+      method: method,
+      params: params,
+    );
+
+    return signature;
   }
 
   Future<void> logout() async {

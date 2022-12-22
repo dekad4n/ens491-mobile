@@ -38,6 +38,8 @@ dependencies:
   url_launcher: ^6.1.6
   walletconnect_dart: ^0.0.11
   provider: ^6.0.4
+  flutter_dotenv: ^5.0.2
+  http: ^0.13.5
 
 dev_dependencies:
   flutter_test:
@@ -62,8 +64,8 @@ flutter:
   uses-material-design: true
 
   # To add assets to your application, add an assets section, like this:
-  # assets:
-  #  - /lib/assets/
+  assets:
+    - lib/.env
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware
