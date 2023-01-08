@@ -12,7 +12,7 @@ class AuthService {
     final String authUrl = '${backendUrl!}/auth/login';
     try {
       Response res = await post(Uri.parse(authUrl),
-          body: jsonEncode({"nonce": nonce, "key": signature}),
+          body: jsonEncode({"nonce": nonce, "signature": signature}),
           headers: headers);
       var body = jsonDecode(res.body);
       return body;

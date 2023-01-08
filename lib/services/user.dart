@@ -10,16 +10,12 @@ class UserService {
     'Content-Type': 'application/json',
   };
   Future<User> getNonce(publicAdress) async {
-    print("asf");
-    final String userUrl = '${backendUrl!}/user?publicAdress=$publicAdress';
+    final String userUrl = '${backendUrl!}/user?publicAddress=$publicAdress';
     Response res = await get(Uri.parse(userUrl));
-    print("asf1");
 
     var body = jsonDecode(res.body);
-    print("asf2");
 
     User user = User.fromJson(body["user"]);
-    print("as3");
 
     return user;
   }

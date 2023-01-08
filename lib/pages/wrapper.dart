@@ -23,7 +23,11 @@ class _MetamaskWrapperState extends State<MetamaskWrapper> {
       create: (context) => MetamaskProvider()..init(),
       builder: (BuildContext context, child) {
         return Consumer<MetamaskProvider>(builder: (context, provider, child) {
-          return LoggedIn(metamaskProvider: provider);
+          if (context.read<MetamaskProvider>().isConnected) {
+            return LoggedIn(metamaskProvider: provider);
+          } else {
+            return LoggedIn(metamaskProvider: provider);
+          }
         });
       },
     ));
@@ -40,16 +44,15 @@ class LoggedIn extends StatefulWidget {
 
 class _LoggedInState extends State<LoggedIn> {
   Widget build(BuildContext context) {
+    var metamaskProvider = Provider.of<MetamaskProvider>(context);
     return (ChangeNotifierProvider(
         create: (context) => UserProvider()..init(),
         builder: (context, child) {
           return Consumer<UserProvider>(
             builder: (context, provider, child) {
-              if (widget.metamaskProvider.isConnected &&
-                  context.read<UserProvider>().user == null) {
-                context
-                    .read<UserProvider>()
-                    .handleLogin(widget.metamaskProvider);
+              if (metamaskProvider.isConnected) {
+                print("heres");
+                provider.handleLogin(metamaskProvider);
               }
               return Home();
             },

@@ -8,7 +8,7 @@ class MetamaskProvider extends ChangeNotifier {
   var _uri = '';
   var _session;
   var currentAddress = '';
-  var chainId = -1;
+  var chainId = 80001;
 
   // Connector
   var connector = WalletConnect(
@@ -24,10 +24,12 @@ class MetamaskProvider extends ChangeNotifier {
   Future<void> loginUsingMetamask() async {
     if (!connector.connected) {
       try {
-        var session = await connector.createSession(onDisplayUri: (uri) async {
-          _uri = uri;
-          await launchUrlString(uri, mode: LaunchMode.externalApplication);
-        });
+        var session = await connector.createSession(
+            chainId: 280,
+            onDisplayUri: (uri) async {
+              _uri = uri;
+              await launchUrlString(uri, mode: LaunchMode.externalApplication);
+            });
         chainId = session.chainId;
         currentAddress = session.accounts[0];
         _session = session;
@@ -56,7 +58,6 @@ class MetamaskProvider extends ChangeNotifier {
     if (connector.connected) {
       try {
         connector.killSession();
-        chainId = -1;
         currentAddress = '';
         connector = WalletConnect(
             bridge: 'https://bridge.walletconnect.org',
@@ -76,7 +77,6 @@ class MetamaskProvider extends ChangeNotifier {
 
   clear() {
     _uri = '';
-    chainId = -1;
     currentAddress = '';
     notifyListeners();
   }

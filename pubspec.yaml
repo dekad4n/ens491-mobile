@@ -40,6 +40,8 @@ dependencies:
   provider: ^6.0.4
   flutter_dotenv: ^5.0.2
   http: ^0.13.5
+  web3dart: ^2.5.1
+  alchemy_web3: ^0.0.1
 
 dev_dependencies:
   flutter_test:

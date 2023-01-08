@@ -17,14 +17,20 @@ class UserProvider extends ChangeNotifier {
 
   void handleLogin(metamaskProvider) async {
     if (hasToken()) {
+      print("here2");
       return;
     }
+    print("buraa");
     try {
       String publicAddress = metamaskProvider.currentAddress;
+      print(publicAddress);
       user = await userService.getNonce(publicAddress);
+      print(user);
       String signature = await metamaskProvider.sign(user!.nonce);
+      print(signature);
       dynamic result = await authService.login(user!.nonce, signature);
       token = result["token"];
+      notifyListeners();
     } catch (e) {}
   }
 
