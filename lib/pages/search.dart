@@ -17,7 +17,6 @@ class _SearchState extends State<Search> {
           child: Text("search"),
         ),
       ]),
-      bottomNavigationBar: bottomNavBar(context),
     ));
   }
 }

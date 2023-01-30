@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 
-BottomNavigationBar bottomNavBar(BuildContext context) {
+BottomNavigationBar bottomNavBar(BuildContext context, var setState) {
   return BottomNavigationBar(
       type: BottomNavigationBarType.fixed,
       items: <BottomNavigationBarItem>[
         BottomNavigationBarItem(
           icon: IconButton(
             onPressed: () {
-              Navigator.pushNamed(context, '/home');
+              // Navigator.pushNamed(context, '/home');
+              setState(0);
             },
             icon: const Icon(Icons.home),
           ),
@@ -16,7 +17,8 @@ BottomNavigationBar bottomNavBar(BuildContext context) {
         BottomNavigationBarItem(
           icon: IconButton(
             onPressed: () {
-              Navigator.pushNamed(context, '/search');
+              // Navigator.pushNamed(context, '/search');
+              setState(1);
             },
             icon: const Icon(Icons.search),
           ),
@@ -25,7 +27,8 @@ BottomNavigationBar bottomNavBar(BuildContext context) {
         BottomNavigationBarItem(
           icon: IconButton(
             onPressed: () {
-              Navigator.pushNamed(context, '/topics');
+              // Navigator.pushNamed(context, '/topics');
+              setState(2);
             },
             icon: const Icon(Icons.tag),
           ),
@@ -35,6 +38,7 @@ BottomNavigationBar bottomNavBar(BuildContext context) {
           icon: IconButton(
             onPressed: () {
               Navigator.pushNamed(context, '/notification');
+              setState(3);
             },
             icon: const Icon(Icons.notifications),
           ),
@@ -44,6 +48,7 @@ BottomNavigationBar bottomNavBar(BuildContext context) {
           icon: IconButton(
             onPressed: () {
               Navigator.pushNamed(context, '/profile');
+              setState(4);
             },
             icon: const Icon(Icons.person),
           ),

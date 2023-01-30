@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tickrypt/pages/home.dart';
+import 'package:tickrypt/pages/search.dart';
 import 'package:tickrypt/providers/metamask.dart';
 import 'package:tickrypt/providers/user_provider.dart';
 import 'package:tickrypt/services/auth.dart';
@@ -43,6 +44,19 @@ class LoggedIn extends StatefulWidget {
 }
 
 class _LoggedInState extends State<LoggedIn> {
+  var pageIdx = 0;
+  dynamic current = Home();
+  void changeMainPage(changeTo) {
+    setState(() {
+      pageIdx = changeTo;
+    });
+    if (pageIdx == 0) {
+      current = Home();
+    } else if (pageIdx == 1) {
+      current = Search();
+    }
+  }
+
   Widget build(BuildContext context) {
     var metamaskProvider = Provider.of<MetamaskProvider>(context);
     return (ChangeNotifierProvider(
@@ -51,10 +65,12 @@ class _LoggedInState extends State<LoggedIn> {
           return Consumer<UserProvider>(
             builder: (context, provider, child) {
               if (metamaskProvider.isConnected) {
-                print("heres");
                 provider.handleLogin(metamaskProvider);
               }
-              return Home();
+              return Scaffold(
+                body: Center(child: current),
+                bottomNavigationBar: bottomNavBar(context, changeMainPage),
+              );
             },
           );
         }));
