@@ -37,7 +37,7 @@ BottomNavigationBar bottomNavBar(BuildContext context, var setState) {
         BottomNavigationBarItem(
           icon: IconButton(
             onPressed: () {
-              Navigator.pushNamed(context, '/notification');
+              // Navigator.pushNamed(context, '/notification');
               setState(3);
             },
             icon: const Icon(Icons.notifications),
@@ -47,7 +47,7 @@ BottomNavigationBar bottomNavBar(BuildContext context, var setState) {
         BottomNavigationBarItem(
           icon: IconButton(
             onPressed: () {
-              Navigator.pushNamed(context, '/profile');
+              // Navigator.pushNamed(context, '/profile');
               setState(4);
             },
             icon: const Icon(Icons.person),

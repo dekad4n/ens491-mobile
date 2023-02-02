@@ -42,6 +42,7 @@ dependencies:
   http: ^0.13.5
   web3dart: ^2.5.1
   alchemy_web3: ^0.0.1
+  carousel_slider: ^4.2.1
 
 dev_dependencies:
   flutter_test:

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-
 import 'package:tickrypt/widgets/navbars.dart';
+import 'package:tickrypt/widgets/sliders/horizontal_slider.dart';
 
 class Home extends StatefulWidget {
   const Home({Key? key}) : super(key: key);
@@ -16,7 +16,18 @@ class _HomeState extends State<Home> {
       body: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
-          children: []),
+          children: [
+            carouselSlider([
+              {
+                "url":
+                    "https://cdn.pixabay.com/photo/2015/04/23/22/00/tree-736885__480.jpg"
+              },
+              {
+                "url":
+                    "https://cdn.pixabay.com/photo/2015/04/23/22/00/tree-736885__480.jpg"
+              }
+            ])
+          ]),
     ));
   }
 }
