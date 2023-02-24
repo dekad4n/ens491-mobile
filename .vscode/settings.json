@@ -1,4 +1,5 @@
 {
-    "cmake.configureOnOpen": true,
-    "cmake.sourceDirectory": "${workspaceFolder}/linux"
+  //   "cmake.configureOnOpen": true,
+  //   "cmake.sourceDirectory": "${workspaceFolder}/linux",
+  "editor.formatOnSave": true
 }
