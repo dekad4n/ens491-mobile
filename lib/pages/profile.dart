@@ -1,10 +1,11 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tickrypt/models/event_model.dart';
 import 'package:tickrypt/providers/metamask.dart';
 import 'package:tickrypt/providers/user_provider.dart';
 import 'package:tickrypt/services/user.dart';
-import 'package:tickrypt/widgets/sliders/horizontal_slider.dart';
+import 'package:tickrypt/widgets/atoms/buttons/primaryElevatedButton.dart';
 
 class Profile extends StatefulWidget {
   const Profile({Key? key}) : super(key: key);
@@ -30,12 +31,31 @@ class _ProfileState extends State<Profile> {
     if (!metamaskProvider.isConnected) {
       return (Scaffold(
         body: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              ElevatedButton(
-                  onPressed: () => {metamaskProvider.loginUsingMetamask()},
-                  child: const Text("Connect"))
+              Padding(
+                padding: const EdgeInsets.only(top: 200),
+                child: Transform.rotate(
+                  angle: 45 * 3.14159 / 180,
+                  child: Transform.scale(
+                    scale: 8,
+                    child: const Icon(CupertinoIcons.ticket),
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(15.0),
+                child: Text(
+                  "Login Tickript to inspect your profile!",
+                  style: Theme.of(context).textTheme.headlineLarge,
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 50),
+                child: primaryElevatedButton(
+                    "Connect", () => {metamaskProvider.loginUsingMetamask()}),
+              )
             ]),
       ));
     }

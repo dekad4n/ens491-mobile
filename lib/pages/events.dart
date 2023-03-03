@@ -4,7 +4,7 @@ import 'package:tickrypt/models/event_model.dart';
 import 'package:tickrypt/providers/metamask.dart';
 import 'package:tickrypt/providers/user_provider.dart';
 import 'package:tickrypt/services/user.dart';
-import 'package:tickrypt/widgets/sliders/horizontal_slider.dart';
+import 'package:tickrypt/widgets/atoms/sliders/horizontal_slider.dart';
 
 class Events extends StatefulWidget {
   const Events({Key? key}) : super(key: key);

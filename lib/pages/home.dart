@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:tickrypt/widgets/navbars.dart';
-import 'package:tickrypt/widgets/sliders/horizontal_slider.dart';
+import 'package:tickrypt/widgets/atoms/sliders/horizontal_slider.dart';
 
 class Home extends StatefulWidget {
   const Home({Key? key}) : super(key: key);
