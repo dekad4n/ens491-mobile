@@ -106,14 +106,14 @@ class _CreateEventState extends State<CreateEvent> {
                     width: 2,
                   ),
                   borderRadius: BorderRadius.circular(15),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.grey.withOpacity(0.5),
-                      spreadRadius: 3,
-                      blurRadius: 7,
-                      offset: Offset(0, 3), // changes position of shadow
-                    ),
-                  ],
+                  // boxShadow: [
+                  //   BoxShadow(
+                  //     color: Colors.grey.withOpacity(0.5),
+                  //     spreadRadius: 3,
+                  //     blurRadius: 7,
+                  //     offset: Offset(0, 3), // changes position of shadow
+                  //   ),
+                  // ],
                 ),
                 child: Container(
                   height: 120,
@@ -130,9 +130,7 @@ class _CreateEventState extends State<CreateEvent> {
                               "https://i.ibb.co/kDMbLZR/eventcoverplaceholder.jpg")),
                 ),
               )),
-          SizedBox(
-            width: 20,
-          ),
+          SizedBox(width: 15),
           Flexible(
             flex: 3,
             child: Container(
@@ -145,7 +143,7 @@ class _CreateEventState extends State<CreateEvent> {
                     style: TextStyle(
                         fontWeight: FontWeight.w500,
                         fontSize: 15,
-                        color: Colors.grey[700]),
+                        color: Colors.black),
                   ),
                   Text(
                     "Event Cover",
@@ -154,6 +152,8 @@ class _CreateEventState extends State<CreateEvent> {
                   ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.white, // Background color
+                        elevation: 0,
+                        side: BorderSide(color: Colors.deepPurple),
                       ),
                       onPressed: () => {_pickImageFromGallery()},
                       child: Row(
@@ -161,9 +161,12 @@ class _CreateEventState extends State<CreateEvent> {
                         children: [
                           Icon(
                             Icons.file_upload_rounded,
-                            color: Colors.blue,
+                            color: Colors.deepPurple,
                           ),
-                          Text("Upload", style: TextStyle(color: Colors.blue))
+                          Text(
+                            "Upload",
+                            style: TextStyle(color: Colors.deepPurple),
+                          ),
                         ],
                       ))
                 ],
@@ -177,7 +180,7 @@ class _CreateEventState extends State<CreateEvent> {
 
   titleTextFormField() {
     return TextFormField(
-      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+      style: TextStyle(fontSize: 18),
       // The validator receives the text that the user has entered.
       decoration: InputDecoration(
         border: OutlineInputBorder(
@@ -210,16 +213,24 @@ class _CreateEventState extends State<CreateEvent> {
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.white, // Background color
+                elevation: 0,
+                side: BorderSide(
+                    color:
+                        _startDate != null ? Colors.deepPurple : Colors.grey),
               ),
               onPressed: _showDatePickerStart,
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
                   Text(_startDate?.toString().split(" ")[0] ?? "Start Date",
-                      style: TextStyle(color: Colors.grey[700], fontSize: 18)),
+                      style: TextStyle(
+                          color: _startDate != null
+                              ? Colors.deepPurple
+                              : Colors.grey,
+                          fontSize: 18)),
                   Icon(
                     Icons.calendar_today,
-                    color: Colors.grey[700],
+                    color: _startDate != null ? Colors.deepPurple : Colors.grey,
                   )
                 ],
               ),
@@ -234,16 +245,23 @@ class _CreateEventState extends State<CreateEvent> {
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.white, // Background color
+                elevation: 0,
+                side: BorderSide(
+                    color: _endDate != null ? Colors.deepPurple : Colors.grey),
               ),
               onPressed: _showDatePickerEnd,
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
                   Text(_endDate?.toString().split(" ")[0] ?? "End Date",
-                      style: TextStyle(color: Colors.grey[700], fontSize: 18)),
+                      style: TextStyle(
+                          color: _endDate != null
+                              ? Colors.deepPurple
+                              : Colors.grey,
+                          fontSize: 18)),
                   Icon(
                     Icons.calendar_today,
-                    color: Colors.grey[700],
+                    color: _endDate != null ? Colors.deepPurple : Colors.grey,
                   )
                 ],
               ),
@@ -265,6 +283,10 @@ class _CreateEventState extends State<CreateEvent> {
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.white, // Background color
+                elevation: 0,
+                side: BorderSide(
+                    color:
+                        _startTime != null ? Colors.deepPurple : Colors.grey),
               ),
               onPressed: () => {_showTimePicker("start")},
               child: Row(
@@ -276,10 +298,14 @@ class _CreateEventState extends State<CreateEvent> {
                               _startTime.toString().indexOf("(") + 1,
                               _startTime.toString().indexOf(")"))
                           : "Start Time",
-                      style: TextStyle(color: Colors.grey[700], fontSize: 18)),
+                      style: TextStyle(
+                          color: _startTime != null
+                              ? Colors.deepPurple
+                              : Colors.grey,
+                          fontSize: 18)),
                   Icon(
                     Icons.access_time,
-                    color: Colors.grey[700],
+                    color: _startTime != null ? Colors.deepPurple : Colors.grey,
                   )
                 ],
               ),
@@ -294,6 +320,9 @@ class _CreateEventState extends State<CreateEvent> {
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.white, // Background color
+                elevation: 0,
+                side: BorderSide(
+                    color: _endTime != null ? Colors.deepPurple : Colors.grey),
               ),
               onPressed: () => {_showTimePicker("end")},
               child: Row(
@@ -305,10 +334,14 @@ class _CreateEventState extends State<CreateEvent> {
                               _endTime.toString().indexOf("(") + 1,
                               _endTime.toString().indexOf(")"))
                           : "End Time",
-                      style: TextStyle(color: Colors.grey[700], fontSize: 18)),
+                      style: TextStyle(
+                          color: _endTime != null
+                              ? Colors.deepPurple
+                              : Colors.grey,
+                          fontSize: 18)),
                   Icon(
                     Icons.access_time,
-                    color: Colors.grey[700],
+                    color: _endTime != null ? Colors.deepPurple : Colors.grey,
                   )
                 ],
               ),
@@ -324,21 +357,27 @@ class _CreateEventState extends State<CreateEvent> {
       padding: EdgeInsets.symmetric(horizontal: 10.0),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(8.0),
-        border:
-            Border.all(color: Colors.grey, style: BorderStyle.solid, width: 1),
+        border: Border.all(
+            color: _category != null ? Colors.deepPurple : Colors.grey,
+            style: BorderStyle.solid,
+            width: 1),
       ),
       child: DropdownButton<String>(
           value: _category,
           hint: Text(
             "Select Event Category",
-            style: TextStyle(fontSize: 20),
+            style: TextStyle(
+                color: _category != null ? Colors.deepPurple : Colors.grey,
+                fontSize: 20),
           ),
           icon: const Icon(
             Icons.arrow_drop_down_rounded,
             size: 40,
           ),
           elevation: 16,
-          style: const TextStyle(color: Colors.black),
+          style: TextStyle(
+            color: _category != null ? Colors.deepPurple : Colors.grey,
+          ),
           underline: Container(
             height: 0,
           ),
@@ -353,28 +392,28 @@ class _CreateEventState extends State<CreateEvent> {
               value: "Category 1",
               child: Text(
                 "Category 1",
-                style: TextStyle(fontSize: 18),
+                style: TextStyle(color: Colors.black, fontSize: 18),
               ),
             ),
             DropdownMenuItem<String>(
               value: "Category 2",
               child: Text(
                 "Category 2",
-                style: TextStyle(fontSize: 18),
+                style: TextStyle(color: Colors.black, fontSize: 18),
               ),
             ),
             DropdownMenuItem<String>(
               value: "Category 3",
               child: Text(
                 "Category 3",
-                style: TextStyle(fontSize: 18),
+                style: TextStyle(color: Colors.black, fontSize: 18),
               ),
             ),
             DropdownMenuItem<String>(
               value: "Category 4",
               child: Text(
                 "Category 4",
-                style: TextStyle(fontSize: 18),
+                style: TextStyle(color: Colors.black, fontSize: 18),
               ),
             )
           ]),
@@ -386,6 +425,8 @@ class _CreateEventState extends State<CreateEvent> {
       style: TextStyle(fontSize: 18),
       // The validator receives the text that the user has entered.
       decoration: InputDecoration(
+          labelStyle: TextStyle(
+              color: _description != null ? Colors.deepPurple : Colors.grey),
           labelText: 'Description',
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(8))),
       keyboardType: TextInputType.multiline,
@@ -404,11 +445,16 @@ class _CreateEventState extends State<CreateEvent> {
     );
   }
 
-  nextButton() {
+  confirmButton() {
     return Row(
       children: [
         Expanded(
           child: ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Color(0xff050a31), // Background color
+              elevation: 0,
+              side: BorderSide(color: Colors.deepPurple),
+            ),
             onPressed: () {
               // Validate returns true if the form is valid, or false otherwise.
               if (_formKey.currentState!.validate() &&
@@ -444,7 +490,7 @@ class _CreateEventState extends State<CreateEvent> {
               }
             },
             child: const Text(
-              'Next: Mint Ticket',
+              'Confirm',
               style: TextStyle(
                 fontSize: 18,
               ),
@@ -483,7 +529,7 @@ class _CreateEventState extends State<CreateEvent> {
                     SizedBox(height: 30),
                     descriptionTextFormField(),
                     SizedBox(height: 30),
-                    nextButton(),
+                    confirmButton(),
                   ],
                 ),
               )
