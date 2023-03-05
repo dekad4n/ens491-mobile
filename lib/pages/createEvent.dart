@@ -180,15 +180,17 @@ class _CreateEventState extends State<CreateEvent> {
 
   titleTextFormField() {
     return TextFormField(
-      style: TextStyle(fontSize: 18),
+      style: TextStyle(fontSize: 18, color: Colors.deepPurple),
       // The validator receives the text that the user has entered.
       decoration: InputDecoration(
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
-        labelText: 'Title',
-      ),
-
+          focusedBorder: OutlineInputBorder(
+              borderSide: BorderSide(color: Colors.deepPurple)),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+          labelText: 'Title',
+          labelStyle: TextStyle(color: Colors.grey)),
+      cursorColor: Colors.deepPurple,
       validator: (value) {
         if (value == null || value.isEmpty) {
           return 'Please enter some text';
@@ -425,13 +427,15 @@ class _CreateEventState extends State<CreateEvent> {
       style: TextStyle(fontSize: 18),
       // The validator receives the text that the user has entered.
       decoration: InputDecoration(
-          labelStyle: TextStyle(
-              color: _description != null ? Colors.deepPurple : Colors.grey),
-          labelText: 'Description',
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8))),
-      keyboardType: TextInputType.multiline,
-      minLines: 1, //Normal textInputField will be displayed
-      maxLines: 6,
+        focusedBorder: OutlineInputBorder(
+            borderSide: BorderSide(color: Colors.deepPurple)),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+        labelStyle: TextStyle(color: Colors.grey),
+        labelText: 'Description',
+      ),
+      cursorColor: Colors.deepPurple,
       validator: (value) {
         if (value == null || value.isEmpty) {
           return 'Please enter some text';
@@ -446,53 +450,71 @@ class _CreateEventState extends State<CreateEvent> {
   }
 
   confirmButton() {
+    bool isEnabled = _coverImage != null &&
+        _startDate != null &&
+        _endDate != null &&
+        _startTime != null &&
+        _endTime != null &&
+        _category != null;
+
     return Row(
       children: [
         Expanded(
-          child: ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Color(0xff050a31), // Background color
-              elevation: 0,
-              side: BorderSide(color: Colors.deepPurple),
-            ),
-            onPressed: () {
-              // Validate returns true if the form is valid, or false otherwise.
-              if (_formKey.currentState!.validate() &&
-                  _coverImage != null &&
-                  _startDate != null &&
-                  _endDate != null &&
-                  _startTime != null &&
-                  _endTime != null &&
-                  _category != null) {
-                // If the form is valid, display a snackbar. In the real world,
-                // you'd often call a server or save the information in a database.
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Processing Data')),
-                );
+          child: Container(
+            height: 70,
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: isEnabled
+                    ? Color(0xff050a31)
+                    : Colors.grey, // Background color
+                elevation: 0,
+              ),
+              onPressed: isEnabled
+                  ? () {
+                      // Validate returns true if the form is valid, or false otherwise.
+                      if (_formKey.currentState != null &&
+                          _formKey.currentState!.validate() &&
+                          _coverImage != null &&
+                          _startDate != null &&
+                          _endDate != null &&
+                          _startTime != null &&
+                          _endTime != null &&
+                          _category != null) {
+                        // If the form is valid, display a snackbar. In the real world,
+                        // you'd often call a server or save the information in a database.
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Processing Data')),
+                        );
 
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => CreateTicket(
-                      props: {
-                        "coverImageAsBytes": _coverImageAsBytes,
-                        "title": _title,
-                        "startDate": _startDate,
-                        "endDate": _endDate,
-                        "startTime": _startTime,
-                        "endTime": _endTime,
-                        "category": _category,
-                        "description": _description,
-                      },
-                    ),
-                  ),
-                );
-              }
-            },
-            child: const Text(
-              'Confirm',
-              style: TextStyle(
-                fontSize: 18,
+                        // 1- Send request to backend
+
+                        // 2- Move next page
+
+                        // Navigator.push(
+                        //   context,
+                        //   MaterialPageRoute(
+                        //     builder: (context) => CreateTicket(
+                        //       props: {
+                        //         "coverImageAsBytes": _coverImageAsBytes,
+                        //         "title": _title,
+                        //         "startDate": _startDate,
+                        //         "endDate": _endDate,
+                        //         "startTime": _startTime,
+                        //         "endTime": _endTime,
+                        //         "category": _category,
+                        //         "description": _description,
+                        //       },
+                        //     ),
+                        //   ),
+                        // );
+                      }
+                    }
+                  : null,
+              child: const Text(
+                'Confirm',
+                style: TextStyle(
+                  fontSize: 18,
+                ),
               ),
             ),
           ),

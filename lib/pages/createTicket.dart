@@ -39,7 +39,7 @@ class _CreateTicketState extends State<CreateTicket> {
         ),
         SizedBox(height: 15),
         Container(
-          width: 200,
+          width: 250,
           child: Column(
             children: [
               Row(
@@ -47,7 +47,11 @@ class _CreateTicketState extends State<CreateTicket> {
                 children: [
                   Text(
                     "Title: ",
-                    style: TextStyle(color: Colors.grey),
+                    style: TextStyle(
+                      color: Colors.grey,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   SizedBox(
                     width: 20,
@@ -55,7 +59,10 @@ class _CreateTicketState extends State<CreateTicket> {
                   Flexible(
                     child: Text(
                       widget.props["title"],
-                      style: TextStyle(color: Colors.grey),
+                      style: TextStyle(
+                        color: Colors.grey,
+                        fontSize: 18,
+                      ),
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
@@ -66,18 +73,25 @@ class _CreateTicketState extends State<CreateTicket> {
                 children: [
                   Text(
                     "Start: ",
-                    style: TextStyle(color: Colors.grey),
+                    style: TextStyle(
+                      color: Colors.grey,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   SizedBox(
                     width: 20,
                   ),
                   Text(
                     widget.props["startDate"].toString().split(" ")[0] +
-                        "   " +
+                        " - " +
                         RegExp(r'\d{2}:\d{2}')
                             .stringMatch(widget.props['startTime'].toString())
                             .toString(),
-                    style: TextStyle(color: Colors.grey),
+                    style: TextStyle(
+                      color: Colors.grey,
+                      fontSize: 18,
+                    ),
                   ),
                 ],
               ),
@@ -86,18 +100,25 @@ class _CreateTicketState extends State<CreateTicket> {
                 children: [
                   Text(
                     "End: ",
-                    style: TextStyle(color: Colors.grey),
+                    style: TextStyle(
+                      color: Colors.grey,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   SizedBox(
                     width: 20,
                   ),
                   Text(
                     widget.props["endDate"].toString().split(" ")[0] +
-                        "   " +
+                        " - " +
                         RegExp(r'\d{2}:\d{2}')
                             .stringMatch(widget.props['endTime'].toString())
                             .toString(),
-                    style: TextStyle(color: Colors.grey),
+                    style: TextStyle(
+                      color: Colors.grey,
+                      fontSize: 18,
+                    ),
                   ),
                 ],
               ),
@@ -106,14 +127,21 @@ class _CreateTicketState extends State<CreateTicket> {
                 children: [
                   Text(
                     "Category: ",
-                    style: TextStyle(color: Colors.grey),
+                    style: TextStyle(
+                      color: Colors.grey,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   SizedBox(
                     width: 20,
                   ),
                   Text(
                     widget.props["category"],
-                    style: TextStyle(color: Colors.grey),
+                    style: TextStyle(
+                      color: Colors.grey,
+                      fontSize: 18,
+                    ),
                   ),
                 ],
               ),
@@ -296,26 +324,29 @@ class _CreateTicketState extends State<CreateTicket> {
     return Row(
       children: [
         Expanded(
-          child: ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Color(0xff050a31), // Background color
-              elevation: 0,
-              side: BorderSide(color: Colors.deepPurple),
-            ),
-            onPressed: () {
-              // Validate returns true if the form is valid, or false otherwise.
-              if (_price != null && _quantity != null && _comission != null) {
-                // If the form is valid, display a snackbar. In the real world,
-                // you'd often call a server or save the information in a database.
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Processing Data')),
-                );
-              }
-            },
-            child: const Text(
-              'Confirm',
-              style: TextStyle(
-                fontSize: 18,
+          child: Container(
+            height: 70,
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Color(0xff050a31), // Background color
+                elevation: 0,
+                side: BorderSide(color: Colors.deepPurple),
+              ),
+              onPressed: () {
+                // Validate returns true if the form is valid, or false otherwise.
+                if (_price != null && _quantity != null && _comission != null) {
+                  // If the form is valid, display a snackbar. In the real world,
+                  // you'd often call a server or save the information in a database.
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Processing Data')),
+                  );
+                }
+              },
+              child: const Text(
+                'Confirm',
+                style: TextStyle(
+                  fontSize: 18,
+                ),
               ),
             ),
           ),
