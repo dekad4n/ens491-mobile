@@ -19,9 +19,19 @@ class EventService {
     return event;
   }
 
-  Future<Event> createEvent() async {
+  Future<Event> createEvent(eventProps, auth) async {
     final String url = '${backendUrl!}/event/create';
-    Response res = await post(Uri.parse(url));
+
+    var headers = {
+      "Access-Control-Allow-Origin": '*',
+      "Authorization": "jwt $auth",
+    };
+
+    Response res = await post(
+      Uri.parse(url),
+      body: eventProps,
+      headers: headers,
+    );
 
     var body = jsonDecode(res.body);
 

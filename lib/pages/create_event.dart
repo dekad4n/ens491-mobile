@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
 import 'dart:convert';
 import 'dart:io';
 
@@ -7,6 +8,7 @@ import 'package:tickrypt/pages/create_ticket.dart';
 import 'package:tickrypt/services/event.dart';
 
 import '../models/event_model.dart';
+import '../providers/user_provider.dart';
 
 class CreateEvent extends StatefulWidget {
   const CreateEvent({super.key});
@@ -454,7 +456,7 @@ class _CreateEventState extends State<CreateEvent> {
     );
   }
 
-  confirmButton() {
+  confirmButton(userProvider) {
     bool isEnabled = _coverImage != null &&
         _startDate != null &&
         _endDate != null &&
@@ -491,28 +493,36 @@ class _CreateEventState extends State<CreateEvent> {
                           const SnackBar(content: Text('Processing Data')),
                         );
 
-                        // 1- Send request to backend
-                        Event event = await eventService
-                            .getEventById("64035c82f9066369ff38c541");
+                        Map<String, dynamic> eventProps = {
+                          "coverImageEncoded": base64Encode(_coverImageAsBytes),
+                          "title": _title,
+                          "startDate": _startDate.toString().split(" ")[0],
+                          "endDate": _endDate.toString().split(" ")[0],
+                          "startTime": RegExp(r'\d{2}:\d{2}')
+                              .stringMatch(_startTime.toString())
+                              .toString(),
+                          "endTime": RegExp(r'\d{2}:\d{2}')
+                              .stringMatch(_endTime.toString())
+                              .toString(),
+                          "category": _category,
+                          "description": _description,
+                        };
+                        // 1- Send request to backend to create Event in mongoDB
+                        Event createdEvent = await eventService.createEvent(
+                          eventProps,
+                          userProvider.token,
+                        );
+
                         // 2- Move next page
 
-                        // Navigator.push(
-                        //   context,
-                        //   MaterialPageRoute(
-                        //     builder: (context) => CreateTicket(
-                        //       props: {
-                        //         "coverImageAsBytes": _coverImageAsBytes,
-                        //         "title": _title,
-                        //         "startDate": _startDate,
-                        //         "endDate": _endDate,
-                        //         "startTime": _startTime,
-                        //         "endTime": _endTime,
-                        //         "category": _category,
-                        //         "description": _description,
-                        //       },
-                        //     ),
-                        //   ),
-                        // );
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => CreateTicket(
+                              props: eventProps,
+                            ),
+                          ),
+                        );
                       }
                     }
                   : null,
@@ -531,6 +541,8 @@ class _CreateEventState extends State<CreateEvent> {
 
   @override
   Widget build(BuildContext context) {
+    var userProvider = Provider.of<UserProvider>(context);
+
     return Scaffold(
       body: Padding(
         padding: const EdgeInsets.all(20.0),
@@ -557,7 +569,7 @@ class _CreateEventState extends State<CreateEvent> {
                     SizedBox(height: 30),
                     descriptionTextFormField(),
                     SizedBox(height: 30),
-                    confirmButton(),
+                    confirmButton(userProvider),
                   ],
                 ),
               )
