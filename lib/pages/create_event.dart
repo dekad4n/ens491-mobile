@@ -3,7 +3,10 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:tickrypt/pages/createTicket.dart';
+import 'package:tickrypt/pages/create_ticket.dart';
+import 'package:tickrypt/services/event.dart';
+
+import '../models/event_model.dart';
 
 class CreateEvent extends StatefulWidget {
   const CreateEvent({super.key});
@@ -16,6 +19,8 @@ class _CreateEventState extends State<CreateEvent> {
   final _formKey = GlobalKey<FormState>();
 
   final ImagePicker _imagePicker = ImagePicker();
+
+  EventService eventService = EventService();
 
   XFile? _coverImage;
   var _coverImageAsBytes;
@@ -470,7 +475,7 @@ class _CreateEventState extends State<CreateEvent> {
                 elevation: 0,
               ),
               onPressed: isEnabled
-                  ? () {
+                  ? () async {
                       // Validate returns true if the form is valid, or false otherwise.
                       if (_formKey.currentState != null &&
                           _formKey.currentState!.validate() &&
@@ -487,7 +492,8 @@ class _CreateEventState extends State<CreateEvent> {
                         );
 
                         // 1- Send request to backend
-
+                        Event event = await eventService
+                            .getEventById("64035c82f9066369ff38c541");
                         // 2- Move next page
 
                         // Navigator.push(
