@@ -4,8 +4,7 @@ import 'package:http/http.dart';
 import 'package:tickrypt/models/event_model.dart';
 
 class EventService {
-  // var backendUrl = dotenv.env["BACKEND_URL"];
-  var backendUrl = "http://10.51.63.194:3001";
+  var backendUrl = dotenv.env["BACKEND_URL"];
 
   Future<Event> getEventById(String eventId) async {
     final String url = '${backendUrl}/event?id=$eventId';
