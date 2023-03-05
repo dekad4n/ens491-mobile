@@ -42,6 +42,7 @@ dependencies:
   web3dart: ^2.5.1
   alchemy_web3: ^0.0.1
   carousel_slider: ^4.2.1
+  image_picker: ^0.8.6+4
   intl: ^0.18.0
 
 dev_dependencies:
