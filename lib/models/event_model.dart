@@ -3,7 +3,7 @@ class Event {
       {this.id,
       this.title,
       this.owner,
-      this.coverImageEncoded,
+      this.coverImageURL,
       this.startDate,
       this.endDate,
       this.startTime,
@@ -14,7 +14,7 @@ class Event {
   String? id; // Nonce of user
   String? title; // Private id
   String? owner; // Public Adress of user's wallet
-  String? coverImageEncoded;
+  String? coverImageURL;
   String? startDate;
   String? endDate;
   String? startTime;
@@ -26,7 +26,7 @@ class Event {
         id: json["_id"],
         owner: json["owner"],
         title: json["title"],
-        coverImageEncoded: json["coverImageEncoded"],
+        coverImageURL: json["coverImageURL"],
         startDate: json["startDate"],
         endDate: json["endDate"],
         startTime: json["startTime"],
@@ -38,7 +38,7 @@ class Event {
         "_id": id,
         "owner": owner,
         "title": title,
-        "coverImageEncoded": coverImageEncoded,
+        "coverImageURL": coverImageURL,
         "startDate": startDate,
         "endDate": endDate,
         "startTime": startTime,
