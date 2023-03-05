@@ -19,9 +19,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
-        brightness: Brightness.dark,
-        primaryColor: Colors.blueGrey[900],
-        fontFamily: 'Roboto',
+        fontFamily: 'Avenir',
       ),
       routes: {
         MainRoutes.wrapper: (context) => const MetamaskWrapper(),
