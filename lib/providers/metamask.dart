@@ -43,7 +43,6 @@ class MetamaskProvider extends ChangeNotifier {
   Future<String> sign(nonce) async {
     List<String?> params = [currentAddress.toLowerCase(), nonce];
     String method = "personal_sign";
-
     await launchUrl(Uri.parse(connector.session.toUri()),
         mode: LaunchMode.externalApplication);
     final signature = await connector.sendCustomRequest(

@@ -18,6 +18,9 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Flutter Demo',
+      theme: ThemeData(
+        fontFamily: 'Avenir',
+      ),
       routes: {
         MainRoutes.wrapper: (context) => const MetamaskWrapper(),
         MainRoutes.home: (context) => const Home(),

@@ -6,6 +6,8 @@ import 'package:tickrypt/providers/metamask.dart';
 import 'package:tickrypt/providers/user_provider.dart';
 import 'package:tickrypt/services/user.dart';
 import 'package:tickrypt/widgets/atoms/buttons/primaryElevatedButton.dart';
+import 'package:tickrypt/widgets/organisms/events/profileEvents.dart';
+import 'package:tickrypt/widgets/organisms/headers/profileHeader.dart';
 
 class Profile extends StatefulWidget {
   const Profile({Key? key}) : super(key: key);
@@ -30,33 +32,98 @@ class _ProfileState extends State<Profile> {
     var metamaskProvider = Provider.of<MetamaskProvider>(context);
     if (!metamaskProvider.isConnected) {
       return (Scaffold(
-        body: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(top: 200),
-                child: Transform.rotate(
-                  angle: 45 * 3.14159 / 180,
-                  child: Transform.scale(
-                    scale: 8,
-                    child: const Icon(CupertinoIcons.ticket),
+        body: Container(
+          alignment: Alignment.topLeft,
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.bottomRight,
+              end: Alignment.topLeft,
+              stops: [0.7272, 0.9733],
+              colors: [
+                Color(0xFF050A31),
+                Color(0xFF6D6C9F),
+              ],
+              transform: GradientRotation(347.69 * (3.14 / 180)),
+            ),
+          ),
+          child:
+              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Image.asset(
+              'lib/assets/login_top_part.png',
+              color: Color(0xFF050a31),
+            ),
+            const Padding(
+              padding: EdgeInsets.fromLTRB(16.0, 0, 0, 20),
+              child: Text(
+                "Go Outside.",
+                style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 48,
+                    fontFamily: 'Avenir',
+                    fontWeight: FontWeight.w300,
+                    fontStyle: FontStyle.normal),
+              ),
+            ),
+            Row(
+              children: [
+                Container(
+                  width: MediaQuery.of(context).size.width * 300 / 354,
+                  height: 150,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(15),
+                    color: Color(0xFF5200FF),
+                  ),
+                  child: GestureDetector(
+                    onTap: () {
+                      metamaskProvider.loginUsingMetamask();
+                    },
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.only(left: 24.0),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: const <Widget>[
+                              FittedBox(
+                                child: Text(
+                                  "Log-in with",
+                                  softWrap: false,
+                                  maxLines: 2,
+                                  style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 42,
+                                      fontFamily: 'Avenir',
+                                      fontWeight: FontWeight.w400),
+                                ),
+                              ),
+                              Text(
+                                " Metamask",
+                                style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 42,
+                                    fontFamily: 'Avenir',
+                                    fontWeight: FontWeight.w400),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Icon(
+                            CupertinoIcons.arrow_right,
+                            color: Colors.white,
+                            size: 40,
+                          ),
+                        )
+                      ],
+                    ),
                   ),
                 ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(15.0),
-                child: Text(
-                  "Login Tickript to inspect your profile!",
-                  style: Theme.of(context).textTheme.headlineLarge,
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(bottom: 50),
-                child: primaryElevatedButton(
-                    "Connect", () => {metamaskProvider.loginUsingMetamask()}),
-              )
-            ]),
+              ],
+            )
+          ]), // your child widget here
+        ),
       ));
     }
     if (userProvider.token == "") {
@@ -65,21 +132,26 @@ class _ProfileState extends State<Profile> {
     }
     getEvents(metamaskProvider.currentAddress);
     return Scaffold(
-      body: Column(
-        children: [
-          Text(userProvider.user!.username),
-          // Get Events
-          FutureBuilder<List<Event>>(
-              future: events,
-              builder:
-                  (BuildContext context, AsyncSnapshot<List<Event>> snapshot) {
-                if (snapshot.hasData) {
-                  return Text("Got Events");
-                }
-                return Text("Does not have events");
-              })
-        ],
-        // Get Minted Tickets
+      body: SafeArea(
+        top: false,
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              profileHeader(context, userProvider.user),
+              // Get Events
+              FutureBuilder<List<Event>>(
+                  future: events,
+                  builder: (BuildContext context,
+                      AsyncSnapshot<List<Event>> snapshot) {
+                    if (snapshot.hasData) {
+                      return profileEvents(context, snapshot.data!);
+                    }
+                    return Text("");
+                  })
+            ],
+            // Get Minted Tickets
+          ),
+        ),
       ),
     );
   }
