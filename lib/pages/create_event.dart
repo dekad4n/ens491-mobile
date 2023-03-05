@@ -508,6 +508,7 @@ class _CreateEventState extends State<CreateEvent> {
                           "description": _description,
                         };
                         // 1- Send request to backend to create Event in mongoDB
+
                         Event createdEvent = await eventService.createEvent(
                           eventProps,
                           userProvider.token,
@@ -515,14 +516,14 @@ class _CreateEventState extends State<CreateEvent> {
 
                         // 2- Move next page
 
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => CreateTicket(
-                              props: eventProps,
-                            ),
-                          ),
-                        );
+                        // Navigator.push(
+                        //   context,
+                        //   MaterialPageRoute(
+                        //     builder: (context) => CreateTicket(
+                        //       props: eventProps,
+                        //     ),
+                        //   ),
+                        // );
                       }
                     }
                   : null,

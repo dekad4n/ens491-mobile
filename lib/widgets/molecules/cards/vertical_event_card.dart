@@ -26,7 +26,7 @@ Container verticalEventCard(BuildContext context, Event event) {
       mainAxisAlignment: MainAxisAlignment.start,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        verticalEventImageWrapper(context, event.coverImageEncoded!),
+        verticalEventImageWrapper(context, event.coverImageURL),
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 17, horizontal: 10.0),
           child: Text(
