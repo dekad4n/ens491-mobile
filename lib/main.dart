@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:tickrypt/pages/home.dart';
+import 'package:tickrypt/pages/profile_settings.dart';
 import 'package:tickrypt/pages/search.dart';
 import 'utils/routes.dart';
 import 'pages/wrapper.dart';
@@ -24,7 +25,8 @@ class MyApp extends StatelessWidget {
       routes: {
         MainRoutes.wrapper: (context) => const MetamaskWrapper(),
         MainRoutes.home: (context) => const Home(),
-        MainRoutes.search: (context) => const Search()
+        MainRoutes.search: (context) => const Search(),
+        MainRoutes.profileSettings: (context) => const ProfileSettings(),
       },
       home: const MetamaskWrapper(),
     );

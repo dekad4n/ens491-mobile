@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 Container verticalEventCard(BuildContext context, Event event) {
-  DateTime date = DateTime.parse(event.startDate);
+  DateTime date = DateTime.parse(event.startDate!);
   String day = DateFormat('EEEE').format(date).substring(0, 3);
   String formattedDate = day + DateFormat(', MMMM d').format(date);
   String time = DateFormat('hh:mm').format(date);
@@ -26,11 +26,11 @@ Container verticalEventCard(BuildContext context, Event event) {
       mainAxisAlignment: MainAxisAlignment.start,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        verticalEventImageWrapper(context, event.logo),
+        verticalEventImageWrapper(context, event.coverImageEncoded!),
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 17, horizontal: 10.0),
           child: Text(
-            event.name,
+            event.title!,
             style: const TextStyle(
                 color: Color(0xFF050A31),
                 fontFamily: 'Avenir',
