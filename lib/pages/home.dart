@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart';
+import 'package:provider/provider.dart';
 import 'package:tickrypt/models/event_model.dart';
 import 'package:tickrypt/models/user_model.dart';
+import 'package:tickrypt/pages/create_ticket.dart';
+import 'package:tickrypt/providers/user_provider.dart';
 import 'package:tickrypt/services/user.dart';
 import 'package:tickrypt/services/utils.dart';
 import 'package:tickrypt/widgets/navbars.dart';
@@ -77,7 +80,7 @@ class _HomeState extends State<Home> {
     );
   }
 
-  Future<List<Card>> getEvents() async {
+  Future<List<Card>> getEvents(userProvider) async {
     String searchTitle = "";
     String id = "";
     int page = 1;
@@ -89,13 +92,13 @@ class _HomeState extends State<Home> {
     List<Card> eventCards = [];
 
     for (Event e in events) {
-      Card eventCard = await horizontalEventCard(e);
+      Card eventCard = await horizontalEventCard(e, userProvider);
       eventCards.add(eventCard);
     }
     return eventCards;
   }
 
-  Future<Card> horizontalEventCard(Event e) async {
+  Future<Card> horizontalEventCard(Event e, userProvider) async {
     //Get owner username and avatar
     User owner = await userService.getNonce(e.owner);
     String? ownerUsername = owner.username;
@@ -112,88 +115,138 @@ class _HomeState extends State<Home> {
         width: double.infinity,
         height: 200,
 
-        child: ClipPath(
-          clipper: ShapeBorderClipper(
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(15))),
-          child: Row(
-            children: [
-              Flexible(
-                flex: 3,
-                fit: FlexFit.tight,
-                child: Container(
-                  child: Padding(
-                    padding: EdgeInsets.all(12),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            CircleAvatar(
-                              backgroundColor: Colors.transparent,
-                              radius: 20,
-                              backgroundImage: NetworkImage(ownerAvatar ??
-                                  "https://upload.wikimedia.org/wikipedia/commons/thumb/4/46/Question_mark_%28black%29.svg/1024px-Question_mark_%28black%29.svg.png"),
-                            ),
-                            SizedBox(width: 15),
-                            Flexible(
-                              child: Text(
-                                ownerUsername,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(fontWeight: FontWeight.w500),
+        child: GestureDetector(
+          onTap: () {
+            //Go to the event's page
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (context) => CreateTicket(
+                        event: e,
+                        // userProvider: userProvider,
+                        // ownerUsername: ownerUsername,
+                        // ownerAvatar: ownerAvatar!,
+                      )),
+            );
+          },
+          behavior: HitTestBehavior.opaque,
+          child: ClipPath(
+            clipper: ShapeBorderClipper(
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(15))),
+            child: Row(
+              children: [
+                Flexible(
+                  flex: 3,
+                  fit: FlexFit.tight,
+                  child: Container(
+                    child: Padding(
+                      padding: EdgeInsets.all(12),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              CircleAvatar(
+                                backgroundColor: Colors.transparent,
+                                radius: 20,
+                                backgroundImage: NetworkImage(ownerAvatar ??
+                                    "https://upload.wikimedia.org/wikipedia/commons/thumb/4/46/Question_mark_%28black%29.svg/1024px-Question_mark_%28black%29.svg.png"),
                               ),
-                            )
-                          ],
-                        ),
-                        SizedBox(height: 5),
-                        Expanded(
-                          child: Container(
-                            child: Text(
-                              e.title!,
-                              style: TextStyle(
-                                  fontSize: 25, fontWeight: FontWeight.w900),
-                              overflow: TextOverflow.ellipsis,
-                              maxLines: 3,
+                              SizedBox(width: 15),
+                              Flexible(
+                                child: Text(
+                                  ownerUsername,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(fontWeight: FontWeight.w500),
+                                ),
+                              )
+                            ],
+                          ),
+                          SizedBox(height: 5),
+                          Expanded(
+                            child: Container(
+                              child: Text(
+                                e.title!,
+                                style: TextStyle(
+                                    fontSize: 25, fontWeight: FontWeight.w900),
+                                overflow: TextOverflow.ellipsis,
+                                maxLines: 3,
+                              ),
                             ),
                           ),
-                        ),
-                        Column(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              "Starting at",
-                              style: TextStyle(
-                                color: Colors.grey,
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Column(
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    "Starting at",
+                                    style: TextStyle(
+                                      color: Colors.grey,
+                                    ),
+                                  ),
+                                  Text(
+                                    "FREE",
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
                               ),
-                            ),
-                            Text(
-                              "FREE",
-                              style: TextStyle(
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
-              ),
-              Flexible(
-                  flex: 2,
-                  fit: FlexFit.tight,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      image: DecorationImage(
-                          image: NetworkImage(e.coverImageURL!),
-                          fit: BoxFit.cover,
-                          alignment: Alignment.bottomCenter),
-                      color: Colors.grey,
-                    ),
-                  )),
-            ],
+                Flexible(
+                    flex: 2,
+                    fit: FlexFit.tight,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        image: DecorationImage(
+                            image: NetworkImage(e.coverImageURL!),
+                            fit: BoxFit.cover,
+                            alignment: Alignment.bottomCenter),
+                        color: Colors.white,
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                Text(
+                                  e.startDate!,
+                                  style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w800),
+                                ),
+                              ],
+                            ),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                Text(
+                                  e.startTime!,
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    )),
+              ],
+            ),
           ),
         ),
         //Padding
@@ -201,7 +254,7 @@ class _HomeState extends State<Home> {
     );
   }
 
-  eventsSection() {
+  eventsSection(userProvider) {
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Column(
@@ -214,7 +267,7 @@ class _HomeState extends State<Home> {
             thickness: 1,
           ),
           FutureBuilder(
-            future: getEvents(),
+            future: getEvents(userProvider),
             builder: (ctx, snapshot) {
               // Checking if future is resolved or not
               if (snapshot.connectionState == ConnectionState.done) {
@@ -252,6 +305,8 @@ class _HomeState extends State<Home> {
 
   @override
   Widget build(BuildContext context) {
+    var userProvider = Provider.of<UserProvider>(context);
+
     return (Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
@@ -286,7 +341,7 @@ class _HomeState extends State<Home> {
               // ])
               bannerContainer(),
               SizedBox(height: 30),
-              eventsSection(),
+              eventsSection(userProvider),
             ],
           ),
         ),

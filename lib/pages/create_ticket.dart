@@ -1,9 +1,9 @@
-
 import 'package:flutter/material.dart';
+import 'package:tickrypt/models/event_model.dart';
 
 class CreateTicket extends StatefulWidget {
-  final dynamic props;
-  const CreateTicket({Key? key, @required this.props}) : super(key: key);
+  final Event event;
+  const CreateTicket({Key? key, required this.event}) : super(key: key);
 
   @override
   State<CreateTicket> createState() => _CreateTicketState();
@@ -14,7 +14,7 @@ class _CreateTicketState extends State<CreateTicket> {
   int? _quantity;
   double? _comission;
 
-  coverPreviewContainer() {
+  eventPreviewContainer() {
     return Column(
       children: [
         Text(
@@ -30,8 +30,8 @@ class _CreateTicketState extends State<CreateTicket> {
             width: 120,
             child: ClipRRect(
               borderRadius: BorderRadius.circular(15),
-              child: Image.memory(
-                widget.props["coverImageAsBytes"],
+              child: Image.network(
+                widget.event.coverImageURL!,
                 fit: BoxFit.cover,
                 alignment: Alignment.center,
               ),
@@ -40,109 +40,99 @@ class _CreateTicketState extends State<CreateTicket> {
         ),
         SizedBox(height: 15),
         Container(
-          width: 250,
+          padding: EdgeInsets.all(20),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              Text(
+                widget.event.title!,
+                style: TextStyle(
+                  color: Colors.black,
+                  fontSize: 25,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              SizedBox(height: 5),
+              Text(
+                widget.event.description!,
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 20,
+                ),
+              ),
+              SizedBox(height: 5),
+              Text(
+                widget.event.category!,
+                style: TextStyle(
+                  color: Colors.grey[400],
+                  fontSize: 18,
+                ),
+              ),
+              SizedBox(height: 5),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    "Title: ",
+                    "Start",
                     style: TextStyle(
                       color: Colors.grey,
                       fontSize: 18,
-                      fontWeight: FontWeight.bold,
                     ),
                   ),
-                  SizedBox(
-                    width: 20,
-                  ),
-                  Flexible(
-                    child: Text(
-                      widget.props["title"],
-                      style: TextStyle(
-                        color: Colors.grey,
-                        fontSize: 18,
+                  Row(
+                    children: [
+                      Icon(Icons.calendar_month),
+                      Text(
+                        widget.event.startDate!,
+                        style: TextStyle(
+                          color: Colors.grey,
+                          fontSize: 18,
+                        ),
                       ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
+                      SizedBox(width: 10),
+                      Icon(Icons.access_time),
+                      Text(
+                        widget.event.startTime!,
+                        style: TextStyle(
+                          color: Colors.grey,
+                          fontSize: 18,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
+              SizedBox(height: 5),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    "Start: ",
-                    style: TextStyle(
-                      color: Colors.grey,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  SizedBox(
-                    width: 20,
-                  ),
-                  Text(
-                    widget.props["startDate"].toString().split(" ")[0] +
-                        " - " +
-                        RegExp(r'\d{2}:\d{2}')
-                            .stringMatch(widget.props['startTime'].toString())
-                            .toString(),
+                    "End",
                     style: TextStyle(
                       color: Colors.grey,
                       fontSize: 18,
                     ),
                   ),
-                ],
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    "End: ",
-                    style: TextStyle(
-                      color: Colors.grey,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  SizedBox(
-                    width: 20,
-                  ),
-                  Text(
-                    widget.props["endDate"].toString().split(" ")[0] +
-                        " - " +
-                        RegExp(r'\d{2}:\d{2}')
-                            .stringMatch(widget.props['endTime'].toString())
-                            .toString(),
-                    style: TextStyle(
-                      color: Colors.grey,
-                      fontSize: 18,
-                    ),
-                  ),
-                ],
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    "Category: ",
-                    style: TextStyle(
-                      color: Colors.grey,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  SizedBox(
-                    width: 20,
-                  ),
-                  Text(
-                    widget.props["category"],
-                    style: TextStyle(
-                      color: Colors.grey,
-                      fontSize: 18,
-                    ),
+                  Row(
+                    children: [
+                      Icon(Icons.calendar_month),
+                      Text(
+                        widget.event.endDate!,
+                        style: TextStyle(
+                          color: Colors.grey,
+                          fontSize: 18,
+                        ),
+                      ),
+                      SizedBox(width: 10),
+                      Icon(Icons.access_time),
+                      Text(
+                        widget.event.endTime!,
+                        style: TextStyle(
+                          color: Colors.grey,
+                          fontSize: 18,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -157,7 +147,7 @@ class _CreateTicketState extends State<CreateTicket> {
     return Container(
       padding: EdgeInsets.all(8),
       height: 90,
-      width: 140,
+      width: 100,
       decoration: BoxDecoration(
         border:
             Border.all(color: _price != null ? Colors.deepPurple : Colors.grey),
@@ -216,7 +206,7 @@ class _CreateTicketState extends State<CreateTicket> {
     return Container(
       padding: EdgeInsets.all(8),
       height: 90,
-      width: 140,
+      width: 100,
       decoration: BoxDecoration(
         border:
             Border.all(color: _price != null ? Colors.deepPurple : Colors.grey),
@@ -250,64 +240,6 @@ class _CreateTicketState extends State<CreateTicket> {
                     } else {
                       setState(() {
                         _quantity = int.parse(value);
-                      });
-                    }
-                    return null;
-                  },
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  resaleComissionContainer() {
-    return Container(
-      padding: EdgeInsets.all(8),
-      height: 90,
-      decoration: BoxDecoration(
-        border:
-            Border.all(color: _price != null ? Colors.deepPurple : Colors.grey),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            "Resale Comission",
-            style: TextStyle(
-                color: Colors.grey, fontSize: 12, fontWeight: FontWeight.bold),
-          ),
-          Row(
-            children: [
-              Text(
-                "%  ",
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black,
-                ),
-              ),
-              Expanded(
-                child: TextFormField(
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  decoration: InputDecoration(
-                    border: null,
-                  ),
-                  // The validator receives the text that the user has entered.
-                  keyboardType: TextInputType.number,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return '';
-                    } else {
-                      setState(() {
-                        _comission = double.parse(value);
                       });
                     }
                     return null;
@@ -358,8 +290,6 @@ class _CreateTicketState extends State<CreateTicket> {
 
   @override
   Widget build(BuildContext context) {
-    // print(widget.props);
-
     return Scaffold(
       appBar: AppBar(
         elevation: 0,
@@ -381,25 +311,23 @@ class _CreateTicketState extends State<CreateTicket> {
         ),
         centerTitle: true,
       ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(40, 20, 40, 20),
+      body: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: SafeArea(
+          child: SingleChildScrollView(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                coverPreviewContainer(),
+                eventPreviewContainer(),
                 SizedBox(height: 20),
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
                     priceContainer(),
                     quantityContainer(),
                   ],
                 ),
-                SizedBox(height: 20),
-                resaleComissionContainer(),
                 SizedBox(height: 20),
                 confirmButton(),
               ],
