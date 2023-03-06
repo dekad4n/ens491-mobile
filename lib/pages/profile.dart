@@ -144,7 +144,8 @@ class _ProfileState extends State<Profile> {
                   builder: (BuildContext context,
                       AsyncSnapshot<List<Event>> snapshot) {
                     if (snapshot.hasData) {
-                      return profileEvents(context, snapshot.data!);
+                      return profileEvents(
+                          context, snapshot.data!, userProvider, setState);
                     }
                     return Text("");
                   })

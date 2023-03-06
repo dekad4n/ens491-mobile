@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:tickrypt/models/event_model.dart';
+import 'package:tickrypt/pages/create_event.dart';
 import 'package:tickrypt/widgets/molecules/cards/vertical_event_card.dart';
 
-Container profileEvents(BuildContext context, List<Event> events) {
+Container profileEvents(
+    BuildContext context, List<Event> events, userProvider, setState) {
   return Container(
     color: const Color(0xFFe9f2f6),
     width: MediaQuery.of(context).size.width,
@@ -13,15 +15,37 @@ Container profileEvents(BuildContext context, List<Event> events) {
       // ignore: prefer_const_literals_to_create_immutables
       children: [
         // ignore: prefer_const_constructors
-        Text(
-          "My Events",
-          // ignore: prefer_const_constructors
-          style: TextStyle(
-              color: const Color(0xFF050A31),
-              fontSize: 20,
-              fontFamily: 'Avenir',
-              fontWeight: FontWeight.w800,
-              letterSpacing: 1),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              "My Events",
+              // ignore: prefer_const_constructors
+              style: TextStyle(
+                  color: const Color(0xFF050A31),
+                  fontSize: 20,
+                  fontFamily: 'Avenir',
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 1),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                // Go to createEvent page
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) =>
+                          CreateEvent(userProvider: userProvider)),
+                ).then((value) => {setState(() {})});
+              },
+              child: Icon(Icons.add, color: Colors.white),
+              style: ElevatedButton.styleFrom(
+                shape: CircleBorder(),
+                padding: EdgeInsets.all(8),
+                backgroundColor: const Color(0xFF050A31), // <-- Button color
+              ),
+            ),
+          ],
         ),
         Padding(
           padding: const EdgeInsets.only(top: 30.0),

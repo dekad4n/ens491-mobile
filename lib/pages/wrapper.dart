@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:tickrypt/pages/create_event.dart';
 import 'package:tickrypt/pages/home.dart';
 import 'package:tickrypt/pages/profile.dart';
 import 'package:tickrypt/pages/search.dart';
@@ -55,7 +54,7 @@ class _LoggedInState extends State<LoggedIn> {
     if (pageIdx == 0) {
       current = Home();
     } else if (pageIdx == 1) {
-      current = CreateEvent();
+      current = Search();
     } else if (pageIdx == 4) {
       current = Profile();
     }
