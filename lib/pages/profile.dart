@@ -137,7 +137,7 @@ class _ProfileState extends State<Profile> {
         child: SingleChildScrollView(
           child: Column(
             children: [
-              profileHeader(context, userProvider.user),
+              profileHeader(context, userProvider.user, setState),
               // Get Events
               FutureBuilder<List<Event>>(
                   future: events,

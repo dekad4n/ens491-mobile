@@ -6,7 +6,7 @@ import 'package:tickrypt/providers/metamask.dart';
 import 'package:tickrypt/providers/user_provider.dart';
 import 'package:tickrypt/services/user.dart';
 
-MaterialButton settingsButton(context) {
+MaterialButton settingsButton(context, setState) {
   var userProvider = Provider.of<UserProvider>(context);
   var metamaskProvider = Provider.of<MetamaskProvider>(context);
   return MaterialButton(
@@ -14,8 +14,13 @@ MaterialButton settingsButton(context) {
       Navigator.push(
         context,
         MaterialPageRoute(
-            builder: (context) => ProfileSettings(user: userProvider.user)),
-      );
+            builder: (context) => ProfileSettings(
+                user: userProvider.user, token: userProvider.token)),
+      ).then((value) => {
+            setState(() {
+              userProvider.handleUpdate(metamaskProvider);
+            })
+          });
     },
     color: Color(0xFF050A31),
     shape: const RoundedRectangleBorder(

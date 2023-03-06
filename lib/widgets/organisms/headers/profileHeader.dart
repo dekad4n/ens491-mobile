@@ -4,7 +4,7 @@ import 'package:tickrypt/widgets/atoms/imageWrappers/avatar.dart';
 import 'package:tickrypt/models/user_model.dart';
 import 'package:tickrypt/widgets/molecules/button_groups/profile_header_group.dart';
 
-dynamic profileHeader(BuildContext context, User? currentUser) {
+dynamic profileHeader(BuildContext context, User? currentUser, setState) {
   var username = currentUser?.username ?? "";
   username = username.length > 16 ? username.substring(0, 16) + '..' : username;
   return Column(children: [
@@ -27,7 +27,7 @@ dynamic profileHeader(BuildContext context, User? currentUser) {
     ),
     Padding(
       padding: const EdgeInsets.fromLTRB(0, 8.0, 0, 50),
-      child: profileHeaderGroup(context),
+      child: profileHeaderGroup(context, setState),
     )
   ]);
 }

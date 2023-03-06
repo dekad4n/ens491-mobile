@@ -8,7 +8,9 @@ Padding backButton(context) {
     padding: EdgeInsets.fromLTRB(width * 0.05, 75, width * 0.05, 0),
     child: IconButton(
       icon: const Icon(CupertinoIcons.arrow_left),
-      onPressed: () {},
+      onPressed: () {
+        Navigator.of(context).pop();
+      },
     ),
   );
 }

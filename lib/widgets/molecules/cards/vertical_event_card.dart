@@ -7,7 +7,6 @@ Container verticalEventCard(BuildContext context, Event event) {
   DateTime date = DateTime.parse(event.startDate!);
   String day = DateFormat('EEEE').format(date).substring(0, 3);
   String formattedDate = day + DateFormat(', MMMM d').format(date);
-  String time = DateFormat('hh:mm').format(date);
   return Container(
     alignment: Alignment.topLeft,
     width: (MediaQuery.of(context).size.width - 47) / 2,
@@ -55,7 +54,7 @@ Container verticalEventCard(BuildContext context, Event event) {
         Padding(
           padding: const EdgeInsets.fromLTRB(10.0, 0, 10, 17),
           child: Text(
-            time,
+            event.startTime ?? "",
             textAlign: TextAlign.start,
             style: const TextStyle(
               color: Color(0xFF050A31),

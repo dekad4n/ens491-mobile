@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tickrypt/providers/metamask.dart';
 import 'package:tickrypt/services/auth.dart';
 import 'package:tickrypt/services/user.dart';
 import 'package:tickrypt/models/user_model.dart';
@@ -27,6 +28,11 @@ class UserProvider extends ChangeNotifier {
       token = result["token"];
       notifyListeners();
     } catch (e) {}
+  }
+
+  Future<void> handleUpdate(metamaskProvider) async {
+    user = await userService.getNonce(metamaskProvider.currentAddress);
+    notifyListeners();
   }
 
   init() {}
