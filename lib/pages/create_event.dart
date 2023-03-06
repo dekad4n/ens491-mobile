@@ -11,7 +11,9 @@ import '../models/event_model.dart';
 import '../providers/user_provider.dart';
 
 class CreateEvent extends StatefulWidget {
-  const CreateEvent({super.key});
+  final UserProvider userProvider;
+
+  const CreateEvent({Key? key, required this.userProvider}) : super(key: key);
 
   @override
   State<CreateEvent> createState() => _CreateEventState();
@@ -187,7 +189,7 @@ class _CreateEventState extends State<CreateEvent> {
 
   titleTextFormField() {
     return TextFormField(
-      style: TextStyle(fontSize: 18, color: Colors.deepPurple),
+      style: TextStyle(fontSize: 18),
       // The validator receives the text that the user has entered.
       decoration: InputDecoration(
           focusedBorder: OutlineInputBorder(
@@ -366,10 +368,8 @@ class _CreateEventState extends State<CreateEvent> {
       padding: EdgeInsets.symmetric(horizontal: 10.0),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(8.0),
-        border: Border.all(
-            color: _category != null ? Colors.deepPurple : Colors.grey,
-            style: BorderStyle.solid,
-            width: 1),
+        border:
+            Border.all(color: Colors.grey, style: BorderStyle.solid, width: 1),
       ),
       child: DropdownButton<String>(
           value: _category,
@@ -377,7 +377,7 @@ class _CreateEventState extends State<CreateEvent> {
             "Select Event Category",
             style: TextStyle(
                 color: _category != null ? Colors.deepPurple : Colors.grey,
-                fontSize: 20),
+                fontSize: 18),
           ),
           icon: const Icon(
             Icons.arrow_drop_down_rounded,
@@ -490,7 +490,7 @@ class _CreateEventState extends State<CreateEvent> {
                         // If the form is valid, display a snackbar. In the real world,
                         // you'd often call a server or save the information in a database.
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Processing Data')),
+                          const SnackBar(content: Text('Creating event...')),
                         );
 
                         Map<String, dynamic> eventProps = {
@@ -513,6 +513,8 @@ class _CreateEventState extends State<CreateEvent> {
                           eventProps,
                           userProvider.token,
                         );
+
+                        Navigator.pop(context, true);
 
                         // 2- Move next page
 
@@ -542,9 +544,29 @@ class _CreateEventState extends State<CreateEvent> {
 
   @override
   Widget build(BuildContext context) {
-    var userProvider = Provider.of<UserProvider>(context);
+    // var userProvider = Provider.of<UserProvider>(context);
 
     return Scaffold(
+      appBar: AppBar(
+        elevation: 0,
+        shadowColor: null,
+        backgroundColor: Colors.transparent,
+        leading: IconButton(
+          iconSize: 30,
+          color: Color(0xff050a31),
+          icon: Icon(Icons.arrow_back),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        title: Text(
+          "Create Event",
+          style: TextStyle(
+            color: Color(0xff050a31),
+            fontSize: 25,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        centerTitle: true,
+      ),
       body: Padding(
         padding: const EdgeInsets.all(20.0),
         child: SafeArea(
@@ -570,7 +592,7 @@ class _CreateEventState extends State<CreateEvent> {
                     SizedBox(height: 30),
                     descriptionTextFormField(),
                     SizedBox(height: 30),
-                    confirmButton(userProvider),
+                    confirmButton(widget.userProvider),
                   ],
                 ),
               )

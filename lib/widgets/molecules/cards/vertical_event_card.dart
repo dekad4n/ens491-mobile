@@ -7,7 +7,7 @@ Container verticalEventCard(BuildContext context, Event event) {
   DateTime date = DateTime.parse(event.startDate!);
   String day = DateFormat('EEEE').format(date).substring(0, 3);
   String formattedDate = day + DateFormat(', MMMM d').format(date);
-  String time = DateFormat('hh:mm').format(date);
+  String time = event.startTime!;
   return Container(
     alignment: Alignment.topLeft,
     width: (MediaQuery.of(context).size.width - 47) / 2,
