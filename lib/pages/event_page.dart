@@ -1,8 +1,10 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:tickrypt/models/user_model.dart';
 import 'package:tickrypt/pages/create_ticket.dart';
 import 'package:tickrypt/services/user.dart';
+import 'package:tickrypt/widgets/atoms/buttons/backButtonWhite.dart';
 
 class EventPage extends StatefulWidget {
   final dynamic event;
@@ -29,6 +31,7 @@ class _EventPageState extends State<EventPage> {
     date = DateTime.parse(widget.event.endDate);
     day = DateFormat('EEEE').format(date).substring(0, 3);
     String formattedEnd = day + DateFormat(', MMMM d').format(date);
+    getOwner();
     return Scaffold(
       body: SingleChildScrollView(
         child: Column(
@@ -51,6 +54,39 @@ class _EventPageState extends State<EventPage> {
                     widget.event!.coverImageURL ?? "",
                     width: MediaQuery.of(context).size.width,
                     fit: BoxFit.fill,
+                  ),
+                ),
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  child: Container(
+                    width: MediaQuery.of(context).size.width,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        backButtonWhite(context),
+                        Padding(
+                          padding: EdgeInsets.fromLTRB(
+                              MediaQuery.of(context).size.width * 0.05,
+                              75,
+                              MediaQuery.of(context).size.width * 0.05,
+                              0),
+                          child: IconButton(
+                              onPressed: () {
+                                Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (context) => CreateTicket(
+                                            props: widget.event.integerId)));
+                              },
+                              icon: Icon(
+                                CupertinoIcons.add_circled,
+                                size: 33,
+                                color: Colors.white,
+                              )),
+                        )
+                      ],
+                    ),
                   ),
                 ),
                 Positioned(
@@ -153,15 +189,6 @@ class _EventPageState extends State<EventPage> {
                 ],
               ),
             ),
-            TextButton(
-                onPressed: () {
-                  Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) =>
-                              CreateTicket(props: widget.event.integerId)));
-                },
-                child: Text("Mint"))
           ],
         ),
       ),
