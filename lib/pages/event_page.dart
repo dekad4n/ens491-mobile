@@ -25,6 +25,42 @@ class _EventPageState extends State<EventPage> {
     });
   }
 
+  createTicketButton() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 80),
+      child: ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF050A31),
+          ),
+          onPressed: () {
+            Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => CreateTicket(
+                        event: widget.event,
+                        userProvider: widget.userProvider!)));
+          },
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                CupertinoIcons.tickets,
+                size: 40,
+                color: Colors.white,
+              ),
+              SizedBox(width: 15),
+              Text(
+                "Create ticket",
+                style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 22,
+                    fontWeight: FontWeight.w600),
+              )
+            ],
+          )),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     DateTime date = DateTime.parse(widget.event.startDate!);
@@ -177,39 +213,9 @@ class _EventPageState extends State<EventPage> {
               ),
             ),
             SizedBox(height: 50),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 80),
-              child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF050A31),
-                  ),
-                  onPressed: () {
-                    Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => CreateTicket(
-                                event: widget.event,
-                                userProvider: widget.userProvider!)));
-                  },
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        CupertinoIcons.tickets,
-                        size: 40,
-                        color: Colors.white,
-                      ),
-                      SizedBox(width: 15),
-                      Text(
-                        "Create ticket",
-                        style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 22,
-                            fontWeight: FontWeight.w600),
-                      )
-                    ],
-                  )),
-            )
+            widget.event.owner == widget.userProvider?.user?.publicAddress
+                ? createTicketButton()
+                : Text("")
           ],
         ),
       ),
