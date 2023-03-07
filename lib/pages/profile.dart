@@ -29,6 +29,7 @@ class _ProfileState extends State<Profile> {
   @override
   Widget build(BuildContext context) {
     var userProvider = Provider.of<UserProvider>(context);
+    print(userProvider.token);
     var metamaskProvider = Provider.of<MetamaskProvider>(context);
     if (!metamaskProvider.isConnected) {
       return (Scaffold(

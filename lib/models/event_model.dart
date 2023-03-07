@@ -9,7 +9,8 @@ class Event {
       this.startTime,
       this.endTime,
       this.category,
-      this.description});
+      this.description,
+      this.integerId});
 
   String? id; // Nonce of user
   String? title; // Private id
@@ -21,19 +22,20 @@ class Event {
   String? endTime;
   String? category;
   String? description;
+  int? integerId;
 
   factory Event.fromJson(Map<String, dynamic> json) => Event(
-        id: json["_id"],
-        owner: json["owner"],
-        title: json["title"],
-        coverImageURL: json["coverImageURL"],
-        startDate: json["startDate"],
-        endDate: json["endDate"],
-        startTime: json["startTime"],
-        endTime: json["endTime"],
-        category: json["category"],
-        description: json["description"],
-      );
+      id: json["_id"],
+      owner: json["owner"],
+      title: json["title"],
+      coverImageURL: json["coverImageURL"],
+      startDate: json["startDate"],
+      endDate: json["endDate"],
+      startTime: json["startTime"],
+      endTime: json["endTime"],
+      category: json["category"],
+      description: json["description"],
+      integerId: json["integerId"]);
   Map<String, dynamic> toJson() => {
         "_id": id,
         "owner": owner,
@@ -45,5 +47,6 @@ class Event {
         "endTime": endTime,
         "category": category,
         "description": description,
+        "integerId": integerId,
       };
 }
