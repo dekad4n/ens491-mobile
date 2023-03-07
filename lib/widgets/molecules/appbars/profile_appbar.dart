@@ -6,9 +6,9 @@ dynamic profileAppbar(context) {
   var width = MediaQuery.of(context).size.width;
   var height = MediaQuery.of(context).size.height;
   return Row(
+    mainAxisAlignment: MainAxisAlignment.end,
     crossAxisAlignment: CrossAxisAlignment.center,
     children: [
-      backButton(context),
       const Spacer(),
       Padding(
         padding: EdgeInsets.fromLTRB(width * 0.05, 75, width * 0.05, 0),

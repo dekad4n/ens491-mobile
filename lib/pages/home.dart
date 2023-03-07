@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:tickrypt/models/event_model.dart';
 import 'package:tickrypt/models/user_model.dart';
 import 'package:tickrypt/pages/create_ticket.dart';
+import 'package:tickrypt/pages/event_page.dart';
 import 'package:tickrypt/providers/user_provider.dart';
 import 'package:tickrypt/services/user.dart';
 import 'package:tickrypt/services/utils.dart';
@@ -118,16 +119,14 @@ class _HomeState extends State<Home> {
         child: GestureDetector(
           onTap: () {
             //Go to the event's page
+
             Navigator.push(
-              context,
-              MaterialPageRoute(
-                  builder: (context) => CreateTicket(
-                        event: e,
-                        // userProvider: userProvider,
-                        // ownerUsername: ownerUsername,
-                        // ownerAvatar: ownerAvatar!,
-                      )),
-            );
+                context,
+                MaterialPageRoute(
+                    builder: (context) => EventPage(
+                          event: e,
+                          userProvider: userProvider,
+                        )));
           },
           behavior: HitTestBehavior.opaque,
           child: ClipPath(

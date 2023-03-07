@@ -4,8 +4,7 @@ import 'package:http/http.dart';
 import 'package:tickrypt/models/event_model.dart';
 
 class UtilsService {
-  // var backendUrl = dotenv.env["BACKEND_URL"];
-  var backendUrl = "http://10.51.20.179:3001";
+  var backendUrl = dotenv.env["BACKEND_URL"];
 
   Future<List<Event>> search(
       String searchTitle, String id, int page, int pageLimit) async {

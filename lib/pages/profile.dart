@@ -78,6 +78,7 @@ class _ProfileState extends State<Profile> {
                     onTap: () {
                       metamaskProvider.loginUsingMetamask();
                     },
+                    behavior: HitTestBehavior.opaque,
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [

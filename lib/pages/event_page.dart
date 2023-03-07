@@ -3,12 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:tickrypt/models/user_model.dart';
 import 'package:tickrypt/pages/create_ticket.dart';
+import 'package:tickrypt/providers/user_provider.dart';
 import 'package:tickrypt/services/user.dart';
 import 'package:tickrypt/widgets/atoms/buttons/backButtonWhite.dart';
 
 class EventPage extends StatefulWidget {
   final dynamic event;
-  const EventPage({super.key, this.event});
+  final UserProvider? userProvider;
+  const EventPage({super.key, this.event, this.userProvider});
 
   @override
   State<EventPage> createState() => _EventPageState();
@@ -44,7 +46,7 @@ class _EventPageState extends State<EventPage> {
                     return const LinearGradient(
                       colors: [
                         Colors.transparent,
-                        Color.fromRGBO(5, 10, 49, 0.8),
+                        Color.fromRGBO(5, 10, 50, 0.8),
                       ],
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
@@ -65,51 +67,36 @@ class _EventPageState extends State<EventPage> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         backButtonWhite(context),
-                        Padding(
-                          padding: EdgeInsets.fromLTRB(
-                              MediaQuery.of(context).size.width * 0.05,
-                              75,
-                              MediaQuery.of(context).size.width * 0.05,
-                              0),
-                          child: IconButton(
-                              onPressed: () {
-                                Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                        builder: (context) => CreateTicket(
-                                            props: widget.event.integerId)));
-                              },
-                              icon: Icon(
-                                CupertinoIcons.add_circled,
-                                size: 33,
-                                color: Colors.white,
-                              )),
-                        )
                       ],
                     ),
                   ),
                 ),
                 Positioned(
-                    bottom: 40,
+                    bottom: 30,
                     left: 20,
-                    child: Text(
-                      widget.event.title,
-                      style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 28),
+                    child: Container(
+                      width: MediaQuery.of(context).size.width - 40,
+                      child: Text(
+                        widget.event.title,
+                        style: const TextStyle(
+                            overflow: TextOverflow.fade,
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 28),
+                      ),
                     ))
               ],
             ),
             Container(
               width: MediaQuery.of(context).size.width,
-              height: 50,
+              height: 1,
               decoration: const BoxDecoration(
                 color: Color(0xFF050A31),
                 boxShadow: [
                   BoxShadow(
                     offset: Offset(-5, -20),
-                    blurRadius: 10,
+                    blurRadius: 40,
+                    spreadRadius: 20,
                     color: Color.fromRGBO(5, 10, 49, 0.8),
                   ),
                 ],
@@ -189,6 +176,40 @@ class _EventPageState extends State<EventPage> {
                 ],
               ),
             ),
+            SizedBox(height: 50),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 80),
+              child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF050A31),
+                  ),
+                  onPressed: () {
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => CreateTicket(
+                                event: widget.event,
+                                userProvider: widget.userProvider!)));
+                  },
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        CupertinoIcons.tickets,
+                        size: 40,
+                        color: Colors.white,
+                      ),
+                      SizedBox(width: 15),
+                      Text(
+                        "Create ticket",
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 22,
+                            fontWeight: FontWeight.w600),
+                      )
+                    ],
+                  )),
+            )
           ],
         ),
       ),

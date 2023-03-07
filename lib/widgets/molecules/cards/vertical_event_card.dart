@@ -1,3 +1,5 @@
+import 'package:provider/provider.dart';
+import 'package:tickrypt/providers/user_provider.dart';
 import 'package:tickrypt/widgets/atoms/imageWrappers/vertical_event_image_wrapper.dart';
 import 'package:tickrypt/models/event_model.dart';
 import 'package:flutter/material.dart';
@@ -5,14 +7,21 @@ import 'package:intl/intl.dart';
 import 'package:tickrypt/pages/event_page.dart';
 
 GestureDetector verticalEventCard(BuildContext context, Event event) {
+  var userProvider = Provider.of<UserProvider>(context);
+
   DateTime date = DateTime.parse(event.startDate!);
   String day = DateFormat('EEEE').format(date).substring(0, 3);
   String formattedDate = day + DateFormat(', MMMM d').format(date);
   String time = event.startTime!;
   return GestureDetector(
     onTap: () {
-      Navigator.push(context,
-          MaterialPageRoute(builder: (context) => EventPage(event: event)));
+      Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (context) => EventPage(
+                    event: event,
+                    userProvider: userProvider,
+                  )));
     },
     child: Container(
       alignment: Alignment.topLeft,

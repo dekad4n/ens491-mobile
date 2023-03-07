@@ -1,9 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:tickrypt/models/event_model.dart';
+import 'package:tickrypt/providers/user_provider.dart';
+import 'package:tickrypt/services/ticket.dart';
 
 class CreateTicket extends StatefulWidget {
   final Event event;
-  const CreateTicket({Key? key, required this.event}) : super(key: key);
+  final UserProvider userProvider;
+
+  const CreateTicket(
+      {Key? key, required this.event, required this.userProvider})
+      : super(key: key);
 
   @override
   State<CreateTicket> createState() => _CreateTicketState();
@@ -52,7 +58,7 @@ class _CreateTicketState extends State<CreateTicket> {
                   fontWeight: FontWeight.w700,
                 ),
               ),
-              SizedBox(height: 5),
+              SizedBox(height: 20),
               Text(
                 widget.event.description!,
                 style: TextStyle(
@@ -60,7 +66,7 @@ class _CreateTicketState extends State<CreateTicket> {
                   fontSize: 20,
                 ),
               ),
-              SizedBox(height: 5),
+              SizedBox(height: 20),
               Text(
                 widget.event.category!,
                 style: TextStyle(
@@ -68,7 +74,7 @@ class _CreateTicketState extends State<CreateTicket> {
                   fontSize: 18,
                 ),
               ),
-              SizedBox(height: 5),
+              SizedBox(height: 20),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -265,15 +271,16 @@ class _CreateTicketState extends State<CreateTicket> {
                 elevation: 0,
                 side: BorderSide(color: Colors.deepPurple),
               ),
-              onPressed: () {
+              onPressed: () async {
                 // Validate returns true if the form is valid, or false otherwise.
-                if (_price != null && _quantity != null && _comission != null) {
-                  // If the form is valid, display a snackbar. In the real world,
-                  // you'd often call a server or save the information in a database.
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Processing Data')),
-                  );
-                }
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Processing Data')),
+                );
+
+                TicketService ticketService = TicketService();
+                await ticketService.mint(
+                  widget.userProvider.token,
+                );
               },
               child: const Text(
                 'Confirm',
