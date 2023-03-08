@@ -1,4 +1,5 @@
 import 'package:provider/provider.dart';
+import 'package:tickrypt/providers/metamask.dart';
 import 'package:tickrypt/providers/user_provider.dart';
 import 'package:tickrypt/widgets/atoms/imageWrappers/vertical_event_image_wrapper.dart';
 import 'package:tickrypt/models/event_model.dart';
@@ -8,6 +9,7 @@ import 'package:tickrypt/pages/event_page.dart';
 
 GestureDetector verticalEventCard(BuildContext context, Event event) {
   var userProvider = Provider.of<UserProvider>(context);
+  var metamaskProvider = Provider.of<MetamaskProvider>(context);
 
   DateTime date = DateTime.parse(event.startDate!);
   String day = DateFormat('EEEE').format(date).substring(0, 3);
@@ -21,6 +23,7 @@ GestureDetector verticalEventCard(BuildContext context, Event event) {
               builder: (context) => EventPage(
                     event: event,
                     userProvider: userProvider,
+                    metamaskProvider: metamaskProvider,
                   )));
     },
     child: Container(

@@ -1,14 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:tickrypt/models/event_model.dart';
+import 'package:tickrypt/providers/metamask.dart';
 import 'package:tickrypt/providers/user_provider.dart';
 import 'package:tickrypt/services/ticket.dart';
+import 'package:alchemy_web3/alchemy_web3.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class CreateTicket extends StatefulWidget {
   final Event event;
   final UserProvider userProvider;
+  final MetamaskProvider metamaskProvider;
 
   const CreateTicket(
-      {Key? key, required this.event, required this.userProvider})
+      {Key? key,
+      required this.event,
+      required this.userProvider,
+      required this.metamaskProvider})
       : super(key: key);
 
   @override
@@ -18,7 +26,8 @@ class CreateTicket extends StatefulWidget {
 class _CreateTicketState extends State<CreateTicket> {
   double? _price;
   int? _quantity;
-  double? _comission;
+
+  final alchemy = Alchemy();
 
   eventPreviewContainer() {
     return Column(
@@ -259,7 +268,7 @@ class _CreateTicketState extends State<CreateTicket> {
     );
   }
 
-  confirmButton() {
+  confirmButton(metamaskProvider) {
     return Row(
       children: [
         Expanded(
@@ -278,9 +287,43 @@ class _CreateTicketState extends State<CreateTicket> {
                 );
 
                 TicketService ticketService = TicketService();
-                await ticketService.mint(
+
+                var mintResult = await ticketService.mint(
                   widget.userProvider.token,
                 );
+                print("xxx");
+                alchemy.init(
+                  httpRpcUrl:
+                      "https://polygon-mumbai.g.alchemy.com/v2/jq6Um8Vdb_j-F0vwzpqBjvjHiz3-v5wy",
+                  wsRpcUrl:
+                      "wss://polygon-mumbai.g.alchemy.com/v2/jq6Um8Vdb_j-F0vwzpqBjvjHiz3-v5wy",
+                  verbose: true,
+                );
+
+                List<dynamic> params = [
+                  {
+                    "from": mintResult["from"],
+                    "to": mintResult["to"],
+                    "data": mintResult["data"],
+                  }
+                ];
+                String method = "eth_sendTransaction";
+
+                await launchUrl(
+                    Uri.parse(metamaskProvider.connector.session.toUri()),
+                    mode: LaunchMode.externalApplication);
+                final signature =
+                    await metamaskProvider.connector.sendCustomRequest(
+                  method: method,
+                  params: params,
+                );
+                print("signature:" + signature);
+
+                try {
+                  print("burda");
+                } catch (e) {
+                  print(e);
+                }
               },
               child: const Text(
                 'Confirm',
@@ -336,7 +379,7 @@ class _CreateTicketState extends State<CreateTicket> {
                   ],
                 ),
                 SizedBox(height: 20),
-                confirmButton(),
+                confirmButton(widget.metamaskProvider),
               ],
             ),
           ),

@@ -5,6 +5,7 @@ import 'package:tickrypt/models/event_model.dart';
 import 'package:tickrypt/models/user_model.dart';
 import 'package:tickrypt/pages/create_ticket.dart';
 import 'package:tickrypt/pages/event_page.dart';
+import 'package:tickrypt/providers/metamask.dart';
 import 'package:tickrypt/providers/user_provider.dart';
 import 'package:tickrypt/services/user.dart';
 import 'package:tickrypt/services/utils.dart';
@@ -81,7 +82,7 @@ class _HomeState extends State<Home> {
     );
   }
 
-  Future<List<Card>> getEvents(userProvider) async {
+  Future<List<Card>> getEvents(userProvider, metamaskProvider) async {
     String searchTitle = "";
     String id = "";
     int page = 1;
@@ -93,13 +94,15 @@ class _HomeState extends State<Home> {
     List<Card> eventCards = [];
 
     for (Event e in events) {
-      Card eventCard = await horizontalEventCard(e, userProvider);
+      Card eventCard =
+          await horizontalEventCard(e, userProvider, metamaskProvider);
       eventCards.add(eventCard);
     }
     return eventCards;
   }
 
-  Future<Card> horizontalEventCard(Event e, userProvider) async {
+  Future<Card> horizontalEventCard(
+      Event e, userProvider, metamaskProvider) async {
     //Get owner username and avatar
     User owner = await userService.getNonce(e.owner);
     String? ownerUsername = owner.username;
@@ -126,6 +129,7 @@ class _HomeState extends State<Home> {
                     builder: (context) => EventPage(
                           event: e,
                           userProvider: userProvider,
+                          metamaskProvider: metamaskProvider,
                         )));
           },
           behavior: HitTestBehavior.opaque,
@@ -253,7 +257,7 @@ class _HomeState extends State<Home> {
     );
   }
 
-  eventsSection(userProvider) {
+  eventsSection(userProvider, metamaskProvider) {
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Column(
@@ -266,7 +270,7 @@ class _HomeState extends State<Home> {
             thickness: 1,
           ),
           FutureBuilder(
-            future: getEvents(userProvider),
+            future: getEvents(userProvider, metamaskProvider),
             builder: (ctx, snapshot) {
               // Checking if future is resolved or not
               if (snapshot.connectionState == ConnectionState.done) {
@@ -305,6 +309,7 @@ class _HomeState extends State<Home> {
   @override
   Widget build(BuildContext context) {
     var userProvider = Provider.of<UserProvider>(context);
+    var metamaskProvider = Provider.of<MetamaskProvider>(context);
 
     return (Scaffold(
       body: SafeArea(
@@ -340,7 +345,7 @@ class _HomeState extends State<Home> {
               // ])
               bannerContainer(),
               SizedBox(height: 30),
-              eventsSection(userProvider),
+              eventsSection(userProvider, metamaskProvider),
             ],
           ),
         ),
