@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:tickrypt/models/user_model.dart';
 import 'package:tickrypt/pages/create_ticket.dart';
+import 'package:tickrypt/providers/metamask.dart';
 import 'package:tickrypt/providers/user_provider.dart';
 import 'package:tickrypt/services/user.dart';
 import 'package:tickrypt/widgets/atoms/buttons/backButtonWhite.dart';
@@ -10,7 +11,10 @@ import 'package:tickrypt/widgets/atoms/buttons/backButtonWhite.dart';
 class EventPage extends StatefulWidget {
   final dynamic event;
   final UserProvider? userProvider;
-  const EventPage({super.key, this.event, this.userProvider});
+  final MetamaskProvider? metamaskProvider;
+
+  const EventPage(
+      {super.key, this.event, this.userProvider, this.metamaskProvider});
 
   @override
   State<EventPage> createState() => _EventPageState();
@@ -37,8 +41,10 @@ class _EventPageState extends State<EventPage> {
                 context,
                 MaterialPageRoute(
                     builder: (context) => CreateTicket(
-                        event: widget.event,
-                        userProvider: widget.userProvider!)));
+                          event: widget.event,
+                          userProvider: widget.userProvider!,
+                          metamaskProvider: widget.metamaskProvider!,
+                        )));
           },
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -141,7 +147,6 @@ class _EventPageState extends State<EventPage> {
             FutureBuilder<User>(
                 future: owner,
                 builder: (BuildContext context, AsyncSnapshot<User> snapshot) {
-                  print(snapshot);
                   if (snapshot.hasData) {
                     return Padding(
                       padding: const EdgeInsets.symmetric(vertical: 30),
