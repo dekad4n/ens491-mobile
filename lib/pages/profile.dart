@@ -26,6 +26,34 @@ class _ProfileState extends State<Profile> {
     });
   }
 
+  myEventsSection(UserProvider userProvider) {
+    if (userProvider.isWhitelisted == null ||
+        userProvider.isWhitelisted == false) {
+      return Text("");
+    }
+    if (userProvider.isWhitelisted!) {
+      return FutureBuilder<List<Event>>(
+          future: events,
+          builder: (BuildContext context, AsyncSnapshot<List<Event>> snapshot) {
+            if (snapshot.hasData) {
+              return profileEvents(
+                  context, snapshot.data!, userProvider, setState);
+            }
+            return Text("");
+          });
+    }
+  }
+
+  attendingEventsSection(UserProvider userProvider) {
+    if (userProvider.isWhitelisted != null &&
+        userProvider.isWhitelisted == true) {
+      return Text("");
+    } else {
+      ///TODO: Add attending events section
+      return Text("Attending");
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     var userProvider = Provider.of<UserProvider>(context);
@@ -140,17 +168,8 @@ class _ProfileState extends State<Profile> {
           child: Column(
             children: [
               profileHeader(context, userProvider.user, setState),
-              // Get Events
-              FutureBuilder<List<Event>>(
-                  future: events,
-                  builder: (BuildContext context,
-                      AsyncSnapshot<List<Event>> snapshot) {
-                    if (snapshot.hasData) {
-                      return profileEvents(
-                          context, snapshot.data!, userProvider, setState);
-                    }
-                    return Text("");
-                  })
+              myEventsSection(userProvider),
+              attendingEventsSection(userProvider),
             ],
             // Get Minted Tickets
           ),

@@ -21,15 +21,15 @@ GestureDetector verticalEventCard(BuildContext context, Event event) {
   return GestureDetector(
     onTap: () async {
       await eventService.getEventById(event.id!);
-      print(userProvider.user);
-      // Navigator.push(
-      //     context,
-      //     MaterialPageRoute(
-      //         builder: (context) => EventPage(
-      //               event: event,
-      //               userProvider: userProvider,
-      //               metamaskProvider: metamaskProvider,
-      //             )));
+
+      Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (context) => EventPage(
+                    event: event,
+                    userProvider: userProvider,
+                    metamaskProvider: metamaskProvider,
+                  )));
     },
     behavior: HitTestBehavior.opaque,
     child: Container(
