@@ -289,8 +289,11 @@ class _CreateTicketState extends State<CreateTicket> {
                 TicketService ticketService = TicketService();
 
                 var mintResult = await ticketService.mint(
-                  widget.userProvider.token,
+                  auth: widget.userProvider.token,
+                  eventId: widget.event.integerId,
+                  amount: 5, //_quantity
                 );
+
                 print("xxx");
                 alchemy.init(
                   httpRpcUrl:
@@ -307,16 +310,19 @@ class _CreateTicketState extends State<CreateTicket> {
                     "data": mintResult["data"],
                   }
                 ];
+
                 String method = "eth_sendTransaction";
 
                 await launchUrl(
                     Uri.parse(metamaskProvider.connector.session.toUri()),
                     mode: LaunchMode.externalApplication);
+
                 final signature =
                     await metamaskProvider.connector.sendCustomRequest(
                   method: method,
                   params: params,
                 );
+
                 print("signature:" + signature);
 
                 try {
