@@ -34,12 +34,50 @@ class _EventPageState extends State<EventPage> {
   }
 
   Future<List<dynamic>> getMintedEventTicketTokens() async {
-    print("1");
     List<dynamic> mintedEventTicketTokens =
         await eventService.getMintedEventTicketIds(widget.event.integerId);
 
     // An example return: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+
+    // for (dynamic tokenId in mintedEventTicketTokens) {
+    //   print(tokenId);
+    //   final String url =
+    //       'http://10.51.20.179:3001/market/market-item?tokenId=$tokenId';
+
+    //   await get(Uri.parse(url));
+
+    //   // var body = jsonDecode(res.body);
+
+    //   // print(body);
+    // }
+
     return mintedEventTicketTokens;
+  }
+
+  sellButton() {
+    return ElevatedButton(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xFF050A31),
+        ),
+        onPressed: () async {},
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              CupertinoIcons.cart,
+              size: 30,
+              color: Colors.white,
+            ),
+            SizedBox(width: 10),
+            Text(
+              "Sell",
+              style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600),
+            )
+          ],
+        ));
   }
 
   createTicketButton() {
@@ -235,50 +273,80 @@ class _EventPageState extends State<EventPage> {
 
             // Minted:
             Container(
-              padding: EdgeInsets.fromLTRB(15, 15, 15, 0),
+              padding: EdgeInsets.fromLTRB(30, 10, 30, 10),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        CupertinoIcons.tickets_fill,
+                        size: 40,
+                        color: Colors.deepPurple[700],
+                      ),
+                      SizedBox(width: 10),
+                      Text(
+                        "Minted:",
+                        style: TextStyle(
+                          fontWeight: FontWeight.w900,
+                          fontSize: 24,
+                        ),
+                      ),
+                      SizedBox(width: 10),
+                      FutureBuilder(
+                          future: getMintedEventTicketTokens(),
+                          builder: (BuildContext context,
+                              AsyncSnapshot<List<dynamic>> snapshot) {
+                            if (!snapshot.hasData) {
+                              return CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.deepPurple,
+                              );
+                            } else {
+                              return Text(
+                                "${snapshot.data!.length}",
+                                style: TextStyle(fontSize: 24),
+                              );
+                            }
+                          }),
+                    ],
+                  ),
+                  sellButton(),
+                ],
+              ),
+            ),
+
+            // Listed:
+            Container(
+              padding: EdgeInsets.fromLTRB(30, 10, 30, 10),
               child: Row(
                 children: [
                   Icon(
-                    CupertinoIcons.tickets,
+                    CupertinoIcons.tickets_fill,
                     size: 40,
-                    color: Colors.deepPurple[700],
+                    color: Colors.blue[800],
                   ),
                   SizedBox(width: 10),
                   Text(
-                    "Minted:",
-                    style: TextStyle(
-                      fontWeight: FontWeight.w900,
-                      fontSize: 24,
-                    ),
+                    "Listed:",
+                    style: TextStyle(fontWeight: FontWeight.w900, fontSize: 24),
                   ),
                   SizedBox(width: 10),
-                  FutureBuilder(
-                      future: getMintedEventTicketTokens(),
-                      builder: (BuildContext context,
-                          AsyncSnapshot<List<dynamic>> snapshot) {
-                        if (!snapshot.hasData) {
-                          return CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.deepPurple,
-                          );
-                        } else {
-                          return Text(
-                            "${snapshot.data!.length}",
-                            style: TextStyle(fontSize: 24),
-                          );
-                        }
-                      }),
+                  Text(
+                    "todo",
+                    style: TextStyle(fontSize: 24),
+                  ),
                 ],
               ),
             ),
 
             // Sold
             Container(
-              padding: EdgeInsets.fromLTRB(15, 15, 15, 0),
+              padding: EdgeInsets.fromLTRB(30, 10, 30, 10),
               child: Row(
                 children: [
                   Icon(
-                    CupertinoIcons.tickets,
+                    CupertinoIcons.tickets_fill,
                     size: 40,
                     color: Colors.red[800],
                   ),
@@ -298,11 +366,11 @@ class _EventPageState extends State<EventPage> {
 
             // On Sale
             Container(
-              padding: EdgeInsets.fromLTRB(15, 15, 15, 0),
+              padding: EdgeInsets.fromLTRB(30, 10, 30, 10),
               child: Row(
                 children: [
                   Icon(
-                    CupertinoIcons.tickets,
+                    CupertinoIcons.tickets_fill,
                     size: 40,
                     color: Colors.green[800],
                   ),
