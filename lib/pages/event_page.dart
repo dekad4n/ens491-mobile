@@ -1,3 +1,4 @@
+import 'package:alchemy_web3/alchemy_web3.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -6,8 +7,10 @@ import 'package:tickrypt/pages/create_ticket.dart';
 import 'package:tickrypt/providers/metamask.dart';
 import 'package:tickrypt/providers/user_provider.dart';
 import 'package:tickrypt/services/event.dart';
+import 'package:tickrypt/services/market.dart';
 import 'package:tickrypt/services/user.dart';
 import 'package:tickrypt/widgets/atoms/buttons/backButtonWhite.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class EventPage extends StatefulWidget {
   final dynamic event;
@@ -24,8 +27,11 @@ class EventPage extends StatefulWidget {
 class _EventPageState extends State<EventPage> {
   UserService userService = UserService();
   EventService eventService = EventService();
+  MarketService marketService = MarketService();
 
   late Future<User> owner;
+
+  final alchemy = Alchemy();
 
   void getOwner() {
     setState(() {
@@ -59,7 +65,46 @@ class _EventPageState extends State<EventPage> {
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xFF050A31),
         ),
-        onPressed: () async {},
+        onPressed: () async {
+          try {
+            dynamic transactionParameters =
+                await marketService.sell(widget.userProvider!.token, 1, 0.05);
+
+            print("transcationParamters:" + transactionParameters.toString());
+
+            alchemy.init(
+              httpRpcUrl:
+                  "https://polygon-mumbai.g.alchemy.com/v2/jq6Um8Vdb_j-F0vwzpqBjvjHiz3-v5wy",
+              wsRpcUrl:
+                  "wss://polygon-mumbai.g.alchemy.com/v2/jq6Um8Vdb_j-F0vwzpqBjvjHiz3-v5wy",
+              verbose: true,
+            );
+
+            List<dynamic> params = [
+              {
+                "from": transactionParameters["from"],
+                "to": transactionParameters["to"],
+                "data": transactionParameters["data"],
+              }
+            ];
+
+            String method = "eth_sendTransaction";
+
+            await launchUrl(
+                Uri.parse(widget.metamaskProvider!.connector.session.toUri()),
+                mode: LaunchMode.externalApplication);
+
+            final signature =
+                await widget.metamaskProvider!.connector.sendCustomRequest(
+              method: method,
+              params: params,
+            );
+
+            print("signature:" + signature);
+          } catch (e) {
+            print(e.toString() + " ERROR while /sell");
+          }
+        },
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
