@@ -7,8 +7,11 @@ import 'package:tickrypt/models/user_model.dart';
 class UserProvider extends ChangeNotifier {
   String? token = "";
   User? user;
+  bool? isWhitelisted;
+
   UserService userService = UserService();
   AuthService authService = AuthService();
+
   bool hasToken() {
     if (token == null) {
       return false;
@@ -22,10 +25,16 @@ class UserProvider extends ChangeNotifier {
     }
     try {
       String publicAddress = metamaskProvider.currentAddress;
+
       user = await userService.getNonce(publicAddress);
+
       String signature = await metamaskProvider.sign(user!.nonce);
+
       dynamic result = await authService.login(user!.nonce, signature);
+
       token = result["token"];
+      isWhitelisted = result["isWhitelisted"];
+
       notifyListeners();
     } catch (e) {}
   }

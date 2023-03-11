@@ -7,7 +7,8 @@ class TicketService {
   var headers = {
     "Access-Control-Allow-Origin": '*',
   };
-  dynamic mint({auth, eventId, amount}) async {
+
+  mint({auth, eventId, amount}) async {
     var user = {
       "_id": "63a305d83cff9d2414c9fafe",
       "id": "0x243aec942e214a4b78e625fab53c8f9ae7dc98c8",
@@ -32,18 +33,35 @@ class TicketService {
     final String authUrl = '${backendUrl!}/ticket/mint';
 
     try {
-      print("calling /mint");
-
       Response res =
           await post(Uri.parse(authUrl), body: params, headers: headers);
 
       var body = jsonDecode(res.body);
 
-      print("finished /mint");
-
       return body;
     } catch (e) {
-      print("Erorr during mint():" + e.toString());
+      print("Error during mint():" + e.toString());
+    }
+  }
+
+  getTicketDetails({ticketToken}) async {
+    final String authUrl = '${backendUrl!}/ticket?token=$ticketToken';
+
+    try {
+      Response res = await get(
+        Uri.parse(authUrl),
+        headers: headers,
+      );
+
+      var body = jsonDecode(res.body);
+
+      return body["result"];
+      //It will return the following map:
+      // {name: "sadi", image: "ipfs://123456"}
+
+      // return body;
+    } catch (e) {
+      print("Error during getTicket():" + e.toString());
     }
   }
 }

@@ -29,6 +29,8 @@ class _CreateTicketState extends State<CreateTicket> {
 
   final alchemy = Alchemy();
 
+  TicketService ticketService = TicketService();
+
   eventPreviewContainer() {
     return Column(
       children: [
@@ -286,8 +288,6 @@ class _CreateTicketState extends State<CreateTicket> {
                   const SnackBar(content: Text('Processing Data')),
                 );
 
-                TicketService ticketService = TicketService();
-
                 var mintResult = await ticketService.mint(
                   auth: widget.userProvider.token,
                   eventId: widget.event.integerId,
@@ -386,6 +386,11 @@ class _CreateTicketState extends State<CreateTicket> {
                 ),
                 SizedBox(height: 20),
                 confirmButton(widget.metamaskProvider),
+                // ElevatedButton(
+                //     onPressed: () async {
+                //       await ticketService.getTicketDetails(ticketToken: 4);
+                //     },
+                //     child: Text("Get Ticket NFT Metadata"))
               ],
             ),
           ),
