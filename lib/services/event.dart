@@ -38,4 +38,16 @@ class EventService {
 
     return event;
   }
+
+  Future<List<dynamic>> getMintedEventTicketIds(int integerId) async {
+    final String url =
+        '${backendUrl}/event/minted-event-ticket-tokens?integerId=$integerId';
+    Response res = await get(Uri.parse(url));
+
+    var body = jsonDecode(res.body);
+
+    List<dynamic> ticketTokens = body["mintedEventTicketTokens"];
+
+    return ticketTokens;
+  }
 }

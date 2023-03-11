@@ -5,6 +5,7 @@ import 'package:tickrypt/models/user_model.dart';
 import 'package:tickrypt/pages/create_ticket.dart';
 import 'package:tickrypt/providers/metamask.dart';
 import 'package:tickrypt/providers/user_provider.dart';
+import 'package:tickrypt/services/event.dart';
 import 'package:tickrypt/services/user.dart';
 import 'package:tickrypt/widgets/atoms/buttons/backButtonWhite.dart';
 
@@ -21,12 +22,24 @@ class EventPage extends StatefulWidget {
 }
 
 class _EventPageState extends State<EventPage> {
-  late Future<User> owner;
   UserService userService = UserService();
+  EventService eventService = EventService();
+
+  late Future<User> owner;
+
   void getOwner() {
     setState(() {
       owner = userService.getNonce(widget.event.owner);
     });
+  }
+
+  Future<List<dynamic>> getMintedEventTicketTokens() async {
+    print("1");
+    List<dynamic> mintedEventTicketTokens =
+        await eventService.getMintedEventTicketIds(widget.event.integerId);
+
+    // An example return: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+    return mintedEventTicketTokens;
   }
 
   createTicketButton() {
@@ -217,6 +230,97 @@ class _EventPageState extends State<EventPage> {
                 ],
               ),
             ),
+
+            SizedBox(height: 20),
+
+            // Minted:
+            Container(
+              padding: EdgeInsets.fromLTRB(15, 15, 15, 0),
+              child: Row(
+                children: [
+                  Icon(
+                    CupertinoIcons.tickets,
+                    size: 40,
+                    color: Colors.deepPurple[700],
+                  ),
+                  SizedBox(width: 10),
+                  Text(
+                    "Minted:",
+                    style: TextStyle(
+                      fontWeight: FontWeight.w900,
+                      fontSize: 24,
+                    ),
+                  ),
+                  SizedBox(width: 10),
+                  FutureBuilder(
+                      future: getMintedEventTicketTokens(),
+                      builder: (BuildContext context,
+                          AsyncSnapshot<List<dynamic>> snapshot) {
+                        if (!snapshot.hasData) {
+                          return CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.deepPurple,
+                          );
+                        } else {
+                          return Text(
+                            "${snapshot.data!.length}",
+                            style: TextStyle(fontSize: 24),
+                          );
+                        }
+                      }),
+                ],
+              ),
+            ),
+
+            // Sold
+            Container(
+              padding: EdgeInsets.fromLTRB(15, 15, 15, 0),
+              child: Row(
+                children: [
+                  Icon(
+                    CupertinoIcons.tickets,
+                    size: 40,
+                    color: Colors.red[800],
+                  ),
+                  SizedBox(width: 10),
+                  Text(
+                    "Sold:",
+                    style: TextStyle(fontWeight: FontWeight.w900, fontSize: 24),
+                  ),
+                  SizedBox(width: 10),
+                  Text(
+                    "todo",
+                    style: TextStyle(fontSize: 24),
+                  ),
+                ],
+              ),
+            ),
+
+            // On Sale
+            Container(
+              padding: EdgeInsets.fromLTRB(15, 15, 15, 0),
+              child: Row(
+                children: [
+                  Icon(
+                    CupertinoIcons.tickets,
+                    size: 40,
+                    color: Colors.green[800],
+                  ),
+                  SizedBox(width: 10),
+                  Text(
+                    "On Sale:",
+                    style: TextStyle(fontWeight: FontWeight.w900, fontSize: 24),
+                  ),
+                  SizedBox(width: 10),
+                  Text(
+                    "todo",
+                    style: TextStyle(fontSize: 24),
+                  ),
+                ],
+              ),
+            ),
+
+            // Create Ticket Button
             SizedBox(height: 50),
             widget.event.owner == widget.userProvider?.user?.publicAddress
                 ? createTicketButton()
