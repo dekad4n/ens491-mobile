@@ -7,12 +7,12 @@ import 'package:tickrypt/services/ticket.dart';
 import 'package:alchemy_web3/alchemy_web3.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-class CreateTicket extends StatefulWidget {
+class MintTicketPage extends StatefulWidget {
   final Event event;
   final UserProvider userProvider;
   final MetamaskProvider metamaskProvider;
 
-  const CreateTicket(
+  const MintTicketPage(
       {Key? key,
       required this.event,
       required this.userProvider,
@@ -20,12 +20,11 @@ class CreateTicket extends StatefulWidget {
       : super(key: key);
 
   @override
-  State<CreateTicket> createState() => _CreateTicketState();
+  State<MintTicketPage> createState() => _MintTicketPageState();
 }
 
-class _CreateTicketState extends State<CreateTicket> {
-  double? _price;
-  int? _quantity;
+class _MintTicketPageState extends State<MintTicketPage> {
+  int _quantity = 0;
 
   final alchemy = Alchemy();
 
@@ -160,64 +159,64 @@ class _CreateTicketState extends State<CreateTicket> {
     );
   }
 
-  priceContainer() {
-    return Container(
-      padding: EdgeInsets.all(8),
-      height: 90,
-      width: 100,
-      decoration: BoxDecoration(
-        border:
-            Border.all(color: _price != null ? Colors.deepPurple : Colors.grey),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            "Price",
-            style: TextStyle(
-                color: Colors.grey, fontSize: 12, fontWeight: FontWeight.bold),
-          ),
-          Row(
-            children: [
-              Text(
-                "ETH  ",
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black,
-                ),
-              ),
-              Expanded(
-                child: TextFormField(
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  decoration: InputDecoration(
-                    border: null,
-                  ),
-                  // The validator receives the text that the user has entered.
-                  keyboardType: TextInputType.number,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return '';
-                    } else {
-                      setState(() {
-                        _price = double.parse(value);
-                      });
-                    }
-                    return null;
-                  },
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
+  // priceContainer() {
+  //   return Container(
+  //     padding: EdgeInsets.all(8),
+  //     height: 90,
+  //     width: 100,
+  //     decoration: BoxDecoration(
+  //       border:
+  //           Border.all(color: _price != null ? Colors.deepPurple : Colors.grey),
+  //       borderRadius: BorderRadius.circular(8),
+  //     ),
+  //     child: Column(
+  //       mainAxisAlignment: MainAxisAlignment.center,
+  //       crossAxisAlignment: CrossAxisAlignment.start,
+  //       children: [
+  //         Text(
+  //           "Price",
+  //           style: TextStyle(
+  //               color: Colors.grey, fontSize: 12, fontWeight: FontWeight.bold),
+  //         ),
+  //         Row(
+  //           children: [
+  //             Text(
+  //               "ETH  ",
+  //               style: TextStyle(
+  //                 fontSize: 20,
+  //                 fontWeight: FontWeight.bold,
+  //                 color: Colors.black,
+  //               ),
+  //             ),
+  //             Expanded(
+  //               child: TextFormField(
+  //                 style: TextStyle(
+  //                   fontSize: 22,
+  //                   fontWeight: FontWeight.bold,
+  //                 ),
+  //                 decoration: InputDecoration(
+  //                   border: null,
+  //                 ),
+  //                 // The validator receives the text that the user has entered.
+  //                 keyboardType: TextInputType.number,
+  //                 validator: (value) {
+  //                   if (value == null || value.isEmpty) {
+  //                     return '';
+  //                   } else {
+  //                     setState(() {
+  //                       _price = double.parse(value);
+  //                     });
+  //                   }
+  //                   return null;
+  //                 },
+  //               ),
+  //             ),
+  //           ],
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
 
   quantityContainer() {
     return Container(
@@ -226,7 +225,7 @@ class _CreateTicketState extends State<CreateTicket> {
       width: 100,
       decoration: BoxDecoration(
         border:
-            Border.all(color: _price != null ? Colors.deepPurple : Colors.grey),
+            Border.all(color: _quantity != 0 ? Colors.deepPurple : Colors.grey),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
@@ -251,6 +250,13 @@ class _CreateTicketState extends State<CreateTicket> {
                   ),
                   // The validator receives the text that the user has entered.
                   keyboardType: TextInputType.number,
+                  onChanged: (value) {
+                    if (value != null && value != "") {
+                      setState(() {
+                        _quantity = int.parse(value);
+                      });
+                    } else {}
+                  },
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return '';
@@ -278,57 +284,55 @@ class _CreateTicketState extends State<CreateTicket> {
             height: 70,
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: Color(0xff050a31), // Background color
+                backgroundColor: _quantity != 0
+                    ? Color(0xff050a31)
+                    : Colors.grey, // Background color
                 elevation: 0,
-                side: BorderSide(color: Colors.deepPurple),
               ),
               onPressed: () async {
                 // Validate returns true if the form is valid, or false otherwise.
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Processing Data')),
-                );
+                if (_quantity != 0) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Processing Data')),
+                  );
 
-                var mintResult = await ticketService.mint(
-                  auth: widget.userProvider.token,
-                  eventId: widget.event.integerId,
-                  amount: 5, //_quantity
-                );
+                  var mintResult = await ticketService.mint(
+                    auth: widget.userProvider.token,
+                    eventId: widget.event.integerId,
+                    amount: 5, //_quantity
+                  );
 
-                print("xxx");
-                alchemy.init(
-                  httpRpcUrl:
-                      "https://polygon-mumbai.g.alchemy.com/v2/jq6Um8Vdb_j-F0vwzpqBjvjHiz3-v5wy",
-                  wsRpcUrl:
-                      "wss://polygon-mumbai.g.alchemy.com/v2/jq6Um8Vdb_j-F0vwzpqBjvjHiz3-v5wy",
-                  verbose: true,
-                );
+                  alchemy.init(
+                    httpRpcUrl:
+                        "https://polygon-mumbai.g.alchemy.com/v2/jq6Um8Vdb_j-F0vwzpqBjvjHiz3-v5wy",
+                    wsRpcUrl:
+                        "wss://polygon-mumbai.g.alchemy.com/v2/jq6Um8Vdb_j-F0vwzpqBjvjHiz3-v5wy",
+                    verbose: true,
+                  );
 
-                List<dynamic> params = [
-                  {
-                    "from": mintResult["from"],
-                    "to": mintResult["to"],
-                    "data": mintResult["data"],
-                  }
-                ];
+                  List<dynamic> params = [
+                    {
+                      "from": mintResult["from"],
+                      "to": mintResult["to"],
+                      "data": mintResult["data"],
+                    }
+                  ];
 
-                String method = "eth_sendTransaction";
+                  String method = "eth_sendTransaction";
 
-                await launchUrl(
-                    Uri.parse(metamaskProvider.connector.session.toUri()),
-                    mode: LaunchMode.externalApplication);
+                  await launchUrl(
+                      Uri.parse(metamaskProvider.connector.session.toUri()),
+                      mode: LaunchMode.externalApplication);
 
-                final signature =
-                    await metamaskProvider.connector.sendCustomRequest(
-                  method: method,
-                  params: params,
-                );
+                  final signature =
+                      await metamaskProvider.connector.sendCustomRequest(
+                    method: method,
+                    params: params,
+                  );
 
-                print("signature:" + signature);
+                  print("signature:" + signature);
 
-                try {
-                  print("burda");
-                } catch (e) {
-                  print(e);
+                  Navigator.pop(context);
                 }
               },
               child: const Text(
@@ -358,7 +362,7 @@ class _CreateTicketState extends State<CreateTicket> {
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Text(
-          "Create Ticket",
+          "Mint Ticket",
           style: TextStyle(
             color: Color(0xff050a31),
             fontSize: 25,
@@ -380,7 +384,6 @@ class _CreateTicketState extends State<CreateTicket> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    priceContainer(),
                     quantityContainer(),
                   ],
                 ),

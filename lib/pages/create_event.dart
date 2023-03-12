@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:tickrypt/pages/create_ticket.dart';
+import 'package:tickrypt/pages/mint_ticket.dart';
 import 'package:tickrypt/services/event.dart';
 
 import '../models/event_model.dart';

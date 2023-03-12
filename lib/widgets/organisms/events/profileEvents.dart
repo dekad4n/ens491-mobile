@@ -19,7 +19,7 @@ Container profileEvents(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              "My Events",
+              "My Events (${events.length})",
               // ignore: prefer_const_constructors
               style: TextStyle(
                   color: const Color(0xFF050A31),
