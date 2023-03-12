@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:tickrypt/pages/mint_ticket.dart';
 import 'package:tickrypt/services/event.dart';
 
 import '../models/event_model.dart';
@@ -515,17 +514,6 @@ class _CreateEventState extends State<CreateEvent> {
                         );
 
                         Navigator.pop(context, true);
-
-                        // 2- Move next page
-
-                        // Navigator.push(
-                        //   context,
-                        //   MaterialPageRoute(
-                        //     builder: (context) => CreateTicket(
-                        //       props: eventProps,
-                        //     ),
-                        //   ),
-                        // );
                       }
                     }
                   : null,

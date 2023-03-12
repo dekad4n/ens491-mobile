@@ -1,34 +1,39 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:tickrypt/models/event_model.dart';
 import 'package:tickrypt/providers/metamask.dart';
 import 'package:tickrypt/providers/user_provider.dart';
+import 'package:tickrypt/services/market.dart';
 import 'package:tickrypt/services/ticket.dart';
 import 'package:alchemy_web3/alchemy_web3.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-class MintTicketPage extends StatefulWidget {
+class SellTicketPage extends StatefulWidget {
   final Event event;
+  final List<dynamic> mintedTicketTokenIds;
   final UserProvider userProvider;
   final MetamaskProvider metamaskProvider;
 
-  const MintTicketPage(
+  const SellTicketPage(
       {Key? key,
       required this.event,
+      required this.mintedTicketTokenIds,
       required this.userProvider,
       required this.metamaskProvider})
       : super(key: key);
 
   @override
-  State<MintTicketPage> createState() => _MintTicketPageState();
+  State<SellTicketPage> createState() => SellTicketPageState();
 }
 
-class _MintTicketPageState extends State<MintTicketPage> {
-  int _quantity = 0;
+class SellTicketPageState extends State<SellTicketPage> {
+  double _price = 0.0;
+
+  List<dynamic> marketItemsAll = [];
 
   final alchemy = Alchemy();
 
   TicketService ticketService = TicketService();
+  MarketService marketService = MarketService();
 
   eventPreviewContainer() {
     return Column(
@@ -159,73 +164,14 @@ class _MintTicketPageState extends State<MintTicketPage> {
     );
   }
 
-  // priceContainer() {
-  //   return Container(
-  //     padding: EdgeInsets.all(8),
-  //     height: 90,
-  //     width: 100,
-  //     decoration: BoxDecoration(
-  //       border:
-  //           Border.all(color: _price != null ? Colors.deepPurple : Colors.grey),
-  //       borderRadius: BorderRadius.circular(8),
-  //     ),
-  //     child: Column(
-  //       mainAxisAlignment: MainAxisAlignment.center,
-  //       crossAxisAlignment: CrossAxisAlignment.start,
-  //       children: [
-  //         Text(
-  //           "Price",
-  //           style: TextStyle(
-  //               color: Colors.grey, fontSize: 12, fontWeight: FontWeight.bold),
-  //         ),
-  //         Row(
-  //           children: [
-  //             Text(
-  //               "ETH  ",
-  //               style: TextStyle(
-  //                 fontSize: 20,
-  //                 fontWeight: FontWeight.bold,
-  //                 color: Colors.black,
-  //               ),
-  //             ),
-  //             Expanded(
-  //               child: TextFormField(
-  //                 style: TextStyle(
-  //                   fontSize: 22,
-  //                   fontWeight: FontWeight.bold,
-  //                 ),
-  //                 decoration: InputDecoration(
-  //                   border: null,
-  //                 ),
-  //                 // The validator receives the text that the user has entered.
-  //                 keyboardType: TextInputType.number,
-  //                 validator: (value) {
-  //                   if (value == null || value.isEmpty) {
-  //                     return '';
-  //                   } else {
-  //                     setState(() {
-  //                       _price = double.parse(value);
-  //                     });
-  //                   }
-  //                   return null;
-  //                 },
-  //               ),
-  //             ),
-  //           ],
-  //         ),
-  //       ],
-  //     ),
-  //   );
-  // }
-
-  quantityContainer() {
+  priceContainer() {
     return Container(
       padding: EdgeInsets.all(8),
       height: 90,
       width: 100,
       decoration: BoxDecoration(
         border:
-            Border.all(color: _quantity != 0 ? Colors.deepPurple : Colors.grey),
+            Border.all(color: _price != null ? Colors.deepPurple : Colors.grey),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
@@ -233,12 +179,20 @@ class _MintTicketPageState extends State<MintTicketPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            "Quantity",
+            "Price",
             style: TextStyle(
                 color: Colors.grey, fontSize: 12, fontWeight: FontWeight.bold),
           ),
           Row(
             children: [
+              Text(
+                "ETH  ",
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
+              ),
               Expanded(
                 child: TextFormField(
                   style: TextStyle(
@@ -253,16 +207,16 @@ class _MintTicketPageState extends State<MintTicketPage> {
                   onChanged: (value) {
                     if (value != null && value != "") {
                       setState(() {
-                        _quantity = int.parse(value);
+                        _price = double.parse(value);
                       });
-                    } else {}
+                    }
                   },
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return '';
                     } else {
                       setState(() {
-                        _quantity = int.parse(value);
+                        _price = double.parse(value);
                       });
                     }
                     return null;
@@ -284,23 +238,23 @@ class _MintTicketPageState extends State<MintTicketPage> {
             height: 70,
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: _quantity != 0
+                backgroundColor: _price != 0
                     ? Color(0xff050a31)
                     : Colors.grey, // Background color
                 elevation: 0,
               ),
               onPressed: () async {
                 // Validate returns true if the form is valid, or false otherwise.
-                if (_quantity != 0) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Processing Data')),
+                try {
+                  dynamic transactionParameters = await marketService.sell(
+                    widget.userProvider!.token,
+                    widget.event.integerId,
+                    _price,
+                    widget.mintedTicketTokenIds.length,
                   );
 
-                  var mintResult = await ticketService.mint(
-                    auth: widget.userProvider.token,
-                    eventId: widget.event.integerId,
-                    amount: 5, //_quantity
-                  );
+                  print("transcationParamters:" +
+                      transactionParameters.toString());
 
                   alchemy.init(
                     httpRpcUrl:
@@ -312,27 +266,29 @@ class _MintTicketPageState extends State<MintTicketPage> {
 
                   List<dynamic> params = [
                     {
-                      "from": mintResult["from"],
-                      "to": mintResult["to"],
-                      "data": mintResult["data"],
+                      "from": transactionParameters["from"],
+                      "to": transactionParameters["to"],
+                      "data": transactionParameters["data"],
                     }
                   ];
 
                   String method = "eth_sendTransaction";
 
                   await launchUrl(
-                      Uri.parse(metamaskProvider.connector.session.toUri()),
+                      Uri.parse(
+                          widget.metamaskProvider!.connector.session.toUri()),
                       mode: LaunchMode.externalApplication);
 
-                  final signature =
-                      await metamaskProvider.connector.sendCustomRequest(
-                    method: method,
-                    params: params,
-                  );
+                  final signature = await widget.metamaskProvider!.connector
+                      .sendCustomRequest(
+                          method: method,
+                          params: params,
+                          topic:
+                              "List ${widget.mintedTicketTokenIds.length} Tickets On Market!");
 
                   print("signature:" + signature);
-
-                  Navigator.pop(context);
+                } catch (e) {
+                  print(e.toString() + " ERROR while /sell");
                 }
               },
               child: const Text(
@@ -362,7 +318,7 @@ class _MintTicketPageState extends State<MintTicketPage> {
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Text(
-          "Mint Ticket",
+          "Sell Ticket",
           style: TextStyle(
             color: Color(0xff050a31),
             fontSize: 25,
@@ -384,7 +340,7 @@ class _MintTicketPageState extends State<MintTicketPage> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    quantityContainer(),
+                    priceContainer(),
                   ],
                 ),
                 SizedBox(height: 20),

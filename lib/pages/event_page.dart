@@ -3,7 +3,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:tickrypt/models/user_model.dart';
-import 'package:tickrypt/pages/mint_ticket.dart';
+import 'package:tickrypt/pages/sell_ticket_page.dart';
+import 'package:tickrypt/pages/mint_ticket_page.dart';
 import 'package:tickrypt/providers/metamask.dart';
 import 'package:tickrypt/providers/user_provider.dart';
 import 'package:tickrypt/services/event.dart';
@@ -33,7 +34,10 @@ class _EventPageState extends State<EventPage> {
 
   late Future<User> owner;
 
-  List<dynamic> _mintedTicketIds = [];
+  List<dynamic> _mintedTicketTokenIds = [];
+  List<dynamic> _marketItemsAll = [];
+  List<dynamic> _marketItemsSold = [];
+  List<dynamic> _marketItemsOnSale = [];
 
   void getOwner() {
     setState(() {
@@ -59,64 +63,196 @@ class _EventPageState extends State<EventPage> {
     //   // print(body);
     // }
     setState(() {
-      _mintedTicketIds = mintedEventTicketTokens;
+      _mintedTicketTokenIds = mintedEventTicketTokens;
     });
     return mintedEventTicketTokens;
   }
 
-  // To sell minted tickets
-  addListedButton() {
-    return IconButton(
-      icon: Icon(Icons.add_circle),
-      onPressed: () async {
-        try {
-          dynamic transactionParameters =
-              await marketService.sell(widget.userProvider!.token, 1, 0.05);
+  Future<List<dynamic>> getMarketItemsAll() async {
+    List<dynamic> marketItemsAll =
+        await marketService.getMarketItemsAllByEventId(widget.event.integerId);
 
-          print("transcationParamters:" + transactionParameters.toString());
+    print(marketItemsAll);
+    return marketItemsAll;
+  }
 
-          alchemy.init(
-            httpRpcUrl:
-                "https://polygon-mumbai.g.alchemy.com/v2/jq6Um8Vdb_j-F0vwzpqBjvjHiz3-v5wy",
-            wsRpcUrl:
-                "wss://polygon-mumbai.g.alchemy.com/v2/jq6Um8Vdb_j-F0vwzpqBjvjHiz3-v5wy",
-            verbose: true,
-          );
+  // Future<List<dynamic>> getMarketItems() async {
+  //   List<dynamic> marketItems = await ;
+  //   return marketItems;
+  // }
 
-          List<dynamic> params = [
-            {
-              "from": transactionParameters["from"],
-              "to": transactionParameters["to"],
-              "data": transactionParameters["data"],
-            }
-          ];
+  ticketStatusContainer() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.5),
+            spreadRadius: 3,
+            blurRadius: 7,
+            offset: Offset(0, 3), // changes position of shadow
+          ),
+        ],
+        borderRadius: BorderRadius.circular(15),
+      ),
+      padding: EdgeInsets.all(12),
+      width: MediaQuery.of(context).size.width * 0.60,
+      child: Column(
+        children: [
+          Text(
+            "Ticket Status",
+            style: TextStyle(fontSize: 16),
+          ),
 
-          String method = "eth_sendTransaction";
+          SizedBox(height: 10),
 
-          await launchUrl(
-              Uri.parse(widget.metamaskProvider!.connector.session.toUri()),
-              mode: LaunchMode.externalApplication);
+          // Minted:
+          Container(
+            padding: EdgeInsets.all(2),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    Icon(
+                      CupertinoIcons.tickets_fill,
+                      size: 30,
+                      color: Colors.deepPurple[800],
+                    ),
+                    SizedBox(width: 10),
+                    Text(
+                      "Minted:",
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 20,
+                      ),
+                    ),
+                    SizedBox(width: 10),
+                    FutureBuilder(
+                        future: getMintedEventTicketTokens(),
+                        builder: (BuildContext context,
+                            AsyncSnapshot<List<dynamic>> snapshot) {
+                          if (!snapshot.hasData) {
+                            return CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.deepPurple,
+                            );
+                          } else {
+                            return Text(
+                              "${snapshot.data!.length}",
+                              style: TextStyle(fontSize: 24),
+                            );
+                          }
+                        }),
+                  ],
+                ),
+                (widget.event.owner ==
+                            widget.userProvider?.user?.publicAddress &&
+                        _marketItemsAll.length == 0)
+                    ? addMintedButton()
+                    : Text(""),
+              ],
+            ),
+          ),
 
-          final signature =
-              await widget.metamaskProvider!.connector.sendCustomRequest(
-            method: method,
-            params: params,
-          );
+          SizedBox(height: 10),
 
-          print("signature:" + signature);
-        } catch (e) {
-          print(e.toString() + " ERROR while /sell");
-        }
-      },
-      color: Color(0xFF050A31),
-      iconSize: 40,
+          // Listed:
+          Container(
+            padding: EdgeInsets.all(2),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    Icon(
+                      CupertinoIcons.tickets_fill,
+                      size: 30,
+                      color: Colors.deepPurple[800],
+                    ),
+                    SizedBox(width: 10),
+                    Text(
+                      "Listed:",
+                      style:
+                          TextStyle(fontWeight: FontWeight.w600, fontSize: 20),
+                    ),
+                    SizedBox(width: 10),
+                    Text(
+                      "${_marketItemsAll.length}",
+                      style: TextStyle(fontSize: 24),
+                    ),
+                  ],
+                ),
+                (widget.event.owner ==
+                            widget.userProvider?.user?.publicAddress &&
+                        _mintedTicketTokenIds.length != 0)
+                    ? addListedButton()
+                    : Text(""),
+              ],
+            ),
+          ),
+
+          SizedBox(height: 10),
+
+          // Sold
+          Container(
+            padding: EdgeInsets.all(2),
+            child: Row(
+              children: [
+                Icon(
+                  CupertinoIcons.tickets_fill,
+                  size: 30,
+                  color: Colors.deepPurple[800],
+                ),
+                SizedBox(width: 10),
+                Text(
+                  "Sold:",
+                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 20),
+                ),
+                SizedBox(width: 10),
+                Text(
+                  "${_marketItemsSold.length}",
+                  style: TextStyle(fontSize: 24),
+                ),
+              ],
+            ),
+          ),
+
+          SizedBox(height: 10),
+
+          // On Sale
+          Container(
+            padding: EdgeInsets.all(2),
+            child: Row(
+              children: [
+                Icon(
+                  CupertinoIcons.tickets_fill,
+                  size: 30,
+                  color: Colors.deepPurple[800],
+                ),
+                SizedBox(width: 10),
+                Text(
+                  "On Sale:",
+                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 20),
+                ),
+                SizedBox(width: 10),
+                Text(
+                  "${_marketItemsOnSale.length}",
+                  style: TextStyle(fontSize: 24),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
+  // To mint tickets
   addMintedButton() {
-    return IconButton(
-      icon: Icon(Icons.add_circle),
-      onPressed: () {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () {
         Navigator.push(
             context,
             MaterialPageRoute(
@@ -126,8 +262,26 @@ class _EventPageState extends State<EventPage> {
                       metamaskProvider: widget.metamaskProvider!,
                     ))).then((value) => setState(() {}));
       },
-      color: Color(0xFF050A31),
-      iconSize: 40,
+      child: Icon(Icons.add_circle, size: 30, color: Color(0xFF050A31)),
+    );
+  }
+
+  // To sell minted tickets
+  addListedButton() {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () {
+        Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) => SellTicketPage(
+                      event: widget.event,
+                      mintedTicketTokenIds: _mintedTicketTokenIds,
+                      userProvider: widget.userProvider!,
+                      metamaskProvider: widget.metamaskProvider!,
+                    ))).then((value) => setState(() {}));
+      },
+      child: Icon(Icons.add_circle, size: 30, color: Color(0xFF050A31)),
     );
   }
 
@@ -139,6 +293,7 @@ class _EventPageState extends State<EventPage> {
     date = DateTime.parse(widget.event.endDate);
     day = DateFormat('EEEE').format(date).substring(0, 3);
     String formattedEnd = day + DateFormat(', MMMM d').format(date);
+
     getOwner();
     return Scaffold(
       body: SingleChildScrollView(
@@ -281,140 +436,8 @@ class _EventPageState extends State<EventPage> {
                 ],
               ),
             ),
-
-            SizedBox(height: 20),
-
-            // Minted:
-            Container(
-              padding: EdgeInsets.fromLTRB(30, 0, 30, 0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      Icon(
-                        CupertinoIcons.tickets_fill,
-                        size: 40,
-                        color: Colors.deepPurple[700],
-                      ),
-                      SizedBox(width: 10),
-                      Text(
-                        "Minted:",
-                        style: TextStyle(
-                          fontWeight: FontWeight.w900,
-                          fontSize: 24,
-                        ),
-                      ),
-                      SizedBox(width: 10),
-                      FutureBuilder(
-                          future: getMintedEventTicketTokens(),
-                          builder: (BuildContext context,
-                              AsyncSnapshot<List<dynamic>> snapshot) {
-                            if (!snapshot.hasData) {
-                              return CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.deepPurple,
-                              );
-                            } else {
-                              return Text(
-                                "${snapshot.data!.length}",
-                                style: TextStyle(fontSize: 24),
-                              );
-                            }
-                          }),
-                    ],
-                  ),
-                  widget.event.owner == widget.userProvider?.user?.publicAddress
-                      ? addMintedButton()
-                      : Text(""),
-                ],
-              ),
-            ),
-
-            // Listed:
-            Container(
-              padding: EdgeInsets.fromLTRB(30, 0, 30, 0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      Icon(
-                        CupertinoIcons.tickets_fill,
-                        size: 40,
-                        color: Colors.blue[800],
-                      ),
-                      SizedBox(width: 10),
-                      Text(
-                        "Listed:",
-                        style: TextStyle(
-                            fontWeight: FontWeight.w900, fontSize: 24),
-                      ),
-                      SizedBox(width: 10),
-                      Text(
-                        "todo",
-                        style: TextStyle(fontSize: 24),
-                      ),
-                    ],
-                  ),
-                  (widget.event.owner ==
-                              widget.userProvider?.user?.publicAddress &&
-                          _mintedTicketIds.length != 0)
-                      ? addListedButton()
-                      : Text(""),
-                ],
-              ),
-            ),
-
-            // Sold
-            Container(
-              padding: EdgeInsets.fromLTRB(30, 0, 30, 0),
-              child: Row(
-                children: [
-                  Icon(
-                    CupertinoIcons.tickets_fill,
-                    size: 40,
-                    color: Colors.red[800],
-                  ),
-                  SizedBox(width: 10),
-                  Text(
-                    "Sold:",
-                    style: TextStyle(fontWeight: FontWeight.w900, fontSize: 24),
-                  ),
-                  SizedBox(width: 10),
-                  Text(
-                    "todo",
-                    style: TextStyle(fontSize: 24),
-                  ),
-                ],
-              ),
-            ),
-
-            // On Sale
-            Container(
-              padding: EdgeInsets.fromLTRB(30, 0, 30, 0),
-              child: Row(
-                children: [
-                  Icon(
-                    CupertinoIcons.tickets_fill,
-                    size: 40,
-                    color: Colors.green[800],
-                  ),
-                  SizedBox(width: 10),
-                  Text(
-                    "On Sale:",
-                    style: TextStyle(fontWeight: FontWeight.w900, fontSize: 24),
-                  ),
-                  SizedBox(width: 10),
-                  Text(
-                    "todo",
-                    style: TextStyle(fontSize: 24),
-                  ),
-                ],
-              ),
-            ),
-
-            // Create Ticket Button
+            SizedBox(height: 30),
+            ticketStatusContainer(),
           ],
         ),
       ),

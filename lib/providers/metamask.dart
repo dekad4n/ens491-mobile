@@ -46,9 +46,7 @@ class MetamaskProvider extends ChangeNotifier {
     await launchUrl(Uri.parse(connector.session.toUri()),
         mode: LaunchMode.externalApplication);
     final signature = await connector.sendCustomRequest(
-      method: method,
-      params: params,
-    );
+        method: method, params: params, topic: "Login with Metamask!");
 
     return signature;
   }

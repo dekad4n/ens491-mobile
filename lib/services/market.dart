@@ -60,7 +60,7 @@ class MarketService {
     return body["marketItemsSold"];
   }
 
-  Future<dynamic> sell(auth, tokenId, price) async {
+  Future<dynamic> sell(auth, eventId, price, amount) async {
     final String url = '${backendUrl!}/market/sell';
 
     var headers = {
@@ -68,11 +68,10 @@ class MarketService {
       "Authorization": "jwt $auth",
     };
 
-    var params = {
-      "tokenID": "1",
-      "price": "0.05",
-      "ticketType": "",
-      "amount": "1",
+    Map<String, dynamic> params = {
+      "eventId": eventId.toString(),
+      "amount": amount.toString(),
+      "price": price.toString(),
     };
 
     Response res = await post(
