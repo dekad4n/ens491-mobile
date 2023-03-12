@@ -72,7 +72,8 @@ class _LoggedInState extends State<LoggedIn> {
               }
               return Scaffold(
                 body: Center(child: current),
-                bottomNavigationBar: bottomNavBar(context, changeMainPage),
+                bottomNavigationBar:
+                    bottomNavBar(context, changeMainPage, pageIdx),
               );
             },
           );

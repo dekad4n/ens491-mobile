@@ -19,6 +19,8 @@ class UtilsService {
       url += "?searchTitle=$searchTitle&id=$id";
     }
 
+    url += "&page=" + page.toString();
+
     Response res = await get(Uri.parse(url));
     var body = jsonDecode(res.body);
 
