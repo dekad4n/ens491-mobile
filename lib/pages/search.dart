@@ -72,7 +72,6 @@ class _SearchState extends State<Search> {
     //Get owner username and avatar
     String? ownerUsername = owner.username;
     String? ownerAvatar = owner.avatar;
-    print("hic girmo");
     return Card(
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(15.0),
@@ -230,12 +229,14 @@ class _SearchState extends State<Search> {
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 15),
             child: Container(
-              padding: EdgeInsets.fromLTRB(10, 2, 10, 10),
+              padding: EdgeInsets.fromLTRB(10, 2, 10, 3),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(width: 0.3, color: Color(0xFF5200FF)),
               ),
               child: TextFormField(
+                decoration: InputDecoration(
+                    hintText: 'Enter event name', border: InputBorder.none),
                 onChanged: (value) async {
                   _searchText = value;
                   if (_searchText.length > 3) {

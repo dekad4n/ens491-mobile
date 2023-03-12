@@ -29,6 +29,16 @@ class UserService {
     return events;
   }
 
+  Future<Map<dynamic, dynamic>> getTickets(publicAddress) async {
+    final String ticketsUrl =
+        '${backendUrl!}/user/tickets?publicAddress=$publicAddress';
+
+    Response res = await get(Uri.parse(ticketsUrl));
+
+    var body = jsonDecode(res.body);
+    return body;
+  }
+
   Future<dynamic> updateUser(Map<String, dynamic> props, auth) async {
     final String url = '${backendUrl!}/user/update';
     var headers = {
