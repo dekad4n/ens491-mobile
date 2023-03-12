@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart';
 import 'package:provider/provider.dart';
 import 'package:tickrypt/models/event_model.dart';
 import 'package:tickrypt/models/user_model.dart';
-import 'package:tickrypt/pages/mint_ticket.dart';
+import 'package:tickrypt/pages/mint_ticket_page.dart';
 import 'package:tickrypt/pages/event_page.dart';
 import 'package:tickrypt/providers/metamask.dart';
 import 'package:tickrypt/providers/user_provider.dart';
