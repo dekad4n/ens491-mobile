@@ -287,6 +287,8 @@ class SellTicketPageState extends State<SellTicketPage> {
                               "List ${widget.mintedTicketTokenIds.length} Tickets On Market!");
 
                   print("signature:" + signature);
+
+                  Navigator.pop(context);
                 } catch (e) {
                   print(e.toString() + " ERROR while /sell");
                 }

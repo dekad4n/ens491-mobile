@@ -60,6 +60,44 @@ class MarketService {
     return body["marketItemsSold"];
   }
 
+  Future<List<dynamic>> getMarketItemsOnSaleByPublicAddress(
+      publicAddress) async {
+    final String url =
+        '${backendUrl!}/market/market-items-onsale?publicAddress=$publicAddress';
+
+    var headers = {
+      "Access-Control-Allow-Origin": '*',
+    };
+
+    Response res = await get(
+      Uri.parse(url),
+      headers: headers,
+    );
+
+    var body = jsonDecode(res.body);
+
+    return body["marketItemsOnSale"];
+  }
+
+  Future<List<dynamic>> getMarketItemsOwnedByPublicAddress(
+      publicAddress) async {
+    final String url =
+        '${backendUrl!}/market/market-items-owned?publicAddress=$publicAddress';
+
+    var headers = {
+      "Access-Control-Allow-Origin": '*',
+    };
+
+    Response res = await get(
+      Uri.parse(url),
+      headers: headers,
+    );
+
+    var body = jsonDecode(res.body);
+
+    return body["marketItemsOwned"];
+  }
+
   Future<dynamic> sell(auth, eventId, price, amount) async {
     final String url = '${backendUrl!}/market/sell';
 

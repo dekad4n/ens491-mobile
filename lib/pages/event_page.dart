@@ -72,7 +72,40 @@ class _EventPageState extends State<EventPage> {
     List<dynamic> marketItemsAll =
         await marketService.getMarketItemsAllByEventId(widget.event.integerId);
 
-    print(marketItemsAll);
+    List<dynamic> marketItemsSold = [];
+    List<dynamic> marketItemsOnSale = [];
+
+    for (dynamic marketItem in marketItemsAll) {
+      if (RegExp(r'^0x0+$').hasMatch(marketItem["seller"]) &&
+          marketItem["sold"]) {
+        // If seller address is zeroAddress (0x000000000000000)
+        // Then it means this ticket is already sold
+        marketItemsSold.add(marketItem);
+      } else {
+        marketItemsOnSale.add(marketItem);
+      }
+    }
+
+    setState(() {
+      _marketItemsAll = marketItemsAll;
+      _marketItemsSold = marketItemsSold;
+      _marketItemsOnSale = marketItemsOnSale;
+    });
+
+    print("MARKET ITEMS ALL-----------------------");
+    for (var x in marketItemsAll) {
+      print(x);
+    }
+
+    print("MARKET ITEMS SOLD-----------------------");
+    for (var x in marketItemsSold) {
+      print(x);
+    }
+
+    print("MARKET ITEMS ONSALE-----------------------");
+    for (var x in marketItemsOnSale) {
+      print(x);
+    }
     return marketItemsAll;
   }
 
@@ -438,6 +471,11 @@ class _EventPageState extends State<EventPage> {
             ),
             SizedBox(height: 30),
             ticketStatusContainer(),
+            ElevatedButton(
+                onPressed: () async {
+                  await getMarketItemsAll();
+                },
+                child: Text("press")),
           ],
         ),
       ),

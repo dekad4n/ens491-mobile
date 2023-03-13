@@ -186,15 +186,9 @@ class _HomeState extends State<Home> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    "Starting at",
+                                    "Event id: ${e.integerId}",
                                     style: TextStyle(
                                       color: Colors.grey,
-                                    ),
-                                  ),
-                                  Text(
-                                    "FREE",
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.w600,
                                     ),
                                   ),
                                 ],
