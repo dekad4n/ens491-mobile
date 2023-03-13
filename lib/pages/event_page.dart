@@ -26,6 +26,13 @@ class EventPage extends StatefulWidget {
 }
 
 class _EventPageState extends State<EventPage> {
+  @override
+  void setState(fn) {
+    if (mounted) {
+      super.setState(fn);
+    }
+  }
+
   final alchemy = Alchemy();
 
   UserService userService = UserService();
@@ -45,74 +52,66 @@ class _EventPageState extends State<EventPage> {
     });
   }
 
-  Future<List<dynamic>> getMintedEventTicketTokens() async {
-    List<dynamic> mintedEventTicketTokens =
-        await eventService.getMintedEventTicketIds(widget.event.integerId);
+  Future<bool> getMintedEventTicketTokens() async {
+    try {
+      List<dynamic> mintedEventTicketTokens =
+          await eventService.getMintedEventTicketIds(widget.event.integerId);
 
-    // An example return: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+      // An example return: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 
-    // for (dynamic tokenId in mintedEventTicketTokens) {
-    //   print(tokenId);
-    //   final String url =
-    //       'http://10.51.20.179:3001/market/market-item?tokenId=$tokenId';
+      // for (dynamic tokenId in mintedEventTicketTokens) {
+      //   print(tokenId);
+      //   final String url =
+      //       'http://10.51.20.179:3001/market/market-item?tokenId=$tokenId';
 
-    //   await get(Uri.parse(url));
+      //   await get(Uri.parse(url));
 
-    //   // var body = jsonDecode(res.body);
+      //   // var body = jsonDecode(res.body);
 
-    //   // print(body);
-    // }
-    setState(() {
-      _mintedTicketTokenIds = mintedEventTicketTokens;
-    });
-    return mintedEventTicketTokens;
+      //   // print(body);
+      // }
+      setState(() {
+        _mintedTicketTokenIds = mintedEventTicketTokens;
+      });
+      return true;
+    } catch (e) {
+      print(e.toString() + "ERROR");
+
+      return false;
+    }
   }
 
-  Future<List<dynamic>> getMarketItemsAll() async {
-    List<dynamic> marketItemsAll =
-        await marketService.getMarketItemsAllByEventId(widget.event.integerId);
+  Future<bool> getMarketItemsAll() async {
+    try {
+      List<dynamic> marketItemsAll = await marketService
+          .getMarketItemsAllByEventId(widget.event.integerId);
 
-    List<dynamic> marketItemsSold = [];
-    List<dynamic> marketItemsOnSale = [];
+      List<dynamic> marketItemsSold = [];
+      List<dynamic> marketItemsOnSale = [];
 
-    for (dynamic marketItem in marketItemsAll) {
-      if (RegExp(r'^0x0+$').hasMatch(marketItem["seller"]) &&
-          marketItem["sold"]) {
-        // If seller address is zeroAddress (0x000000000000000)
-        // Then it means this ticket is already sold
-        marketItemsSold.add(marketItem);
-      } else {
-        marketItemsOnSale.add(marketItem);
+      for (dynamic marketItem in marketItemsAll) {
+        if (RegExp(r'^0x0+$').hasMatch(marketItem["seller"]) &&
+            marketItem["sold"]) {
+          // If seller address is zeroAddress (0x000000000000000)
+          // Then it means this ticket is already sold
+          marketItemsSold.add(marketItem);
+        } else {
+          marketItemsOnSale.add(marketItem);
+        }
       }
-    }
 
-    setState(() {
-      _marketItemsAll = marketItemsAll;
-      _marketItemsSold = marketItemsSold;
-      _marketItemsOnSale = marketItemsOnSale;
-    });
+      setState(() {
+        _marketItemsAll = marketItemsAll;
+        _marketItemsSold = marketItemsSold;
+        _marketItemsOnSale = marketItemsOnSale;
+      });
 
-    print("MARKET ITEMS ALL-----------------------");
-    for (var x in marketItemsAll) {
-      print(x);
+      return true;
+    } catch (e) {
+      print(e.toString() + "ERROR");
+      return false;
     }
-
-    print("MARKET ITEMS SOLD-----------------------");
-    for (var x in marketItemsSold) {
-      print(x);
-    }
-
-    print("MARKET ITEMS ONSALE-----------------------");
-    for (var x in marketItemsOnSale) {
-      print(x);
-    }
-    return marketItemsAll;
   }
-
-  // Future<List<dynamic>> getMarketItems() async {
-  //   List<dynamic> marketItems = await ;
-  //   return marketItems;
-  // }
 
   ticketStatusContainer() {
     return Container(
@@ -164,16 +163,16 @@ class _EventPageState extends State<EventPage> {
                     FutureBuilder(
                         future: getMintedEventTicketTokens(),
                         builder: (BuildContext context,
-                            AsyncSnapshot<List<dynamic>> snapshot) {
-                          if (!snapshot.hasData) {
+                            AsyncSnapshot<bool> snapshot) {
+                          if (snapshot.hasData && snapshot.data == true) {
+                            return Text(
+                              "${_mintedTicketTokenIds.length}",
+                              style: TextStyle(fontSize: 24),
+                            );
+                          } else {
                             return CircularProgressIndicator(
                               strokeWidth: 2,
                               color: Colors.deepPurple,
-                            );
-                          } else {
-                            return Text(
-                              "${snapshot.data!.length}",
-                              style: TextStyle(fontSize: 24),
                             );
                           }
                         }),
@@ -210,10 +209,22 @@ class _EventPageState extends State<EventPage> {
                           TextStyle(fontWeight: FontWeight.w600, fontSize: 20),
                     ),
                     SizedBox(width: 10),
-                    Text(
-                      "${_marketItemsAll.length}",
-                      style: TextStyle(fontSize: 24),
-                    ),
+                    FutureBuilder(
+                        future: getMarketItemsAll(),
+                        builder: (BuildContext context,
+                            AsyncSnapshot<bool> snapshot) {
+                          if (snapshot.hasData && snapshot.data == true) {
+                            return Text(
+                              "${_marketItemsAll.length}",
+                              style: TextStyle(fontSize: 24),
+                            );
+                          } else {
+                            return CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.deepPurple,
+                            );
+                          }
+                        }),
                   ],
                 ),
                 (widget.event.owner ==
@@ -471,11 +482,6 @@ class _EventPageState extends State<EventPage> {
             ),
             SizedBox(height: 30),
             ticketStatusContainer(),
-            ElevatedButton(
-                onPressed: () async {
-                  await getMarketItemsAll();
-                },
-                child: Text("press")),
           ],
         ),
       ),
