@@ -155,21 +155,25 @@ class _EventPageState extends State<EventPage> {
 
   // To sell minted tickets
   addListedButton() {
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: () {
-        Navigator.push(
-            context,
-            MaterialPageRoute(
-                builder: (context) => SellTicketPage(
-                      event: widget.event,
-                      mintedTicketTokenIds: _mintedTicketTokenIds,
-                      userProvider: widget.userProvider!,
-                      metamaskProvider: widget.metamaskProvider!,
-                    ))).then((value) => setState(() {}));
-      },
-      child: Icon(Icons.add_circle, size: 30, color: Color(0xFF050A31)),
-    );
+    if (_marketItemsOnSale.length != _marketItemsAll.length) {
+      return GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () {
+          Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (context) => SellTicketPage(
+                        event: widget.event,
+                        mintedTicketTokenIds: _mintedTicketTokenIds,
+                        userProvider: widget.userProvider!,
+                        metamaskProvider: widget.metamaskProvider!,
+                      ))).then((value) => setState(() {}));
+        },
+        child: Icon(Icons.add_circle, size: 30, color: Color(0xFF050A31)),
+      );
+    } else {
+      return Text("");
+    }
   }
 
   ticketStatusContainer() {
@@ -335,22 +339,43 @@ class _EventPageState extends State<EventPage> {
 
   buySellButton() {
     if (widget.event.owner == widget.userProvider?.user?.publicAddress) {
-      return Row(
+      // Get all items that i sell
+      List<dynamic> myItemsOnSale = [];
+
+      _marketItemsOnSale.forEach((item) {
+        if (item["seller"].toString().toLowerCase() ==
+            widget.userProvider?.user?.publicAddress) {
+          myItemsOnSale.add(item);
+        }
+      });
+
+      return Column(
         children: [
-          Expanded(
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                elevation: 0,
-                backgroundColor: Color(0xFF050A31),
-              ),
-              child: Text(
-                "Stop Sale",
-                style: TextStyle(fontSize: 22),
-              ),
-              onPressed: () {
-                //TODO: Stop Sale
-              },
+          Text(
+            "You have ${myItemsOnSale.length} items on sale.",
+            style: TextStyle(
+              color: Colors.red[900],
             ),
+          ),
+          SizedBox(height: 5),
+          Row(
+            children: [
+              Expanded(
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    elevation: 0,
+                    backgroundColor: Color(0xFF050A31),
+                  ),
+                  child: Text(
+                    "Stop Sale",
+                    style: TextStyle(fontSize: 22),
+                  ),
+                  onPressed: () {
+                    //TODO: Stop Sale
+                  },
+                ),
+              ),
+            ],
           ),
         ],
       );
@@ -427,22 +452,39 @@ class _EventPageState extends State<EventPage> {
                                   color: Colors.grey,
                                   fontWeight: FontWeight.w600),
                             )
-                          : Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  "Starting at",
-                                  style: TextStyle(color: Colors.grey),
-                                ),
-                                Text(
-                                  "MATIC ${_marketItemsAll[0]['price']}",
-                                  style: TextStyle(
-                                      fontSize: 16,
-                                      color: Colors.grey,
-                                      fontWeight: FontWeight.w600),
+                          : (widget.event.owner ==
+                                  widget.userProvider?.user?.publicAddress
+                              ? Column(
+                                  children: [
+                                    Text(
+                                      "Your price",
+                                      style: TextStyle(color: Colors.grey),
+                                    ),
+                                    Text(
+                                      "MATIC ${_marketItemsAll[0]['price']}",
+                                      style: TextStyle(
+                                          fontSize: 16,
+                                          color: Colors.grey,
+                                          fontWeight: FontWeight.w600),
+                                    )
+                                  ],
                                 )
-                              ],
-                            ))
+                              : Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text(
+                                      "Starting at",
+                                      style: TextStyle(color: Colors.grey),
+                                    ),
+                                    Text(
+                                      "MATIC ${_marketItemsAll[0]['price']}",
+                                      style: TextStyle(
+                                          fontSize: 16,
+                                          color: Colors.grey,
+                                          fontWeight: FontWeight.w600),
+                                    )
+                                  ],
+                                )))
                 ],
               ),
               SizedBox(height: 10),
