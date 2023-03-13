@@ -122,4 +122,31 @@ class MarketService {
 
     return body;
   }
+
+  Future<dynamic> stopSale(auth, tokenIds, price, eventId) async {
+    final String url = '${backendUrl!}/market/stop-sale';
+
+    var headers = {
+      "Accept": "application/json",
+      "content-type": "application/json",
+      "Access-Control-Allow-Origin": '*',
+      "Authorization": "jwt $auth",
+    };
+
+    Map<String, dynamic> params = {
+      "price": price.toString(),
+      "tokenIds": tokenIds,
+      "eventId": eventId,
+    };
+
+    Response res = await post(
+      Uri.parse(url),
+      body: jsonEncode(params),
+      headers: headers,
+    );
+
+    var body = jsonDecode(res.body);
+
+    return body;
+  }
 }

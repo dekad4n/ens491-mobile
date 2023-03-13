@@ -133,7 +133,8 @@ class _EventPageState extends State<EventPage> {
   // To mint tickets
   addMintedButton() {
     if (widget.event.owner == widget.userProvider?.user?.publicAddress &&
-        _marketItemsAll.length == 0) {
+        _marketItemsAll.length == 0 &&
+        _mintedTicketTokenIds.length == 0) {
       return GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTap: () {
@@ -149,13 +150,15 @@ class _EventPageState extends State<EventPage> {
         child: Icon(Icons.add_circle, size: 30, color: Color(0xFF050A31)),
       );
     } else {
-      return Text("");
+      return SizedBox();
     }
   }
 
   // To sell minted tickets
   addListedButton() {
-    if (_marketItemsOnSale.length != _marketItemsAll.length) {
+    if (widget.event.owner == widget.userProvider?.user?.publicAddress &&
+        _mintedTicketTokenIds.length != 0 &&
+        _mintedTicketTokenIds.length != _marketItemsAll.length) {
       return GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTap: () {
@@ -172,168 +175,122 @@ class _EventPageState extends State<EventPage> {
         child: Icon(Icons.add_circle, size: 30, color: Color(0xFF050A31)),
       );
     } else {
-      return Text("");
+      return SizedBox();
     }
   }
 
-  ticketStatusContainer() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.5),
-            spreadRadius: 3,
-            blurRadius: 7,
-            offset: Offset(0, 3), // changes position of shadow
-          ),
-        ],
-        borderRadius: BorderRadius.circular(15),
-      ),
-      padding: EdgeInsets.all(12),
-      width: MediaQuery.of(context).size.width * 0.60,
-      child: Column(
-        children: [
-          Text(
-            "Ticket Status",
-            style: TextStyle(fontSize: 16),
-          ),
-
-          SizedBox(height: 10),
-
-          // Minted:
-          Container(
-            padding: EdgeInsets.all(2),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
+  ticketStatusSection() {
+    return Column(
+      children: [
+        Divider(thickness: 1),
+        Container(
+          height: 90,
+          width: double.infinity,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              // Minted:
+              Container(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(
-                      CupertinoIcons.tickets_fill,
-                      size: 30,
-                      color: Colors.deepPurple[800],
-                    ),
-                    SizedBox(width: 10),
                     Text(
-                      "Minted:",
+                      "Minted",
                       style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 20,
+                        fontWeight: FontWeight.w400,
+                        fontSize: 16,
                       ),
                     ),
-                    SizedBox(width: 10),
+                    SizedBox(height: 5),
                     _isLoading
-                        ? CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.deepPurple,
+                        ? Container(
+                            width: 25,
+                            height: 25,
+                            child: CircularProgressIndicator(
+                              color: Colors.deepPurple,
+                              strokeWidth: 2,
+                            ),
                           )
                         : Text(
                             "${_mintedTicketTokenIds.length}",
                             style: TextStyle(fontSize: 24),
-                          )
+                          ),
+                    addMintedButton(),
                   ],
                 ),
-                addMintedButton(),
-              ],
-            ),
-          ),
+              ),
 
-          SizedBox(height: 10),
-
-          // Listed:
-          Container(
-            padding: EdgeInsets.all(2),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
+              // Listed:
+              Container(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(
-                      CupertinoIcons.tickets_fill,
-                      size: 30,
-                      color: Colors.deepPurple[800],
-                    ),
-                    SizedBox(width: 10),
                     Text(
-                      "Listed:",
+                      "Listed",
                       style:
-                          TextStyle(fontWeight: FontWeight.w600, fontSize: 20),
+                          TextStyle(fontWeight: FontWeight.w400, fontSize: 16),
                     ),
-                    SizedBox(width: 10),
+                    SizedBox(height: 5),
                     _isLoading
-                        ? CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.deepPurple,
+                        ? Container(
+                            width: 25,
+                            height: 25,
+                            child: CircularProgressIndicator(
+                              color: Colors.deepPurple,
+                              strokeWidth: 2,
+                            ),
                           )
                         : Text(
                             "${_marketItemsAll.length}",
                             style: TextStyle(fontSize: 24),
-                          )
+                          ),
+                    addListedButton(),
                   ],
                 ),
-                (widget.event.owner ==
-                            widget.userProvider?.user?.publicAddress &&
-                        _mintedTicketTokenIds.length != 0)
-                    ? addListedButton()
-                    : Text(""),
-              ],
-            ),
+              ),
+
+              // Sold
+              Container(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      "Sold",
+                      style:
+                          TextStyle(fontWeight: FontWeight.w400, fontSize: 16),
+                    ),
+                    SizedBox(height: 5),
+                    Text(
+                      "${_marketItemsSold.length}",
+                      style: TextStyle(fontSize: 24),
+                    ),
+                  ],
+                ),
+              ),
+
+              // On Sale
+              Container(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      "On Sale",
+                      style:
+                          TextStyle(fontWeight: FontWeight.w400, fontSize: 16),
+                    ),
+                    SizedBox(height: 5),
+                    Text(
+                      "${_marketItemsOnSale.length}",
+                      style: TextStyle(fontSize: 24),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-
-          SizedBox(height: 10),
-
-          // Sold
-          Container(
-            padding: EdgeInsets.all(2),
-            child: Row(
-              children: [
-                Icon(
-                  CupertinoIcons.tickets_fill,
-                  size: 30,
-                  color: Colors.deepPurple[800],
-                ),
-                SizedBox(width: 10),
-                Text(
-                  "Sold:",
-                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 20),
-                ),
-                SizedBox(width: 10),
-                Text(
-                  "${_marketItemsSold.length}",
-                  style: TextStyle(fontSize: 24),
-                ),
-              ],
-            ),
-          ),
-
-          SizedBox(height: 10),
-
-          // On Sale
-          Container(
-            padding: EdgeInsets.all(2),
-            child: Row(
-              children: [
-                Icon(
-                  CupertinoIcons.tickets_fill,
-                  size: 30,
-                  color: Colors.deepPurple[800],
-                ),
-                SizedBox(width: 10),
-                Text(
-                  "On Sale:",
-                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 20),
-                ),
-                SizedBox(width: 10),
-                Text(
-                  "${_marketItemsOnSale.length}",
-                  style: TextStyle(fontSize: 24),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
+        ),
+        Divider(thickness: 1),
+      ],
     );
   }
 
@@ -352,7 +309,7 @@ class _EventPageState extends State<EventPage> {
       return Column(
         children: [
           Text(
-            "You have ${myItemsOnSale.length} items on sale.",
+            "You have ${myItemsOnSale.length} tickets on sale.",
             style: TextStyle(
               color: Colors.red[900],
             ),
@@ -370,8 +327,49 @@ class _EventPageState extends State<EventPage> {
                     "Stop Sale",
                     style: TextStyle(fontSize: 22),
                   ),
-                  onPressed: () {
-                    //TODO: Stop Sale
+                  onPressed: () async {
+                    List<dynamic> tokenIds =
+                        myItemsOnSale.map((e) => e["tokenID"]).toList();
+
+                    dynamic transactionParameters =
+                        await marketService.stopSale(
+                      widget.userProvider!.token,
+                      tokenIds,
+                      myItemsOnSale[0]["price"],
+                      widget.event.integerId,
+                    );
+
+                    print("xxx");
+
+                    alchemy.init(
+                      httpRpcUrl:
+                          "https://polygon-mumbai.g.alchemy.com/v2/jq6Um8Vdb_j-F0vwzpqBjvjHiz3-v5wy",
+                      wsRpcUrl:
+                          "wss://polygon-mumbai.g.alchemy.com/v2/jq6Um8Vdb_j-F0vwzpqBjvjHiz3-v5wy",
+                      verbose: true,
+                    );
+
+                    List<dynamic> params = [
+                      {
+                        "from": transactionParameters["from"],
+                        "to": transactionParameters["to"],
+                        "data": transactionParameters["data"],
+                      }
+                    ];
+
+                    String method = "eth_sendTransaction";
+
+                    print(params);
+
+                    await launchUrl(
+                        Uri.parse(
+                            widget.metamaskProvider!.connector.session.toUri()),
+                        mode: LaunchMode.externalApplication);
+
+                    final signature = await widget.metamaskProvider!.connector
+                        .sendCustomRequest(method: method, params: params);
+
+                    print("signature:" + signature);
                   },
                 ),
               ),
@@ -440,9 +438,13 @@ class _EventPageState extends State<EventPage> {
                     style: TextStyle(fontSize: 22, fontWeight: FontWeight.w500),
                   ),
                   _isLoading
-                      ? CircularProgressIndicator(
-                          color: Colors.deepPurple,
-                          strokeWidth: 2,
+                      ? Container(
+                          width: 25,
+                          height: 25,
+                          child: CircularProgressIndicator(
+                            color: Colors.deepPurple,
+                            strokeWidth: 2,
+                          ),
                         )
                       : (isSoldOut
                           ? Text(
@@ -612,7 +614,7 @@ class _EventPageState extends State<EventPage> {
                       ),
                     );
                   }
-                  return Text("");
+                  return SizedBox();
                 }),
             Container(
               width: MediaQuery.of(context).size.width,
@@ -653,7 +655,8 @@ class _EventPageState extends State<EventPage> {
               ),
             ),
             SizedBox(height: 30),
-            ticketStatusContainer(),
+            // ticketStatusContainer(),
+            ticketStatusSection(),
             SizedBox(height: 30),
             buySection(),
             SizedBox(height: 30),

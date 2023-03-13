@@ -186,7 +186,7 @@ class SellTicketPageState extends State<SellTicketPage> {
           Row(
             children: [
               Text(
-                "ETH  ",
+                "MATIC  ",
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
