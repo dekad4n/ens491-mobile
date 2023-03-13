@@ -1,7 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:tickrypt/models/event_model.dart';
+import 'package:tickrypt/services/event.dart';
+
+import '../pages/event_page.dart';
+import '../providers/metamask.dart';
+import '../providers/user_provider.dart';
 
 BottomNavigationBar bottomNavBar(
     BuildContext context, var setState, var pageIdx) {
+  var userProvider = Provider.of<UserProvider>(context);
+  var metamaskProvider = Provider.of<MetamaskProvider>(context);
   return BottomNavigationBar(
       type: BottomNavigationBarType.fixed,
       items: <BottomNavigationBarItem>[
@@ -49,9 +58,19 @@ BottomNavigationBar bottomNavBar(
         ),
         BottomNavigationBarItem(
           icon: IconButton(
-            onPressed: () {
+            onPressed: () async {
               // Navigator.pushNamed(context, '/notification');
-              setState(3);
+              // setState(3);
+              Event event = await EventService().getRandomEvent();
+
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => EventPage(
+                            event: event,
+                            userProvider: userProvider,
+                            metamaskProvider: metamaskProvider,
+                          )));
             },
             icon: Image.asset(
               'lib/assets/navbar/random.png',

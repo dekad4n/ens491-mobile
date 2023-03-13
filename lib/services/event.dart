@@ -50,4 +50,13 @@ class EventService {
 
     return ticketTokens;
   }
+
+  Future<Event> getRandomEvent() async {
+    final String url = '${backendUrl}/event/get-random-event';
+    Response res = await get(Uri.parse(url));
+
+    Event body = Event.fromJson(jsonDecode(res.body));
+    print(body);
+    return body;
+  }
 }

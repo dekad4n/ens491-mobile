@@ -295,31 +295,32 @@ class _ProfileState extends State<Profile> {
                         children: [
                           for (var val in snapshot.data!.values)
                             getCurrentValues(val, userProvider),
-                          Padding(
-                            padding: const EdgeInsets.only(top: 15.0),
-                            child: Row(
-                              children: [
-                                Text(
-                                  "Past",
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w300,
-                                    color: Color(0xFF050A31).withOpacity(0.5),
+                          if (snapshot.data!.values.length > 0)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 15.0),
+                              child: Row(
+                                children: [
+                                  Text(
+                                    "Past",
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w300,
+                                      color: Color(0xFF050A31).withOpacity(0.5),
+                                    ),
                                   ),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.only(left: 8.0),
-                                  child: Container(
-                                    width: MediaQuery.of(context).size.width *
-                                        7 /
-                                        10,
-                                    height: 1,
-                                    color: Color.fromRGBO(5, 10, 49, 0.3),
-                                  ),
-                                )
-                              ],
+                                  Padding(
+                                    padding: const EdgeInsets.only(left: 8.0),
+                                    child: Container(
+                                      width: MediaQuery.of(context).size.width *
+                                          7 /
+                                          10,
+                                      height: 1,
+                                      color: Color.fromRGBO(5, 10, 49, 0.3),
+                                    ),
+                                  )
+                                ],
+                              ),
                             ),
-                          ),
                           for (var val in snapshot.data!.values)
                             getPastValues(val, userProvider)
                         ],
