@@ -1,5 +1,6 @@
 import 'package:alchemy_web3/alchemy_web3.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:tickrypt/models/user_model.dart';
@@ -46,287 +47,661 @@ class _EventPageState extends State<EventPage> {
   List<dynamic> _marketItemsSold = [];
   List<dynamic> _marketItemsOnSale = [];
 
+  List<dynamic> _myItemsOnSale = [];
+  List<dynamic> _myOwnItems = [];
+
+  bool _isLoading = true;
+
+  int mySortComparison(dynamic item1, dynamic item2) {
+    if (item1["price"] < item2["price"]) {
+      return -1;
+    } else if (item1["price"] > item2["price"]) {
+      return 1;
+    } else {
+      return 0;
+    }
+  }
+
+  @override
+  void initState() {
+    getMintedEventTicketTokens().then((value) {
+      setState(() {
+        _mintedTicketTokenIds = value;
+      });
+
+      getMarketItemsAll().then((value) {
+        List<dynamic> marketItemsAll = value;
+        List<dynamic> marketItemsSold = [];
+        List<dynamic> marketItemsOnSale = [];
+
+        List<dynamic> myOwnItems = [];
+        List<dynamic> myItemsOnSale = [];
+
+        for (dynamic marketItem in marketItemsAll) {
+          if (RegExp(r'^0x0+$').hasMatch(marketItem["seller"]) &&
+              marketItem["sold"]) {
+            // If seller address is zeroAddress (0x000000000000000)
+            // Then it means this ticket is already sold
+            marketItemsSold.add(marketItem);
+          } else {
+            marketItemsOnSale.add(marketItem);
+          }
+        }
+
+        // Filter my tickets that i sell currently
+        marketItemsOnSale.forEach((item) {
+          if (item["seller"].toString().toLowerCase() ==
+              widget.userProvider?.user?.publicAddress) {
+            myItemsOnSale.add(item);
+          }
+        });
+
+        // Filter my tickets that i own and don't sell
+        marketItemsSold.forEach((item) {
+          if (item["ticketOwner"].toString().toLowerCase() ==
+              widget.userProvider?.user?.publicAddress) {
+            myOwnItems.add(item);
+          }
+        });
+
+        setState(() {
+          _marketItemsAll = marketItemsAll;
+          _marketItemsSold = marketItemsSold;
+          _marketItemsOnSale = marketItemsOnSale;
+
+          _myItemsOnSale = myItemsOnSale;
+          _myOwnItems = myOwnItems;
+
+          _isLoading = false;
+        });
+      });
+    });
+
+    super.initState();
+  }
+
   void getOwner() {
     setState(() {
       owner = userService.getNonce(widget.event.owner);
     });
   }
 
-  Future<bool> getMintedEventTicketTokens() async {
-    try {
-      List<dynamic> mintedEventTicketTokens =
-          await eventService.getMintedEventTicketIds(widget.event.integerId);
+  Future<List<dynamic>> getMintedEventTicketTokens() async {
+    List<dynamic> mintedEventTicketTokens =
+        await eventService.getMintedEventTicketIds(widget.event.integerId);
 
-      // An example return: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+    // An example return: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 
-      // for (dynamic tokenId in mintedEventTicketTokens) {
-      //   print(tokenId);
-      //   final String url =
-      //       'http://10.51.20.179:3001/market/market-item?tokenId=$tokenId';
+    // for (dynamic tokenId in mintedEventTicketTokens) {
+    //   print(tokenId);
+    //   final String url =
+    //       'http://10.51.20.179:3001/market/market-item?tokenId=$tokenId';
 
-      //   await get(Uri.parse(url));
+    //   await get(Uri.parse(url));
 
-      //   // var body = jsonDecode(res.body);
+    //   // var body = jsonDecode(res.body);
 
-      //   // print(body);
-      // }
-      setState(() {
-        _mintedTicketTokenIds = mintedEventTicketTokens;
-      });
-      return true;
-    } catch (e) {
-      print(e.toString() + "ERROR");
+    //   // print(body);
+    // }
 
-      return false;
-    }
+    return mintedEventTicketTokens;
   }
 
-  Future<bool> getMarketItemsAll() async {
-    try {
-      List<dynamic> marketItemsAll = await marketService
-          .getMarketItemsAllByEventId(widget.event.integerId);
+  Future<List<dynamic>> getMarketItemsAll() async {
+    List<dynamic> marketItemsAll =
+        await marketService.getMarketItemsAllByEventId(widget.event.integerId);
 
-      List<dynamic> marketItemsSold = [];
-      List<dynamic> marketItemsOnSale = [];
+    marketItemsAll.sort(mySortComparison);
 
-      for (dynamic marketItem in marketItemsAll) {
-        if (RegExp(r'^0x0+$').hasMatch(marketItem["seller"]) &&
-            marketItem["sold"]) {
-          // If seller address is zeroAddress (0x000000000000000)
-          // Then it means this ticket is already sold
-          marketItemsSold.add(marketItem);
-        } else {
-          marketItemsOnSale.add(marketItem);
+    return marketItemsAll;
+  }
+
+  void refreshTicketStatus() {
+    setState(() {
+      _isLoading = true;
+    });
+    getMintedEventTicketTokens().then((value) {
+      setState(() {
+        _mintedTicketTokenIds = value;
+      });
+
+      getMarketItemsAll().then((value) {
+        List<dynamic> marketItemsAll = value;
+        List<dynamic> marketItemsSold = [];
+        List<dynamic> marketItemsOnSale = [];
+
+        List<dynamic> myOwnItems = [];
+        List<dynamic> myItemsOnSale = [];
+
+        for (dynamic marketItem in marketItemsAll) {
+          if (RegExp(r'^0x0+$').hasMatch(marketItem["seller"]) &&
+              marketItem["sold"]) {
+            // If seller address is zeroAddress (0x000000000000000)
+            // Then it means this ticket is already sold
+            marketItemsSold.add(marketItem);
+          } else {
+            marketItemsOnSale.add(marketItem);
+          }
         }
-      }
 
-      setState(() {
-        _marketItemsAll = marketItemsAll;
-        _marketItemsSold = marketItemsSold;
-        _marketItemsOnSale = marketItemsOnSale;
+        // Filter my tickets that i sell currently
+        marketItemsOnSale.forEach((item) {
+          if (item["seller"].toString().toLowerCase() ==
+              widget.userProvider?.user?.publicAddress) {
+            myItemsOnSale.add(item);
+          }
+        });
+
+        // Filter my tickets that i own and don't sell
+        marketItemsSold.forEach((item) {
+          if (item["ticketOwner"].toString().toLowerCase() ==
+              widget.userProvider?.user?.publicAddress) {
+            myOwnItems.add(item);
+          }
+        });
+
+        setState(() {
+          _marketItemsAll = marketItemsAll;
+          _marketItemsSold = marketItemsSold;
+          _marketItemsOnSale = marketItemsOnSale;
+
+          _myItemsOnSale = myItemsOnSale;
+          _myOwnItems = myOwnItems;
+
+          _isLoading = false;
+        });
       });
-
-      return true;
-    } catch (e) {
-      print(e.toString() + "ERROR");
-      return false;
-    }
-  }
-
-  ticketStatusContainer() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.5),
-            spreadRadius: 3,
-            blurRadius: 7,
-            offset: Offset(0, 3), // changes position of shadow
-          ),
-        ],
-        borderRadius: BorderRadius.circular(15),
-      ),
-      padding: EdgeInsets.all(12),
-      width: MediaQuery.of(context).size.width * 0.60,
-      child: Column(
-        children: [
-          Text(
-            "Ticket Status",
-            style: TextStyle(fontSize: 16),
-          ),
-
-          SizedBox(height: 10),
-
-          // Minted:
-          Container(
-            padding: EdgeInsets.all(2),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  children: [
-                    Icon(
-                      CupertinoIcons.tickets_fill,
-                      size: 30,
-                      color: Colors.deepPurple[800],
-                    ),
-                    SizedBox(width: 10),
-                    Text(
-                      "Minted:",
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 20,
-                      ),
-                    ),
-                    SizedBox(width: 10),
-                    FutureBuilder(
-                        future: getMintedEventTicketTokens(),
-                        builder: (BuildContext context,
-                            AsyncSnapshot<bool> snapshot) {
-                          if (snapshot.hasData && snapshot.data == true) {
-                            return Text(
-                              "${_mintedTicketTokenIds.length}",
-                              style: TextStyle(fontSize: 24),
-                            );
-                          } else {
-                            return CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.deepPurple,
-                            );
-                          }
-                        }),
-                  ],
-                ),
-                (widget.event.owner ==
-                            widget.userProvider?.user?.publicAddress &&
-                        _marketItemsAll.length == 0)
-                    ? addMintedButton()
-                    : Text(""),
-              ],
-            ),
-          ),
-
-          SizedBox(height: 10),
-
-          // Listed:
-          Container(
-            padding: EdgeInsets.all(2),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  children: [
-                    Icon(
-                      CupertinoIcons.tickets_fill,
-                      size: 30,
-                      color: Colors.deepPurple[800],
-                    ),
-                    SizedBox(width: 10),
-                    Text(
-                      "Listed:",
-                      style:
-                          TextStyle(fontWeight: FontWeight.w600, fontSize: 20),
-                    ),
-                    SizedBox(width: 10),
-                    FutureBuilder(
-                        future: getMarketItemsAll(),
-                        builder: (BuildContext context,
-                            AsyncSnapshot<bool> snapshot) {
-                          if (snapshot.hasData && snapshot.data == true) {
-                            return Text(
-                              "${_marketItemsAll.length}",
-                              style: TextStyle(fontSize: 24),
-                            );
-                          } else {
-                            return CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.deepPurple,
-                            );
-                          }
-                        }),
-                  ],
-                ),
-                (widget.event.owner ==
-                            widget.userProvider?.user?.publicAddress &&
-                        _mintedTicketTokenIds.length != 0)
-                    ? addListedButton()
-                    : Text(""),
-              ],
-            ),
-          ),
-
-          SizedBox(height: 10),
-
-          // Sold
-          Container(
-            padding: EdgeInsets.all(2),
-            child: Row(
-              children: [
-                Icon(
-                  CupertinoIcons.tickets_fill,
-                  size: 30,
-                  color: Colors.deepPurple[800],
-                ),
-                SizedBox(width: 10),
-                Text(
-                  "Sold:",
-                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 20),
-                ),
-                SizedBox(width: 10),
-                Text(
-                  "${_marketItemsSold.length}",
-                  style: TextStyle(fontSize: 24),
-                ),
-              ],
-            ),
-          ),
-
-          SizedBox(height: 10),
-
-          // On Sale
-          Container(
-            padding: EdgeInsets.all(2),
-            child: Row(
-              children: [
-                Icon(
-                  CupertinoIcons.tickets_fill,
-                  size: 30,
-                  color: Colors.deepPurple[800],
-                ),
-                SizedBox(width: 10),
-                Text(
-                  "On Sale:",
-                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 20),
-                ),
-                SizedBox(width: 10),
-                Text(
-                  "${_marketItemsOnSale.length}",
-                  style: TextStyle(fontSize: 24),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
+    });
   }
 
   // To mint tickets
   addMintedButton() {
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: () {
-        Navigator.push(
-            context,
-            MaterialPageRoute(
-                builder: (context) => MintTicketPage(
-                      event: widget.event,
-                      userProvider: widget.userProvider!,
-                      metamaskProvider: widget.metamaskProvider!,
-                    ))).then((value) => setState(() {}));
-      },
-      child: Icon(Icons.add_circle, size: 30, color: Color(0xFF050A31)),
-    );
+    if (widget.event.owner == widget.userProvider?.user?.publicAddress &&
+        _marketItemsAll.length == 0 &&
+        _mintedTicketTokenIds.length == 0) {
+      return GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () {
+          Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (context) => MintTicketPage(
+                        event: widget.event,
+                        userProvider: widget.userProvider!,
+                        metamaskProvider: widget.metamaskProvider!,
+                      ))).then((value) async {
+            refreshTicketStatus();
+          });
+        },
+        child: Icon(Icons.add_circle, size: 30, color: Color(0xFF050A31)),
+      );
+    } else {
+      return SizedBox();
+    }
   }
 
   // To sell minted tickets
   addListedButton() {
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: () {
-        Navigator.push(
-            context,
-            MaterialPageRoute(
-                builder: (context) => SellTicketPage(
-                      event: widget.event,
-                      mintedTicketTokenIds: _mintedTicketTokenIds,
-                      userProvider: widget.userProvider!,
-                      metamaskProvider: widget.metamaskProvider!,
-                    ))).then((value) => setState(() {}));
-      },
-      child: Icon(Icons.add_circle, size: 30, color: Color(0xFF050A31)),
+    if (widget.event.owner == widget.userProvider?.user?.publicAddress &&
+        _mintedTicketTokenIds.length != 0 &&
+        _mintedTicketTokenIds.length != _marketItemsAll.length) {
+      return GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () {
+          Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (context) => SellTicketPage(
+                        event: widget.event,
+                        mintedTicketTokenIds: _mintedTicketTokenIds,
+                        userProvider: widget.userProvider!,
+                        metamaskProvider: widget.metamaskProvider!,
+                      ))).then((value) async {
+            refreshTicketStatus();
+          });
+        },
+        child: Icon(Icons.add_circle, size: 30, color: Color(0xFF050A31)),
+      );
+    } else {
+      return SizedBox();
+    }
+  }
+
+  ticketStatusSection() {
+    return Column(
+      children: [
+        Divider(thickness: 1),
+        Container(
+          height: 90,
+          width: double.infinity,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              // Minted:
+              Container(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      "Minted",
+                      style: TextStyle(
+                        fontWeight: FontWeight.w400,
+                        fontSize: 16,
+                      ),
+                    ),
+                    SizedBox(height: 5),
+                    _isLoading
+                        ? Container(
+                            width: 25,
+                            height: 25,
+                            child: CircularProgressIndicator(
+                              color: Colors.deepPurple,
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : Row(
+                            children: [
+                              Text(
+                                "${_mintedTicketTokenIds.length}",
+                                style: TextStyle(fontSize: 24),
+                              ),
+                              addMintedButton(),
+                            ],
+                          ),
+                  ],
+                ),
+              ),
+
+              // Listed:
+              Container(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      "Listed",
+                      style:
+                          TextStyle(fontWeight: FontWeight.w400, fontSize: 16),
+                    ),
+                    SizedBox(height: 5),
+                    _isLoading
+                        ? Container(
+                            width: 25,
+                            height: 25,
+                            child: CircularProgressIndicator(
+                              color: Colors.deepPurple,
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : Row(
+                            children: [
+                              Text(
+                                "${_marketItemsAll.length}/${_mintedTicketTokenIds.length}",
+                                style: TextStyle(fontSize: 24),
+                              ),
+                              addListedButton(),
+                            ],
+                          ),
+                  ],
+                ),
+              ),
+
+              // Sold
+              Container(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      "Sold",
+                      style:
+                          TextStyle(fontWeight: FontWeight.w400, fontSize: 16),
+                    ),
+                    SizedBox(height: 5),
+                    Text(
+                      "${_marketItemsSold.length}",
+                      style: TextStyle(fontSize: 24),
+                    ),
+                  ],
+                ),
+              ),
+
+              // On Sale
+              Container(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      "On Sale",
+                      style:
+                          TextStyle(fontWeight: FontWeight.w400, fontSize: 16),
+                    ),
+                    SizedBox(height: 5),
+                    Text(
+                      "${_marketItemsOnSale.length}",
+                      style: TextStyle(fontSize: 24),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        Divider(thickness: 1),
+      ],
     );
+  }
+
+  buySellButton() {
+    if (widget.event.owner == widget.userProvider?.user?.publicAddress) {
+      // Get all items that i sell
+
+      return Column(
+        children: [
+          Text(
+            "You have ${_myItemsOnSale.length} tickets on sale.",
+            style: TextStyle(
+              color: Colors.red[900],
+            ),
+          ),
+          SizedBox(height: 5),
+          Row(
+            children: [
+              Expanded(
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    elevation: 0,
+                    backgroundColor: _myItemsOnSale.length > 0
+                        ? Color(0xFF050A31)
+                        : Colors.grey,
+                  ),
+                  child: Text(
+                    "Stop Sale",
+                    style: TextStyle(fontSize: 22),
+                  ),
+                  onPressed: () async {
+                    if (_myItemsOnSale.length > 0) {
+                      List<dynamic> tokenIds =
+                          _myItemsOnSale.map((e) => e["tokenID"]).toList();
+
+                      dynamic transactionParameters =
+                          await marketService.stopBatchSale(
+                        widget.userProvider!.token,
+                        tokenIds,
+                        _myItemsOnSale[0]["price"],
+                        widget.event.integerId,
+                      );
+
+                      print("xxx");
+
+                      alchemy.init(
+                        httpRpcUrl:
+                            "https://polygon-mumbai.g.alchemy.com/v2/jq6Um8Vdb_j-F0vwzpqBjvjHiz3-v5wy",
+                        wsRpcUrl:
+                            "wss://polygon-mumbai.g.alchemy.com/v2/jq6Um8Vdb_j-F0vwzpqBjvjHiz3-v5wy",
+                        verbose: true,
+                      );
+
+                      List<dynamic> params = [
+                        {
+                          "from": transactionParameters["from"],
+                          "to": transactionParameters["to"],
+                          "data": transactionParameters["data"],
+                        }
+                      ];
+
+                      String method = "eth_sendTransaction";
+
+                      print(params);
+
+                      await launchUrl(
+                          Uri.parse(widget.metamaskProvider!.connector.session
+                              .toUri()),
+                          mode: LaunchMode.externalApplication);
+
+                      final signature = await widget.metamaskProvider!.connector
+                          .sendCustomRequest(method: method, params: params);
+
+                      print("signature:" + signature);
+                    }
+                  },
+                ),
+              ),
+            ],
+          ),
+        ],
+      );
+    } else {
+      return Row(
+        children: [
+          Expanded(
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                elevation: 0,
+                backgroundColor: Color(0xFF050A31),
+              ),
+              onPressed: () {
+                //TODO: Buy a ticket
+              },
+              child: Text(
+                "Buy",
+                style: TextStyle(fontSize: 22),
+              ),
+            ),
+          ),
+          SizedBox(width: 20),
+          Expanded(
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                elevation: 0,
+                backgroundColor: Color(0xFFF99D23),
+              ),
+              onPressed: () {
+                // TODO: Sell your purchased ticket
+              },
+              child: Text(
+                "Sell",
+                style: TextStyle(fontSize: 22),
+              ),
+            ),
+          )
+        ],
+      );
+    }
+  }
+
+  yourTicketsSection() {
+    // for (var x in _marketItemsAll) print(x);
+
+    if (_myOwnItems.length > 0) {
+      return Container(
+          padding: EdgeInsets.all(12),
+          width: MediaQuery.of(context).size.width * 0.9,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(15),
+            color: Color(0xFFB9A6E0).withOpacity(0.1),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                "Your Ticket Status",
+                style: TextStyle(
+                    color: Color(0xFF050A31),
+                    fontSize: 20,
+                    fontWeight: FontWeight.w500),
+              ),
+              SizedBox(height: 10),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Row(
+                      children: [
+                        Text(
+                          "General Admission",
+                          style: TextStyle(
+                              color: Color(0xFF050A31),
+                              fontSize: 18,
+                              fontWeight: FontWeight.w300),
+                        ),
+                        SizedBox(
+                          width: 40,
+                        ),
+                        Text(
+                          "x ${_myOwnItems.length}",
+                          style: TextStyle(
+                              color: Color(0xFF050A31),
+                              fontSize: 18,
+                              fontWeight: FontWeight.w300),
+                        ),
+                      ],
+                    ),
+                  ),
+                  ElevatedButton(
+                      onPressed: () {
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => SellTicketPage(
+                                      event: widget.event,
+                                      mintedTicketTokenIds:
+                                          _mintedTicketTokenIds,
+                                      userProvider: widget.userProvider!,
+                                      metamaskProvider:
+                                          widget.metamaskProvider!,
+                                    ))).then((value) async {
+                          refreshTicketStatus();
+                        });
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Color(0xFF050A31),
+                      ),
+                      child: Text("Resell")),
+                ],
+              ),
+            ],
+          ));
+    } else {
+      return Container(
+          padding: EdgeInsets.all(12),
+          width: MediaQuery.of(context).size.width * 0.9,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(15),
+            color: Color(0xFFB9A6E0).withOpacity(0.1),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                "Your Ticket Status",
+                style: TextStyle(
+                    color: Color(0xFF050A31),
+                    fontSize: 20,
+                    fontWeight: FontWeight.w500),
+              ),
+              SizedBox(height: 10),
+              Text("You don't own any tickets!"),
+              SizedBox(height: 10),
+            ],
+          ));
+    }
+  }
+
+  buySection() {
+    if (_marketItemsAll.length > 0) {
+      bool isSoldOut = _marketItemsOnSale.length == 0;
+
+      return Container(
+          padding: EdgeInsets.all(12),
+          width: MediaQuery.of(context).size.width * 0.9,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(15),
+            color: Color(0xFFE9F2F6),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        CupertinoIcons.tickets_fill,
+                        color: Color(0xFF050A31),
+                        size: 30,
+                      ),
+                      SizedBox(width: 5),
+                      Text(
+                        "General Admission",
+                        style: TextStyle(
+                            fontSize: 22, fontWeight: FontWeight.w500),
+                      ),
+                    ],
+                  ),
+                  _isLoading
+                      ? Container(
+                          width: 25,
+                          height: 25,
+                          child: CircularProgressIndicator(
+                            color: Colors.deepPurple,
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : (isSoldOut
+                          ? Text(
+                              "Sold Out",
+                              style: TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.grey,
+                                  fontWeight: FontWeight.w600),
+                            )
+                          : (widget.event.owner ==
+                                  widget.userProvider?.user?.publicAddress
+                              ? Column(
+                                  children: [
+                                    Text(
+                                      "Starting At",
+                                      style: TextStyle(color: Colors.grey),
+                                    ),
+                                    Text(
+                                      "MATIC ${_marketItemsAll[0]['price']}",
+                                      style: TextStyle(
+                                          fontSize: 16,
+                                          color: Colors.grey,
+                                          fontWeight: FontWeight.w600),
+                                    )
+                                  ],
+                                )
+                              : Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text(
+                                      "Starting at",
+                                      style: TextStyle(color: Colors.grey),
+                                    ),
+                                    Text(
+                                      "MATIC ${_marketItemsAll[0]['price']}",
+                                      style: TextStyle(
+                                          fontSize: 16,
+                                          color: Colors.grey,
+                                          fontWeight: FontWeight.w600),
+                                    )
+                                  ],
+                                )))
+                ],
+              ),
+              SizedBox(height: 10),
+              Text(
+                "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas bibendum ex at velit luctus rutrum. Pellentesque nec condimentum libero. Phasellus nulla justo, pretium a ullamcorper at, vestibulum ut sem. Curabitur scelerisque tincidunt lacus, a imperdiet enim pulvinar in.",
+                style: TextStyle(fontSize: 18),
+              ),
+              SizedBox(height: 10),
+              buySellButton(),
+            ],
+          ));
+    } else {
+      return Text("There is no issued tickets right now...");
+    }
   }
 
   @override
@@ -407,6 +782,16 @@ class _EventPageState extends State<EventPage> {
                 ],
               ),
             ),
+            (widget.event.owner == widget.userProvider?.user?.publicAddress
+                ? Container(
+                    padding: EdgeInsets.only(top: 15),
+                    child: Text(
+                      "You are organising this event! ",
+                      style: TextStyle(
+                          color: Colors.red[800], fontWeight: FontWeight.w700),
+                    ),
+                  )
+                : SizedBox()),
             FutureBuilder<User>(
                 future: owner,
                 builder: (BuildContext context, AsyncSnapshot<User> snapshot) {
@@ -430,17 +815,23 @@ class _EventPageState extends State<EventPage> {
                                 MediaQuery.of(context).size.width * 10 / 375,
                                 0,
                                 0),
-                            child: Text(
-                              snapshot.data!.username,
-                              style: TextStyle(
-                                  fontSize: 15, fontWeight: FontWeight.w600),
+                            child: Column(
+                              children: [
+                                Text("Organiser"),
+                                Text(
+                                  snapshot.data!.username,
+                                  style: TextStyle(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w600),
+                                ),
+                              ],
                             ),
                           )
                         ],
                       ),
                     );
                   }
-                  return Text("");
+                  return SizedBox();
                 }),
             Container(
               width: MediaQuery.of(context).size.width,
@@ -480,8 +871,14 @@ class _EventPageState extends State<EventPage> {
                 ],
               ),
             ),
+            SizedBox(height: 20),
+            SizedBox(height: 20),
+            ticketStatusSection(),
             SizedBox(height: 30),
-            ticketStatusContainer(),
+            yourTicketsSection(),
+            SizedBox(height: 30),
+            buySection(),
+            SizedBox(height: 30),
           ],
         ),
       ),

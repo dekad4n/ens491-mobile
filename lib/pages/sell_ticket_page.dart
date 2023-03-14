@@ -168,7 +168,7 @@ class SellTicketPageState extends State<SellTicketPage> {
     return Container(
       padding: EdgeInsets.all(8),
       height: 90,
-      width: 100,
+      width: 150,
       decoration: BoxDecoration(
         border:
             Border.all(color: _price != null ? Colors.deepPurple : Colors.grey),
@@ -179,14 +179,14 @@ class SellTicketPageState extends State<SellTicketPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            "Price",
+            "Price per Ticket",
             style: TextStyle(
                 color: Colors.grey, fontSize: 12, fontWeight: FontWeight.bold),
           ),
           Row(
             children: [
               Text(
-                "ETH  ",
+                "MATIC  ",
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
