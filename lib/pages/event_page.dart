@@ -1,5 +1,6 @@
 import 'package:alchemy_web3/alchemy_web3.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:tickrypt/models/user_model.dart';
@@ -130,6 +131,39 @@ class _EventPageState extends State<EventPage> {
     return marketItemsAll;
   }
 
+  Future<void> refreshTicketStatus() async {
+    getMintedEventTicketTokens().then((value) {
+      setState(() {
+        _mintedTicketTokenIds = value;
+      });
+
+      getMarketItemsAll().then((value) {
+        List<dynamic> marketItemsAll = value;
+        List<dynamic> marketItemsSold = [];
+        List<dynamic> marketItemsOnSale = [];
+
+        for (dynamic marketItem in marketItemsAll) {
+          if (RegExp(r'^0x0+$').hasMatch(marketItem["seller"]) &&
+              marketItem["sold"]) {
+            // If seller address is zeroAddress (0x000000000000000)
+            // Then it means this ticket is already sold
+            marketItemsSold.add(marketItem);
+          } else {
+            marketItemsOnSale.add(marketItem);
+          }
+        }
+
+        setState(() {
+          _marketItemsAll = marketItemsAll;
+          _marketItemsSold = marketItemsSold;
+          _marketItemsOnSale = marketItemsOnSale;
+
+          _isLoading = false;
+        });
+      });
+    });
+  }
+
   // To mint tickets
   addMintedButton() {
     if (widget.event.owner == widget.userProvider?.user?.publicAddress &&
@@ -145,7 +179,9 @@ class _EventPageState extends State<EventPage> {
                         event: widget.event,
                         userProvider: widget.userProvider!,
                         metamaskProvider: widget.metamaskProvider!,
-                      ))).then((value) => setState(() {}));
+                      ))).then((value) async {
+            await refreshTicketStatus();
+          });
         },
         child: Icon(Icons.add_circle, size: 30, color: Color(0xFF050A31)),
       );
@@ -170,7 +206,9 @@ class _EventPageState extends State<EventPage> {
                         mintedTicketTokenIds: _mintedTicketTokenIds,
                         userProvider: widget.userProvider!,
                         metamaskProvider: widget.metamaskProvider!,
-                      ))).then((value) => setState(() {}));
+                      ))).then((value) async {
+            await refreshTicketStatus();
+          });
         },
         child: Icon(Icons.add_circle, size: 30, color: Color(0xFF050A31)),
       );
@@ -211,11 +249,15 @@ class _EventPageState extends State<EventPage> {
                               strokeWidth: 2,
                             ),
                           )
-                        : Text(
-                            "${_mintedTicketTokenIds.length}",
-                            style: TextStyle(fontSize: 24),
+                        : Row(
+                            children: [
+                              Text(
+                                "${_mintedTicketTokenIds.length}",
+                                style: TextStyle(fontSize: 24),
+                              ),
+                              addMintedButton(),
+                            ],
                           ),
-                    addMintedButton(),
                   ],
                 ),
               ),
@@ -240,11 +282,15 @@ class _EventPageState extends State<EventPage> {
                               strokeWidth: 2,
                             ),
                           )
-                        : Text(
-                            "${_marketItemsAll.length}",
-                            style: TextStyle(fontSize: 24),
+                        : Row(
+                            children: [
+                              Text(
+                                "${_marketItemsAll.length}/${_mintedTicketTokenIds.length}",
+                                style: TextStyle(fontSize: 24),
+                              ),
+                              addListedButton(),
+                            ],
                           ),
-                    addListedButton(),
                   ],
                 ),
               ),
@@ -332,7 +378,7 @@ class _EventPageState extends State<EventPage> {
                         myItemsOnSale.map((e) => e["tokenID"]).toList();
 
                     dynamic transactionParameters =
-                        await marketService.stopSale(
+                        await marketService.stopBatchSale(
                       widget.userProvider!.token,
                       tokenIds,
                       myItemsOnSale[0]["price"],
@@ -433,9 +479,20 @@ class _EventPageState extends State<EventPage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    "General Admission",
-                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.w500),
+                  Row(
+                    children: [
+                      Icon(
+                        CupertinoIcons.tickets_fill,
+                        color: Color(0xFF050A31),
+                        size: 30,
+                      ),
+                      SizedBox(width: 5),
+                      Text(
+                        "General Admission",
+                        style: TextStyle(
+                            fontSize: 22, fontWeight: FontWeight.w500),
+                      ),
+                    ],
                   ),
                   _isLoading
                       ? Container(
@@ -459,7 +516,7 @@ class _EventPageState extends State<EventPage> {
                               ? Column(
                                   children: [
                                     Text(
-                                      "Your price",
+                                      "Starting At",
                                       style: TextStyle(color: Colors.grey),
                                     ),
                                     Text(
@@ -581,6 +638,16 @@ class _EventPageState extends State<EventPage> {
                 ],
               ),
             ),
+            (widget.event.owner == widget.userProvider?.user?.publicAddress
+                ? Container(
+                    padding: EdgeInsets.only(top: 15),
+                    child: Text(
+                      "You are organising this event! ",
+                      style: TextStyle(
+                          color: Colors.red[800], fontWeight: FontWeight.w700),
+                    ),
+                  )
+                : SizedBox()),
             FutureBuilder<User>(
                 future: owner,
                 builder: (BuildContext context, AsyncSnapshot<User> snapshot) {
@@ -604,10 +671,16 @@ class _EventPageState extends State<EventPage> {
                                 MediaQuery.of(context).size.width * 10 / 375,
                                 0,
                                 0),
-                            child: Text(
-                              snapshot.data!.username,
-                              style: TextStyle(
-                                  fontSize: 15, fontWeight: FontWeight.w600),
+                            child: Column(
+                              children: [
+                                Text("Organiser"),
+                                Text(
+                                  snapshot.data!.username,
+                                  style: TextStyle(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w600),
+                                ),
+                              ],
                             ),
                           )
                         ],
@@ -654,8 +727,8 @@ class _EventPageState extends State<EventPage> {
                 ],
               ),
             ),
-            SizedBox(height: 30),
-            // ticketStatusContainer(),
+            SizedBox(height: 20),
+            SizedBox(height: 20),
             ticketStatusSection(),
             SizedBox(height: 30),
             buySection(),
