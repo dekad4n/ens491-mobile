@@ -47,6 +47,9 @@ class _EventPageState extends State<EventPage> {
   List<dynamic> _marketItemsSold = [];
   List<dynamic> _marketItemsOnSale = [];
 
+  List<dynamic> _myItemsOnSale = [];
+  List<dynamic> _myOwnItems = [];
+
   bool _isLoading = true;
 
   int mySortComparison(dynamic item1, dynamic item2) {
@@ -71,6 +74,9 @@ class _EventPageState extends State<EventPage> {
         List<dynamic> marketItemsSold = [];
         List<dynamic> marketItemsOnSale = [];
 
+        List<dynamic> myOwnItems = [];
+        List<dynamic> myItemsOnSale = [];
+
         for (dynamic marketItem in marketItemsAll) {
           if (RegExp(r'^0x0+$').hasMatch(marketItem["seller"]) &&
               marketItem["sold"]) {
@@ -82,10 +88,29 @@ class _EventPageState extends State<EventPage> {
           }
         }
 
+        // Filter my tickets that i sell currently
+        _marketItemsOnSale.forEach((item) {
+          if (item["seller"].toString().toLowerCase() ==
+              widget.userProvider?.user?.publicAddress) {
+            myItemsOnSale.add(item);
+          }
+        });
+
+        // Filter my tickets that i own and don't sell
+        marketItemsSold.forEach((item) {
+          if (item["ticketOwner"].toString().toLowerCase() ==
+              widget.userProvider?.user?.publicAddress) {
+            myOwnItems.add(item);
+          }
+        });
+
         setState(() {
           _marketItemsAll = marketItemsAll;
           _marketItemsSold = marketItemsSold;
           _marketItemsOnSale = marketItemsOnSale;
+
+          _myItemsOnSale = myItemsOnSale;
+          _myOwnItems = myOwnItems;
 
           _isLoading = false;
         });
@@ -179,9 +204,7 @@ class _EventPageState extends State<EventPage> {
                         event: widget.event,
                         userProvider: widget.userProvider!,
                         metamaskProvider: widget.metamaskProvider!,
-                      ))).then((value) async {
-            await refreshTicketStatus();
-          });
+                      ))).then((value) async {});
         },
         child: Icon(Icons.add_circle, size: 30, color: Color(0xFF050A31)),
       );
@@ -206,9 +229,7 @@ class _EventPageState extends State<EventPage> {
                         mintedTicketTokenIds: _mintedTicketTokenIds,
                         userProvider: widget.userProvider!,
                         metamaskProvider: widget.metamaskProvider!,
-                      ))).then((value) async {
-            await refreshTicketStatus();
-          });
+                      ))).then((value) async {});
         },
         child: Icon(Icons.add_circle, size: 30, color: Color(0xFF050A31)),
       );
@@ -343,19 +364,11 @@ class _EventPageState extends State<EventPage> {
   buySellButton() {
     if (widget.event.owner == widget.userProvider?.user?.publicAddress) {
       // Get all items that i sell
-      List<dynamic> myItemsOnSale = [];
-
-      _marketItemsOnSale.forEach((item) {
-        if (item["seller"].toString().toLowerCase() ==
-            widget.userProvider?.user?.publicAddress) {
-          myItemsOnSale.add(item);
-        }
-      });
 
       return Column(
         children: [
           Text(
-            "You have ${myItemsOnSale.length} tickets on sale.",
+            "You have ${_myItemsOnSale.length} tickets on sale.",
             style: TextStyle(
               color: Colors.red[900],
             ),
@@ -367,55 +380,59 @@ class _EventPageState extends State<EventPage> {
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     elevation: 0,
-                    backgroundColor: Color(0xFF050A31),
+                    backgroundColor: _myItemsOnSale.length > 0
+                        ? Color(0xFF050A31)
+                        : Colors.grey,
                   ),
                   child: Text(
                     "Stop Sale",
                     style: TextStyle(fontSize: 22),
                   ),
                   onPressed: () async {
-                    List<dynamic> tokenIds =
-                        myItemsOnSale.map((e) => e["tokenID"]).toList();
+                    if (_myItemsOnSale.length > 0) {
+                      List<dynamic> tokenIds =
+                          _myItemsOnSale.map((e) => e["tokenID"]).toList();
 
-                    dynamic transactionParameters =
-                        await marketService.stopBatchSale(
-                      widget.userProvider!.token,
-                      tokenIds,
-                      myItemsOnSale[0]["price"],
-                      widget.event.integerId,
-                    );
+                      dynamic transactionParameters =
+                          await marketService.stopBatchSale(
+                        widget.userProvider!.token,
+                        tokenIds,
+                        _myItemsOnSale[0]["price"],
+                        widget.event.integerId,
+                      );
 
-                    print("xxx");
+                      print("xxx");
 
-                    alchemy.init(
-                      httpRpcUrl:
-                          "https://polygon-mumbai.g.alchemy.com/v2/jq6Um8Vdb_j-F0vwzpqBjvjHiz3-v5wy",
-                      wsRpcUrl:
-                          "wss://polygon-mumbai.g.alchemy.com/v2/jq6Um8Vdb_j-F0vwzpqBjvjHiz3-v5wy",
-                      verbose: true,
-                    );
+                      alchemy.init(
+                        httpRpcUrl:
+                            "https://polygon-mumbai.g.alchemy.com/v2/jq6Um8Vdb_j-F0vwzpqBjvjHiz3-v5wy",
+                        wsRpcUrl:
+                            "wss://polygon-mumbai.g.alchemy.com/v2/jq6Um8Vdb_j-F0vwzpqBjvjHiz3-v5wy",
+                        verbose: true,
+                      );
 
-                    List<dynamic> params = [
-                      {
-                        "from": transactionParameters["from"],
-                        "to": transactionParameters["to"],
-                        "data": transactionParameters["data"],
-                      }
-                    ];
+                      List<dynamic> params = [
+                        {
+                          "from": transactionParameters["from"],
+                          "to": transactionParameters["to"],
+                          "data": transactionParameters["data"],
+                        }
+                      ];
 
-                    String method = "eth_sendTransaction";
+                      String method = "eth_sendTransaction";
 
-                    print(params);
+                      print(params);
 
-                    await launchUrl(
-                        Uri.parse(
-                            widget.metamaskProvider!.connector.session.toUri()),
-                        mode: LaunchMode.externalApplication);
+                      await launchUrl(
+                          Uri.parse(widget.metamaskProvider!.connector.session
+                              .toUri()),
+                          mode: LaunchMode.externalApplication);
 
-                    final signature = await widget.metamaskProvider!.connector
-                        .sendCustomRequest(method: method, params: params);
+                      final signature = await widget.metamaskProvider!.connector
+                          .sendCustomRequest(method: method, params: params);
 
-                    print("signature:" + signature);
+                      print("signature:" + signature);
+                    }
                   },
                 ),
               ),
@@ -459,6 +476,91 @@ class _EventPageState extends State<EventPage> {
           )
         ],
       );
+    }
+  }
+
+  yourTicketsSection() {
+    for (var x in _myOwnItems) print(x);
+    for (var x in _marketItemsSold) print(x);
+
+    if (_myOwnItems.length > 0) {
+      return Container(
+          padding: EdgeInsets.all(12),
+          width: MediaQuery.of(context).size.width * 0.9,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(15),
+            color: Color(0xFFB9A6E0).withOpacity(0.1),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                "Your Ticket Status",
+                style: TextStyle(
+                    color: Color(0xFF050A31),
+                    fontSize: 20,
+                    fontWeight: FontWeight.w500),
+              ),
+              SizedBox(height: 10),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Row(
+                      children: [
+                        Text(
+                          "General Admission",
+                          style: TextStyle(
+                              color: Color(0xFF050A31),
+                              fontSize: 18,
+                              fontWeight: FontWeight.w300),
+                        ),
+                        SizedBox(
+                          width: 40,
+                        ),
+                        Text(
+                          "x ${_myOwnItems.length}",
+                          style: TextStyle(
+                              color: Color(0xFF050A31),
+                              fontSize: 18,
+                              fontWeight: FontWeight.w300),
+                        ),
+                      ],
+                    ),
+                  ),
+                  ElevatedButton(
+                      onPressed: () {},
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Color(0xFF050A31),
+                      ),
+                      child: Text("Sell")),
+                ],
+              ),
+            ],
+          ));
+    } else {
+      return Container(
+          padding: EdgeInsets.all(12),
+          width: MediaQuery.of(context).size.width * 0.9,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(15),
+            color: Color(0xFFB9A6E0).withOpacity(0.1),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                "Your Ticket Status",
+                style: TextStyle(
+                    color: Color(0xFF050A31),
+                    fontSize: 20,
+                    fontWeight: FontWeight.w500),
+              ),
+              SizedBox(height: 10),
+              Text("You don't own any tickets!"),
+              SizedBox(height: 10),
+            ],
+          ));
     }
   }
 
@@ -730,6 +832,8 @@ class _EventPageState extends State<EventPage> {
             SizedBox(height: 20),
             SizedBox(height: 20),
             ticketStatusSection(),
+            SizedBox(height: 30),
+            yourTicketsSection(),
             SizedBox(height: 30),
             buySection(),
             SizedBox(height: 30),
