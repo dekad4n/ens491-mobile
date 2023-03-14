@@ -478,8 +478,39 @@ class _EventPageState extends State<EventPage> {
                 elevation: 0,
                 backgroundColor: Color(0xFF050A31),
               ),
-              onPressed: () {
+              onPressed: () async {
                 //TODO: Buy a ticket
+                var transactionParameters = await marketService.buyTicket(
+                    widget.userProvider!.token,
+                    _marketItemsOnSale[0]["tokenID"],
+                    _marketItemsOnSale[0]["price"]);
+                alchemy.init(
+                  httpRpcUrl:
+                      "https://polygon-mumbai.g.alchemy.com/v2/jq6Um8Vdb_j-F0vwzpqBjvjHiz3-v5wy",
+                  wsRpcUrl:
+                      "wss://polygon-mumbai.g.alchemy.com/v2/jq6Um8Vdb_j-F0vwzpqBjvjHiz3-v5wy",
+                  verbose: true,
+                );
+                List<dynamic> params = [
+                  {
+                    "from": transactionParameters["from"],
+                    "to": transactionParameters["to"],
+                    "value": transactionParameters["value"],
+                    "data": transactionParameters["data"],
+                  }
+                ];
+
+                String method = "eth_sendTransaction";
+
+                print(params);
+
+                await launchUrl(
+                    Uri.parse(
+                        widget.metamaskProvider!.connector.session.toUri()),
+                    mode: LaunchMode.externalApplication);
+
+                final signature = await widget.metamaskProvider!.connector
+                    .sendCustomRequest(method: method, params: params);
               },
               child: Text(
                 "Buy",

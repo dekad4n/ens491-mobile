@@ -175,4 +175,26 @@ class MarketService {
 
     return body;
   }
+
+  Future<dynamic> buyTicket(auth, tokenIds, price) async {
+    final String url = '${backendUrl!}/market/buy';
+
+    var headers = {
+      "Accept": "application/json",
+      "content-type": "application/json",
+      "Access-Control-Allow-Origin": '*',
+      "Authorization": "jwt $auth",
+    };
+
+    Map<String, dynamic> params = {"tokenIds": tokenIds, "price": price};
+    Response res = await post(
+      Uri.parse(url),
+      body: jsonEncode(params),
+      headers: headers,
+    );
+
+    var body = jsonDecode(res.body);
+
+    return body;
+  }
 }
