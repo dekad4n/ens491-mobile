@@ -300,6 +300,14 @@ class _MintTicketPageState extends State<MintTicketPage> {
                     auth: widget.userProvider.token,
                     eventId: widget.event.integerId,
                     amount: _quantity, //_quantity
+                    startDateTime: widget.event.startDate.toString() +
+                        " " +
+                        widget.event.startTime.toString() +
+                        ":00",
+                    endDateTime: widget.event.endDate.toString() +
+                        " " +
+                        widget.event.endTime.toString() +
+                        ":00",
                   );
 
                   // alchemy.init(
