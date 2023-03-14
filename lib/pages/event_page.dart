@@ -89,7 +89,7 @@ class _EventPageState extends State<EventPage> {
         }
 
         // Filter my tickets that i sell currently
-        _marketItemsOnSale.forEach((item) {
+        marketItemsOnSale.forEach((item) {
           if (item["seller"].toString().toLowerCase() ==
               widget.userProvider?.user?.publicAddress) {
             myItemsOnSale.add(item);
@@ -156,7 +156,10 @@ class _EventPageState extends State<EventPage> {
     return marketItemsAll;
   }
 
-  Future<void> refreshTicketStatus() async {
+  void refreshTicketStatus() {
+    setState(() {
+      _isLoading = true;
+    });
     getMintedEventTicketTokens().then((value) {
       setState(() {
         _mintedTicketTokenIds = value;
@@ -166,6 +169,9 @@ class _EventPageState extends State<EventPage> {
         List<dynamic> marketItemsAll = value;
         List<dynamic> marketItemsSold = [];
         List<dynamic> marketItemsOnSale = [];
+
+        List<dynamic> myOwnItems = [];
+        List<dynamic> myItemsOnSale = [];
 
         for (dynamic marketItem in marketItemsAll) {
           if (RegExp(r'^0x0+$').hasMatch(marketItem["seller"]) &&
@@ -178,10 +184,29 @@ class _EventPageState extends State<EventPage> {
           }
         }
 
+        // Filter my tickets that i sell currently
+        marketItemsOnSale.forEach((item) {
+          if (item["seller"].toString().toLowerCase() ==
+              widget.userProvider?.user?.publicAddress) {
+            myItemsOnSale.add(item);
+          }
+        });
+
+        // Filter my tickets that i own and don't sell
+        marketItemsSold.forEach((item) {
+          if (item["ticketOwner"].toString().toLowerCase() ==
+              widget.userProvider?.user?.publicAddress) {
+            myOwnItems.add(item);
+          }
+        });
+
         setState(() {
           _marketItemsAll = marketItemsAll;
           _marketItemsSold = marketItemsSold;
           _marketItemsOnSale = marketItemsOnSale;
+
+          _myItemsOnSale = myItemsOnSale;
+          _myOwnItems = myOwnItems;
 
           _isLoading = false;
         });
@@ -204,7 +229,9 @@ class _EventPageState extends State<EventPage> {
                         event: widget.event,
                         userProvider: widget.userProvider!,
                         metamaskProvider: widget.metamaskProvider!,
-                      ))).then((value) async {});
+                      ))).then((value) async {
+            refreshTicketStatus();
+          });
         },
         child: Icon(Icons.add_circle, size: 30, color: Color(0xFF050A31)),
       );
@@ -229,7 +256,9 @@ class _EventPageState extends State<EventPage> {
                         mintedTicketTokenIds: _mintedTicketTokenIds,
                         userProvider: widget.userProvider!,
                         metamaskProvider: widget.metamaskProvider!,
-                      ))).then((value) async {});
+                      ))).then((value) async {
+            refreshTicketStatus();
+          });
         },
         child: Icon(Icons.add_circle, size: 30, color: Color(0xFF050A31)),
       );
@@ -480,8 +509,7 @@ class _EventPageState extends State<EventPage> {
   }
 
   yourTicketsSection() {
-    for (var x in _myOwnItems) print(x);
-    for (var x in _marketItemsSold) print(x);
+    // for (var x in _marketItemsAll) print(x);
 
     if (_myOwnItems.length > 0) {
       return Container(
@@ -529,11 +557,25 @@ class _EventPageState extends State<EventPage> {
                     ),
                   ),
                   ElevatedButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => SellTicketPage(
+                                      event: widget.event,
+                                      mintedTicketTokenIds:
+                                          _mintedTicketTokenIds,
+                                      userProvider: widget.userProvider!,
+                                      metamaskProvider:
+                                          widget.metamaskProvider!,
+                                    ))).then((value) async {
+                          refreshTicketStatus();
+                        });
+                      },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Color(0xFF050A31),
                       ),
-                      child: Text("Sell")),
+                      child: Text("Resell")),
                 ],
               ),
             ],

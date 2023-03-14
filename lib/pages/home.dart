@@ -203,43 +203,51 @@ class _HomeState extends State<Home> {
                 Flexible(
                     flex: 2,
                     fit: FlexFit.tight,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        image: DecorationImage(
-                            image: NetworkImage(e.coverImageURL!),
-                            fit: BoxFit.cover,
-                            alignment: Alignment.bottomCenter),
-                        color: Colors.white,
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Row(
+                    child: Stack(
+                      children: [
+                        Positioned(
+                            child: Container(
+                          decoration: BoxDecoration(
+                            image: DecorationImage(
+                                image: NetworkImage(e.coverImageURL!),
+                                fit: BoxFit.cover,
+                                alignment: Alignment.bottomCenter),
+                            color: Colors.white,
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Column(
                               mainAxisAlignment: MainAxisAlignment.end,
+                              crossAxisAlignment: CrossAxisAlignment.end,
                               children: [
-                                Text(
-                                  e.startDate!,
-                                  style: TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.w800),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  children: [
+                                    Text(
+                                      e.startDate!,
+                                      style: TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.w800),
+                                    ),
+                                  ],
+                                ),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  children: [
+                                    Text(
+                                      e.startTime!,
+                                      style: TextStyle(color: Colors.white),
+                                    ),
+                                  ],
                                 ),
                               ],
                             ),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.end,
-                              children: [
-                                Text(
-                                  e.startTime!,
-                                  style: TextStyle(color: Colors.white),
-                                ),
-                              ],
-                            ),
-                          ],
+                          ),
+                        )),
+                        Positioned(
+                          child: cardExpiredBadge(e),
                         ),
-                      ),
+                      ],
                     )),
               ],
             ),
@@ -248,6 +256,39 @@ class _HomeState extends State<Home> {
         //Padding
       ), //SizedBox
     );
+  }
+
+  cardExpiredBadge(Event event) {
+    List<String> eventStartDateSplit = event.startDate!.split("-");
+    List<String> eventStartTimeSplit = event.startTime!.split(":");
+
+    int startYear = int.parse(eventStartDateSplit[0]);
+    int startMonth = int.parse(eventStartDateSplit[1]);
+    int startDay = int.parse(eventStartDateSplit[2]);
+    int startHour = int.parse(eventStartTimeSplit[0]);
+    int startMinute = int.parse(eventStartTimeSplit[1]);
+
+    DateTime eventStartDateTime =
+        DateTime.utc(startYear, startMonth, startDay, startHour, startMinute);
+
+    DateTime now = DateTime.now();
+
+    if (eventStartDateTime.compareTo(now) < 0) {
+      return Container(
+        padding: EdgeInsets.all(4),
+        decoration: BoxDecoration(
+            color: Colors.red,
+            borderRadius: BorderRadius.only(
+              bottomRight: Radius.circular(8),
+            )),
+        child: Text(
+          "Expired",
+          style: TextStyle(color: Colors.white),
+        ),
+      );
+    } else {
+      return SizedBox();
+    }
   }
 
   eventsSection(userProvider, metamaskProvider) {
