@@ -214,6 +214,24 @@ class _EventPageState extends State<EventPage> {
     });
   }
 
+  bool checkIfExpired() {
+    List<String> eventStartDateSplit = widget.event.startDate!.split("-");
+    List<String> eventStartTimeSplit = widget.event.startTime!.split(":");
+
+    int startYear = int.parse(eventStartDateSplit[0]);
+    int startMonth = int.parse(eventStartDateSplit[1]);
+    int startDay = int.parse(eventStartDateSplit[2]);
+    int startHour = int.parse(eventStartTimeSplit[0]);
+    int startMinute = int.parse(eventStartTimeSplit[1]);
+
+    DateTime eventStartDateTime =
+        DateTime.utc(startYear, startMonth, startDay, startHour, startMinute);
+
+    DateTime now = DateTime.now();
+
+    return eventStartDateTime.compareTo(now) < 0;
+  }
+
   // To mint tickets
   addMintedButton() {
     if (widget.event.owner == widget.userProvider?.user?.publicAddress &&
@@ -392,8 +410,8 @@ class _EventPageState extends State<EventPage> {
 
   buySellButton() {
     if (widget.event.owner == widget.userProvider?.user?.publicAddress) {
+      // If i am the owner,
       // Get all items that i sell
-
       return Column(
         children: [
           Text(
@@ -638,101 +656,125 @@ class _EventPageState extends State<EventPage> {
   }
 
   buySection() {
-    if (_marketItemsAll.length > 0) {
-      bool isSoldOut = _marketItemsOnSale.length == 0;
+    bool isExpired = checkIfExpired();
 
-      return Container(
-          padding: EdgeInsets.all(12),
-          width: MediaQuery.of(context).size.width * 0.9,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(15),
-            color: Color(0xFFE9F2F6),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      Icon(
-                        CupertinoIcons.tickets_fill,
-                        color: Color(0xFF050A31),
-                        size: 30,
-                      ),
-                      SizedBox(width: 5),
-                      Text(
-                        "General Admission",
-                        style: TextStyle(
-                            fontSize: 22, fontWeight: FontWeight.w500),
-                      ),
-                    ],
-                  ),
-                  _isLoading
-                      ? Container(
-                          width: 25,
-                          height: 25,
-                          child: CircularProgressIndicator(
-                            color: Colors.deepPurple,
-                            strokeWidth: 2,
-                          ),
-                        )
-                      : (isSoldOut
-                          ? Text(
-                              "Sold Out",
-                              style: TextStyle(
-                                  fontSize: 16,
-                                  color: Colors.grey,
-                                  fontWeight: FontWeight.w600),
-                            )
-                          : (widget.event.owner ==
-                                  widget.userProvider?.user?.publicAddress
-                              ? Column(
-                                  children: [
-                                    Text(
-                                      "Starting At",
-                                      style: TextStyle(color: Colors.grey),
-                                    ),
-                                    Text(
-                                      "MATIC ${_marketItemsAll[0]['price']}",
-                                      style: TextStyle(
-                                          fontSize: 16,
-                                          color: Colors.grey,
-                                          fontWeight: FontWeight.w600),
-                                    )
-                                  ],
-                                )
-                              : Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Text(
-                                      "Starting at",
-                                      style: TextStyle(color: Colors.grey),
-                                    ),
-                                    Text(
-                                      "MATIC ${_marketItemsAll[0]['price']}",
-                                      style: TextStyle(
-                                          fontSize: 16,
-                                          color: Colors.grey,
-                                          fontWeight: FontWeight.w600),
-                                    )
-                                  ],
-                                )))
-                ],
-              ),
-              SizedBox(height: 10),
-              Text(
-                "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas bibendum ex at velit luctus rutrum. Pellentesque nec condimentum libero. Phasellus nulla justo, pretium a ullamcorper at, vestibulum ut sem. Curabitur scelerisque tincidunt lacus, a imperdiet enim pulvinar in.",
-                style: TextStyle(fontSize: 18),
-              ),
-              SizedBox(height: 10),
-              buySellButton(),
-            ],
-          ));
+    if (isExpired) {
+      return expiredContainer();
     } else {
-      return Text("There is no issued tickets right now...");
+      if (_marketItemsAll.length > 0) {
+        bool isSoldOut = _marketItemsOnSale.length == 0;
+
+        return Container(
+            padding: EdgeInsets.all(12),
+            width: MediaQuery.of(context).size.width * 0.9,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(15),
+              color: Color(0xFFE9F2F6),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          CupertinoIcons.tickets_fill,
+                          color: Color(0xFF050A31),
+                          size: 30,
+                        ),
+                        SizedBox(width: 5),
+                        Text(
+                          "General Admission",
+                          style: TextStyle(
+                              fontSize: 22, fontWeight: FontWeight.w500),
+                        ),
+                      ],
+                    ),
+                    _isLoading
+                        ? Container(
+                            width: 25,
+                            height: 25,
+                            child: CircularProgressIndicator(
+                              color: Colors.deepPurple,
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : (isSoldOut
+                            ? Text(
+                                "Sold Out",
+                                style: TextStyle(
+                                    fontSize: 16,
+                                    color: Colors.grey,
+                                    fontWeight: FontWeight.w600),
+                              )
+                            : (widget.event.owner ==
+                                    widget.userProvider?.user?.publicAddress
+                                ? Column(
+                                    children: [
+                                      Text(
+                                        "Starting At",
+                                        style: TextStyle(color: Colors.grey),
+                                      ),
+                                      Text(
+                                        "MATIC ${_marketItemsAll[0]['price']}",
+                                        style: TextStyle(
+                                            fontSize: 16,
+                                            color: Colors.grey,
+                                            fontWeight: FontWeight.w600),
+                                      )
+                                    ],
+                                  )
+                                : Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        "Starting at",
+                                        style: TextStyle(color: Colors.grey),
+                                      ),
+                                      Text(
+                                        "MATIC ${_marketItemsAll[0]['price']}",
+                                        style: TextStyle(
+                                            fontSize: 16,
+                                            color: Colors.grey,
+                                            fontWeight: FontWeight.w600),
+                                      )
+                                    ],
+                                  )))
+                  ],
+                ),
+                SizedBox(height: 10),
+                Text(
+                  "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas bibendum ex at velit luctus rutrum. Pellentesque nec condimentum libero. Phasellus nulla justo, pretium a ullamcorper at, vestibulum ut sem. Curabitur scelerisque tincidunt lacus, a imperdiet enim pulvinar in.",
+                  style: TextStyle(fontSize: 18),
+                ),
+                SizedBox(height: 10),
+                buySellButton(),
+              ],
+            ));
+      } else {
+        return Text("There is no issued tickets right now...");
+      }
     }
+  }
+
+  expiredContainer() {
+    return Container(
+      width: MediaQuery.of(context).size.width * 0.8,
+      height: 50,
+      padding: EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: Colors.red,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Center(
+        child: Text(
+          "This event is expired!",
+          style: TextStyle(color: Colors.white, fontSize: 18),
+        ),
+      ),
+    );
   }
 
   @override
@@ -903,6 +945,7 @@ class _EventPageState extends State<EventPage> {
               ),
             ),
             SizedBox(height: 20),
+            expiredContainer(),
             SizedBox(height: 20),
             ticketStatusSection(),
             SizedBox(height: 30),
