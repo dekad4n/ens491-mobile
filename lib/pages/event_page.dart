@@ -8,6 +8,7 @@ import 'package:tickrypt/pages/resell_ticket_page.dart';
 import 'package:tickrypt/pages/sell_ticket_page.dart';
 import 'package:tickrypt/pages/mint_ticket_page.dart';
 import 'package:tickrypt/pages/ticket_page.dart';
+import 'package:tickrypt/pages/transfer_page.dart';
 import 'package:tickrypt/providers/metamask.dart';
 import 'package:tickrypt/providers/user_provider.dart';
 import 'package:tickrypt/services/event.dart';
@@ -651,51 +652,83 @@ class _EventPageState extends State<EventPage> {
                         "General Admission",
                         style: TextStyle(
                             color: Color(0xFF050A31),
-                            fontSize: 18,
+                            fontSize: 16,
                             fontWeight: FontWeight.w300),
                       ),
-                      SizedBox(width: 40),
+                      SizedBox(width: 20),
                       Text(
                         "x ${_myOwnItems.length}",
                         style: TextStyle(
                             color: Color(0xFF050A31),
-                            fontSize: 18,
+                            fontSize: 16,
                             fontWeight: FontWeight.w300),
                       ),
                     ],
                   ),
                 ),
                 _myOwnItems.length > 0
-                    ? GestureDetector(
-                        behavior: HitTestBehavior.opaque,
-                        child: Container(
-                          padding: EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(8),
-                              color: Color(0xFF050A31)),
-                          child: Center(
-                            child: Text(
-                              "Resell",
-                              style: TextStyle(color: Colors.white),
+                    ? Row(
+                        children: [
+                          GestureDetector(
+                            behavior: HitTestBehavior.opaque,
+                            child: Container(
+                              padding: EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(8),
+                                  color: Color(0xFFF99D23)),
+                              child: Center(
+                                child: Text(
+                                  "Transfer",
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                              ),
                             ),
+                            onTap: () {
+                              Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) => TransferPage(
+                                            event: widget.event,
+                                            userProvider: widget.userProvider!,
+                                            metamaskProvider:
+                                                widget.metamaskProvider!,
+                                            myOwnItems: _myOwnItems,
+                                          ))).then((value) {});
+                            },
                           ),
-                        ),
-                        onTap: () {
-                          Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) => ResellTicketPage(
-                                        event: widget.event,
-                                        mintedTicketTokenIds:
-                                            _mintedTicketTokenIds,
-                                        userProvider: widget.userProvider!,
-                                        metamaskProvider:
-                                            widget.metamaskProvider!,
-                                        myOwnItems: _myOwnItems,
-                                      ))).then((value) {
-                            refreshTicketStatus();
-                          });
-                        },
+                          SizedBox(width: 15),
+                          GestureDetector(
+                            behavior: HitTestBehavior.opaque,
+                            child: Container(
+                              padding: EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(8),
+                                  color: Color(0xFF050A31)),
+                              child: Center(
+                                child: Text(
+                                  "Resell",
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                              ),
+                            ),
+                            onTap: () {
+                              Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) => ResellTicketPage(
+                                            event: widget.event,
+                                            mintedTicketTokenIds:
+                                                _mintedTicketTokenIds,
+                                            userProvider: widget.userProvider!,
+                                            metamaskProvider:
+                                                widget.metamaskProvider!,
+                                            myOwnItems: _myOwnItems,
+                                          ))).then((value) {
+                                refreshTicketStatus();
+                              });
+                            },
+                          ),
+                        ],
                       )
                     : SizedBox(),
               ],
@@ -719,15 +752,15 @@ class _EventPageState extends State<EventPage> {
                         "General Admission",
                         style: TextStyle(
                             color: Color(0xFF050A31),
-                            fontSize: 18,
+                            fontSize: 16,
                             fontWeight: FontWeight.w300),
                       ),
-                      SizedBox(width: 40),
+                      SizedBox(width: 20),
                       Text(
                         "x ${_myItemsOnSale.length}",
                         style: TextStyle(
                             color: Color(0xFF050A31),
-                            fontSize: 18,
+                            fontSize: 16,
                             fontWeight: FontWeight.w300),
                       ),
                     ],
