@@ -7,6 +7,7 @@ import 'package:tickrypt/models/user_model.dart';
 import 'package:tickrypt/pages/resell_ticket_page.dart';
 import 'package:tickrypt/pages/sell_ticket_page.dart';
 import 'package:tickrypt/pages/mint_ticket_page.dart';
+import 'package:tickrypt/pages/ticket_page.dart';
 import 'package:tickrypt/providers/metamask.dart';
 import 'package:tickrypt/providers/user_provider.dart';
 import 'package:tickrypt/services/event.dart';
@@ -65,58 +66,7 @@ class _EventPageState extends State<EventPage> {
 
   @override
   void initState() {
-    getMintedEventTicketTokens().then((value) {
-      setState(() {
-        _mintedTicketTokenIds = value;
-      });
-
-      getMarketItemsAll().then((value) {
-        List<dynamic> marketItemsAll = value;
-        List<dynamic> marketItemsSold = [];
-        List<dynamic> marketItemsOnSale = [];
-
-        List<dynamic> myOwnItems = [];
-        List<dynamic> myItemsOnSale = [];
-
-        for (dynamic marketItem in marketItemsAll) {
-          if (RegExp(r'^0x0+$').hasMatch(marketItem["seller"]) &&
-              marketItem["sold"]) {
-            // If seller address is zeroAddress (0x000000000000000)
-            // Then it means this ticket is already sold
-            marketItemsSold.add(marketItem);
-          } else {
-            marketItemsOnSale.add(marketItem);
-          }
-        }
-
-        // Filter my tickets that i sell currently
-        marketItemsOnSale.forEach((item) {
-          if (item["seller"].toString().toLowerCase() ==
-              widget.userProvider?.user?.publicAddress) {
-            myItemsOnSale.add(item);
-          }
-        });
-
-        // Filter my tickets that i own and don't sell
-        marketItemsSold.forEach((item) {
-          if (item["ticketOwner"].toString().toLowerCase() ==
-              widget.userProvider?.user?.publicAddress) {
-            myOwnItems.add(item);
-          }
-        });
-
-        setState(() {
-          _marketItemsAll = marketItemsAll;
-          _marketItemsSold = marketItemsSold;
-          _marketItemsOnSale = marketItemsOnSale;
-
-          _myItemsOnSale = myItemsOnSale;
-          _myOwnItems = myOwnItems;
-
-          _isLoading = false;
-        });
-      });
-    });
+    refreshTicketStatus();
 
     super.initState();
   }
@@ -130,20 +80,6 @@ class _EventPageState extends State<EventPage> {
   Future<List<dynamic>> getMintedEventTicketTokens() async {
     List<dynamic> mintedEventTicketTokens =
         await eventService.getMintedEventTicketIds(widget.event.integerId);
-
-    // An example return: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-
-    // for (dynamic tokenId in mintedEventTicketTokens) {
-    //   print(tokenId);
-    //   final String url =
-    //       'http://10.51.20.179:3001/market/market-item?tokenId=$tokenId';
-
-    //   await get(Uri.parse(url));
-
-    //   // var body = jsonDecode(res.body);
-
-    //   // print(body);
-    // }
 
     return mintedEventTicketTokens;
   }
@@ -375,10 +311,19 @@ class _EventPageState extends State<EventPage> {
                           TextStyle(fontWeight: FontWeight.w400, fontSize: 16),
                     ),
                     SizedBox(height: 5),
-                    Text(
-                      "${_marketItemsSold.length}",
-                      style: TextStyle(fontSize: 24),
-                    ),
+                    _isLoading
+                        ? Container(
+                            width: 25,
+                            height: 25,
+                            child: CircularProgressIndicator(
+                              color: Colors.deepPurple,
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : Text(
+                            "${_marketItemsSold.length}",
+                            style: TextStyle(fontSize: 24),
+                          ),
                   ],
                 ),
               ),
@@ -394,10 +339,19 @@ class _EventPageState extends State<EventPage> {
                           TextStyle(fontWeight: FontWeight.w400, fontSize: 16),
                     ),
                     SizedBox(height: 5),
-                    Text(
-                      "${_marketItemsOnSale.length}",
-                      style: TextStyle(fontSize: 24),
-                    ),
+                    _isLoading
+                        ? Container(
+                            width: 25,
+                            height: 25,
+                            child: CircularProgressIndicator(
+                              color: Colors.deepPurple,
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : Text(
+                            "${_marketItemsOnSale.length}",
+                            style: TextStyle(fontSize: 24),
+                          ),
                   ],
                 ),
               ),
@@ -667,12 +621,24 @@ class _EventPageState extends State<EventPage> {
             Divider(
               thickness: 1,
             ),
-            Text(
-              "You Own:",
-              style: TextStyle(
-                  color: Color(0xFF050A31),
-                  fontSize: 18,
-                  fontWeight: FontWeight.w400),
+            GestureDetector(
+              child: Text(
+                "You Own:",
+                style: TextStyle(
+                    color: Color(0xFF050A31),
+                    fontSize: 18,
+                    fontWeight: FontWeight.w400),
+              ),
+              onTap: () {
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => TicketPage(
+                              event: widget.event,
+                              userProvider: widget.userProvider,
+                              metamaskProvider: widget.metamaskProvider,
+                            ))).then((value) {});
+              },
             ),
             SizedBox(height: 10),
             Row(
