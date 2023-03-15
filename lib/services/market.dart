@@ -186,10 +186,38 @@ class MarketService {
       "Authorization": "jwt $auth",
     };
 
-    Map<String, dynamic> params = {"tokenIds": tokenIds, "price": price};
+    Map<String, dynamic> params = {
+      "tokenIds": tokenIds,
+      "price": price,
+    };
+
     Response res = await post(
       Uri.parse(url),
       body: jsonEncode(params),
+      headers: headers,
+    );
+
+    var body = jsonDecode(res.body);
+
+    return body;
+  }
+
+  Future<dynamic> resell(auth, price, tokenId) async {
+    final String url = '${backendUrl!}/market/resell';
+
+    var headers = {
+      "Access-Control-Allow-Origin": '*',
+      "Authorization": "jwt $auth",
+    };
+
+    Map<String, dynamic> params = {
+      "price": price.toString(),
+      "tokenId": tokenId.toString(),
+    };
+
+    Response res = await post(
+      Uri.parse(url),
+      body: params,
       headers: headers,
     );
 

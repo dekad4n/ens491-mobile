@@ -4,6 +4,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:tickrypt/models/user_model.dart';
+import 'package:tickrypt/pages/resell_ticket_page.dart';
 import 'package:tickrypt/pages/sell_ticket_page.dart';
 import 'package:tickrypt/pages/mint_ticket_page.dart';
 import 'package:tickrypt/providers/metamask.dart';
@@ -408,9 +409,11 @@ class _EventPageState extends State<EventPage> {
     );
   }
 
-  buySellButton() {
+  buyStopSaleButton() {
+    // for (var x in _myOwnItems) print(x);
+
     if (widget.event.owner == widget.userProvider?.user?.publicAddress) {
-      // If i am the owner,
+      // If i am the owner, show Stop Sale Button
       // Get all items that i sell
       return Column(
         children: [
@@ -488,72 +491,171 @@ class _EventPageState extends State<EventPage> {
         ],
       );
     } else {
-      return Row(
-        children: [
-          Expanded(
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                elevation: 0,
-                backgroundColor: Color(0xFF050A31),
+      if (_myItemsOnSale.length > 0) {
+        // If i am a normal user and i currently sell something,
+        // Show Stop Sale Button
+        return Column(
+          children: [
+            Text(
+              "You have ${_myItemsOnSale.length} tickets on sale.",
+              style: TextStyle(
+                color: Colors.red[900],
               ),
-              onPressed: () async {
-                //TODO: Buy a ticket
-                var transactionParameters = await marketService.buyTicket(
-                    widget.userProvider!.token,
-                    _marketItemsOnSale[0]["tokenID"],
-                    _marketItemsOnSale[0]["price"]);
-                alchemy.init(
-                  httpRpcUrl:
-                      "https://polygon-mumbai.g.alchemy.com/v2/jq6Um8Vdb_j-F0vwzpqBjvjHiz3-v5wy",
-                  wsRpcUrl:
-                      "wss://polygon-mumbai.g.alchemy.com/v2/jq6Um8Vdb_j-F0vwzpqBjvjHiz3-v5wy",
-                  verbose: true,
-                );
-                List<dynamic> params = [
-                  {
-                    "from": transactionParameters["from"],
-                    "to": transactionParameters["to"],
-                    "value": transactionParameters["value"],
-                    "data": transactionParameters["data"],
+            ),
+            SizedBox(height: 5),
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      elevation: 0,
+                      backgroundColor: Color(0xFF050A31),
+                    ),
+                    child: Text(
+                      "Stop Sale",
+                      style: TextStyle(fontSize: 22),
+                    ),
+                    onPressed: () async {
+                      if (_myItemsOnSale.length > 0) {
+                        List<dynamic> tokenIds =
+                            _myItemsOnSale.map((e) => e["tokenID"]).toList();
+
+                        dynamic transactionParameters =
+                            await marketService.stopBatchSale(
+                          widget.userProvider!.token,
+                          tokenIds,
+                          _myItemsOnSale[0]["price"],
+                          widget.event.integerId,
+                        );
+
+                        print("xxx");
+
+                        alchemy.init(
+                          httpRpcUrl:
+                              "https://polygon-mumbai.g.alchemy.com/v2/jq6Um8Vdb_j-F0vwzpqBjvjHiz3-v5wy",
+                          wsRpcUrl:
+                              "wss://polygon-mumbai.g.alchemy.com/v2/jq6Um8Vdb_j-F0vwzpqBjvjHiz3-v5wy",
+                          verbose: true,
+                        );
+
+                        List<dynamic> params = [
+                          {
+                            "from": transactionParameters["from"],
+                            "to": transactionParameters["to"],
+                            "data": transactionParameters["data"],
+                          }
+                        ];
+
+                        String method = "eth_sendTransaction";
+
+                        print(params);
+
+                        await launchUrl(
+                            Uri.parse(widget.metamaskProvider!.connector.session
+                                .toUri()),
+                            mode: LaunchMode.externalApplication);
+
+                        final signature = await widget
+                            .metamaskProvider!.connector
+                            .sendCustomRequest(method: method, params: params);
+
+                        print("signature:" + signature);
+
+                        refreshTicketStatus();
+                      }
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ],
+        );
+      } else {
+        // If not, then show Buy Button
+        return Row(
+          children: [
+            Expanded(
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  elevation: 0,
+                  backgroundColor: Color(0xFFF99D23),
+                ),
+                onPressed: () async {
+                  if (widget.metamaskProvider!.isConnected) {
+                    // Buy a ticket
+                    var transactionParameters = await marketService.buyTicket(
+                        widget.userProvider!.token,
+                        _marketItemsOnSale[0]["tokenID"],
+                        _marketItemsOnSale[0]["price"]);
+                    alchemy.init(
+                      httpRpcUrl:
+                          "https://polygon-mumbai.g.alchemy.com/v2/jq6Um8Vdb_j-F0vwzpqBjvjHiz3-v5wy",
+                      wsRpcUrl:
+                          "wss://polygon-mumbai.g.alchemy.com/v2/jq6Um8Vdb_j-F0vwzpqBjvjHiz3-v5wy",
+                      verbose: true,
+                    );
+                    List<dynamic> params = [
+                      {
+                        "from": transactionParameters["from"],
+                        "to": transactionParameters["to"],
+                        "value": transactionParameters["value"],
+                        "data": transactionParameters["data"],
+                      }
+                    ];
+
+                    String method = "eth_sendTransaction";
+
+                    await launchUrl(
+                        Uri.parse(
+                            widget.metamaskProvider!.connector.session.toUri()),
+                        mode: LaunchMode.externalApplication);
+
+                    final signature = await widget.metamaskProvider!.connector
+                        .sendCustomRequest(method: method, params: params);
+
+                    refreshTicketStatus();
+                  } else {
+                    showDialog<void>(
+                      context: context,
+                      barrierDismissible: false, // user must tap button!
+                      builder: (BuildContext context) {
+                        return AlertDialog(
+                          title: const Text("You Need To Login First"),
+                          content: SingleChildScrollView(
+                            child: ListBody(
+                              children: const <Widget>[
+                                Text(
+                                    'In order to buy a ticket, you need to login using your Metamask account.'),
+                                SizedBox(
+                                  height: 10,
+                                ),
+                                Text(
+                                    "Please go to the Profile page to perform login."),
+                              ],
+                            ),
+                          ),
+                          actions: <Widget>[
+                            TextButton(
+                              child: const Text('Close'),
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                              },
+                            ),
+                          ],
+                        );
+                      },
+                    );
                   }
-                ];
-
-                String method = "eth_sendTransaction";
-
-                print(params);
-
-                await launchUrl(
-                    Uri.parse(
-                        widget.metamaskProvider!.connector.session.toUri()),
-                    mode: LaunchMode.externalApplication);
-
-                final signature = await widget.metamaskProvider!.connector
-                    .sendCustomRequest(method: method, params: params);
-              },
-              child: Text(
-                "Buy",
-                style: TextStyle(fontSize: 22),
+                },
+                child: Text(
+                  "Buy",
+                  style: TextStyle(fontSize: 22, color: Color(0xFF050A31)),
+                ),
               ),
             ),
-          ),
-          SizedBox(width: 20),
-          Expanded(
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                elevation: 0,
-                backgroundColor: Color(0xFFF99D23),
-              ),
-              onPressed: () {
-                // TODO: Sell your purchased ticket
-              },
-              child: Text(
-                "Sell",
-                style: TextStyle(fontSize: 22),
-              ),
-            ),
-          )
-        ],
-      );
+          ],
+        );
+      }
     }
   }
 
@@ -610,13 +712,14 @@ class _EventPageState extends State<EventPage> {
                         Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: (context) => SellTicketPage(
+                                builder: (context) => ResellTicketPage(
                                       event: widget.event,
                                       mintedTicketTokenIds:
                                           _mintedTicketTokenIds,
                                       userProvider: widget.userProvider!,
                                       metamaskProvider:
                                           widget.metamaskProvider!,
+                                      myOwnItems: _myOwnItems,
                                     ))).then((value) async {
                           refreshTicketStatus();
                         });
@@ -709,39 +812,22 @@ class _EventPageState extends State<EventPage> {
                                     color: Colors.grey,
                                     fontWeight: FontWeight.w600),
                               )
-                            : (widget.event.owner ==
-                                    widget.userProvider?.user?.publicAddress
-                                ? Column(
-                                    children: [
-                                      Text(
-                                        "Starting At",
-                                        style: TextStyle(color: Colors.grey),
-                                      ),
-                                      Text(
-                                        "MATIC ${_marketItemsAll[0]['price']}",
-                                        style: TextStyle(
-                                            fontSize: 16,
-                                            color: Colors.grey,
-                                            fontWeight: FontWeight.w600),
-                                      )
-                                    ],
+                            : Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    "Starting at",
+                                    style: TextStyle(color: Colors.grey),
+                                  ),
+                                  Text(
+                                    "MATIC ${_marketItemsOnSale[0]['price']}",
+                                    style: TextStyle(
+                                        fontSize: 16,
+                                        color: Colors.grey,
+                                        fontWeight: FontWeight.w600),
                                   )
-                                : Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Text(
-                                        "Starting at",
-                                        style: TextStyle(color: Colors.grey),
-                                      ),
-                                      Text(
-                                        "MATIC ${_marketItemsAll[0]['price']}",
-                                        style: TextStyle(
-                                            fontSize: 16,
-                                            color: Colors.grey,
-                                            fontWeight: FontWeight.w600),
-                                      )
-                                    ],
-                                  )))
+                                ],
+                              ))
                   ],
                 ),
                 SizedBox(height: 10),
@@ -750,7 +836,7 @@ class _EventPageState extends State<EventPage> {
                   style: TextStyle(fontSize: 18),
                 ),
                 SizedBox(height: 10),
-                buySellButton(),
+                buyStopSaleButton(),
               ],
             ));
       } else {
@@ -945,7 +1031,7 @@ class _EventPageState extends State<EventPage> {
               ),
             ),
             SizedBox(height: 20),
-            expiredContainer(),
+            checkIfExpired() ? expiredContainer() : SizedBox(),
             SizedBox(height: 20),
             ticketStatusSection(),
             SizedBox(height: 30),
