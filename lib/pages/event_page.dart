@@ -435,7 +435,7 @@ class _EventPageState extends State<EventPage> {
                         : Colors.grey,
                   ),
                   child: Text(
-                    "Stop Sale",
+                    "Stop Batch Sale",
                     style: TextStyle(fontSize: 22),
                   ),
                   onPressed: () async {
@@ -491,271 +491,254 @@ class _EventPageState extends State<EventPage> {
         ],
       );
     } else {
-      if (_myItemsOnSale.length > 0) {
-        // If i am a normal user and i currently sell something,
-        // Show Stop Sale Button
-        return Column(
-          children: [
-            Text(
-              "You have ${_myItemsOnSale.length} tickets on sale.",
-              style: TextStyle(
-                color: Colors.red[900],
+      return Row(
+        children: [
+          Expanded(
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                elevation: 0,
+                backgroundColor: Color(0xFFF99D23),
               ),
-            ),
-            SizedBox(height: 5),
-            Row(
-              children: [
-                Expanded(
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      elevation: 0,
-                      backgroundColor: Color(0xFF050A31),
-                    ),
-                    child: Text(
-                      "Stop Sale",
-                      style: TextStyle(fontSize: 22),
-                    ),
-                    onPressed: () async {
-                      if (_myItemsOnSale.length > 0) {
-                        List<dynamic> tokenIds =
-                            _myItemsOnSale.map((e) => e["tokenID"]).toList();
+              onPressed: () async {
+                if (widget.metamaskProvider!.isConnected) {
+                  // Buy a ticket
+                  var transactionParameters = await marketService.buyTicket(
+                      widget.userProvider!.token,
+                      _marketItemsOnSale[0]["tokenID"],
+                      _marketItemsOnSale[0]["price"]);
+                  alchemy.init(
+                    httpRpcUrl:
+                        "https://polygon-mumbai.g.alchemy.com/v2/jq6Um8Vdb_j-F0vwzpqBjvjHiz3-v5wy",
+                    wsRpcUrl:
+                        "wss://polygon-mumbai.g.alchemy.com/v2/jq6Um8Vdb_j-F0vwzpqBjvjHiz3-v5wy",
+                    verbose: true,
+                  );
+                  List<dynamic> params = [
+                    {
+                      "from": transactionParameters["from"],
+                      "to": transactionParameters["to"],
+                      "value": transactionParameters["value"],
+                      "data": transactionParameters["data"],
+                    }
+                  ];
 
-                        dynamic transactionParameters =
-                            await marketService.stopBatchSale(
-                          widget.userProvider!.token,
-                          tokenIds,
-                          _myItemsOnSale[0]["price"],
-                          widget.event.integerId,
-                        );
+                  String method = "eth_sendTransaction";
 
-                        print("xxx");
+                  await launchUrl(
+                      Uri.parse(
+                          widget.metamaskProvider!.connector.session.toUri()),
+                      mode: LaunchMode.externalApplication);
 
-                        alchemy.init(
-                          httpRpcUrl:
-                              "https://polygon-mumbai.g.alchemy.com/v2/jq6Um8Vdb_j-F0vwzpqBjvjHiz3-v5wy",
-                          wsRpcUrl:
-                              "wss://polygon-mumbai.g.alchemy.com/v2/jq6Um8Vdb_j-F0vwzpqBjvjHiz3-v5wy",
-                          verbose: true,
-                        );
+                  final signature = await widget.metamaskProvider!.connector
+                      .sendCustomRequest(method: method, params: params);
 
-                        List<dynamic> params = [
-                          {
-                            "from": transactionParameters["from"],
-                            "to": transactionParameters["to"],
-                            "data": transactionParameters["data"],
-                          }
-                        ];
-
-                        String method = "eth_sendTransaction";
-
-                        print(params);
-
-                        await launchUrl(
-                            Uri.parse(widget.metamaskProvider!.connector.session
-                                .toUri()),
-                            mode: LaunchMode.externalApplication);
-
-                        final signature = await widget
-                            .metamaskProvider!.connector
-                            .sendCustomRequest(method: method, params: params);
-
-                        print("signature:" + signature);
-
-                        refreshTicketStatus();
-                      }
-                    },
-                  ),
-                ),
-              ],
-            ),
-          ],
-        );
-      } else {
-        // If not, then show Buy Button
-        return Row(
-          children: [
-            Expanded(
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  elevation: 0,
-                  backgroundColor: Color(0xFFF99D23),
-                ),
-                onPressed: () async {
-                  if (widget.metamaskProvider!.isConnected) {
-                    // Buy a ticket
-                    var transactionParameters = await marketService.buyTicket(
-                        widget.userProvider!.token,
-                        _marketItemsOnSale[0]["tokenID"],
-                        _marketItemsOnSale[0]["price"]);
-                    alchemy.init(
-                      httpRpcUrl:
-                          "https://polygon-mumbai.g.alchemy.com/v2/jq6Um8Vdb_j-F0vwzpqBjvjHiz3-v5wy",
-                      wsRpcUrl:
-                          "wss://polygon-mumbai.g.alchemy.com/v2/jq6Um8Vdb_j-F0vwzpqBjvjHiz3-v5wy",
-                      verbose: true,
-                    );
-                    List<dynamic> params = [
-                      {
-                        "from": transactionParameters["from"],
-                        "to": transactionParameters["to"],
-                        "value": transactionParameters["value"],
-                        "data": transactionParameters["data"],
-                      }
-                    ];
-
-                    String method = "eth_sendTransaction";
-
-                    await launchUrl(
-                        Uri.parse(
-                            widget.metamaskProvider!.connector.session.toUri()),
-                        mode: LaunchMode.externalApplication);
-
-                    final signature = await widget.metamaskProvider!.connector
-                        .sendCustomRequest(method: method, params: params);
-
-                    refreshTicketStatus();
-                  } else {
-                    showDialog<void>(
-                      context: context,
-                      barrierDismissible: false, // user must tap button!
-                      builder: (BuildContext context) {
-                        return AlertDialog(
-                          title: const Text("You Need To Login First"),
-                          content: SingleChildScrollView(
-                            child: ListBody(
-                              children: const <Widget>[
-                                Text(
-                                    'In order to buy a ticket, you need to login using your Metamask account.'),
-                                SizedBox(
-                                  height: 10,
-                                ),
-                                Text(
-                                    "Please go to the Profile page to perform login."),
-                              ],
-                            ),
+                  refreshTicketStatus();
+                } else {
+                  showDialog<void>(
+                    context: context,
+                    barrierDismissible: false, // user must tap button!
+                    builder: (BuildContext context) {
+                      return AlertDialog(
+                        title: const Text("You Need To Login First"),
+                        content: SingleChildScrollView(
+                          child: ListBody(
+                            children: const <Widget>[
+                              Text(
+                                  'In order to buy a ticket, you need to login using your Metamask account.'),
+                              SizedBox(
+                                height: 10,
+                              ),
+                              Text(
+                                  "Please go to the Profile page to perform login."),
+                            ],
                           ),
-                          actions: <Widget>[
-                            TextButton(
-                              child: const Text('Close'),
-                              onPressed: () {
-                                Navigator.of(context).pop();
-                              },
-                            ),
-                          ],
-                        );
-                      },
-                    );
-                  }
-                },
-                child: Text(
-                  "Buy",
-                  style: TextStyle(fontSize: 22, color: Color(0xFF050A31)),
-                ),
+                        ),
+                        actions: <Widget>[
+                          TextButton(
+                            child: const Text('Close'),
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                            },
+                          ),
+                        ],
+                      );
+                    },
+                  );
+                }
+              },
+              child: Text(
+                "Buy",
+                style: TextStyle(fontSize: 22, color: Color(0xFF050A31)),
               ),
             ),
-          ],
-        );
-      }
+          ),
+        ],
+      );
     }
   }
 
   yourTicketsSection() {
     // for (var x in _marketItemsAll) print(x);
-
-    if (_myOwnItems.length > 0) {
-      return Container(
-          padding: EdgeInsets.all(12),
-          width: MediaQuery.of(context).size.width * 0.9,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(15),
-            color: Color(0xFFB9A6E0).withOpacity(0.1),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                "Your Ticket Status",
-                style: TextStyle(
-                    color: Color(0xFF050A31),
-                    fontSize: 20,
-                    fontWeight: FontWeight.w500),
-              ),
-              SizedBox(height: 10),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Row(
-                      children: [
-                        Text(
-                          "General Admission",
-                          style: TextStyle(
-                              color: Color(0xFF050A31),
-                              fontSize: 18,
-                              fontWeight: FontWeight.w300),
-                        ),
-                        SizedBox(
-                          width: 40,
-                        ),
-                        Text(
-                          "x ${_myOwnItems.length}",
-                          style: TextStyle(
-                              color: Color(0xFF050A31),
-                              fontSize: 18,
-                              fontWeight: FontWeight.w300),
-                        ),
-                      ],
-                    ),
-                  ),
-                  ElevatedButton(
-                      onPressed: () {
-                        Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => ResellTicketPage(
-                                      event: widget.event,
-                                      mintedTicketTokenIds:
-                                          _mintedTicketTokenIds,
-                                      userProvider: widget.userProvider!,
-                                      metamaskProvider:
-                                          widget.metamaskProvider!,
-                                      myOwnItems: _myOwnItems,
-                                    ))).then((value) async {
-                          refreshTicketStatus();
-                        });
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Color(0xFF050A31),
+    return Container(
+        padding: EdgeInsets.all(12),
+        width: MediaQuery.of(context).size.width * 0.9,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(15),
+          color: Color(0xFFB9A6E0).withOpacity(0.1),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              "Your Ticket Status",
+              style: TextStyle(
+                  color: Color(0xFF050A31),
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600),
+            ),
+            Divider(
+              thickness: 1,
+            ),
+            Text(
+              "You Own:",
+              style: TextStyle(
+                  color: Color(0xFF050A31),
+                  fontSize: 18,
+                  fontWeight: FontWeight.w400),
+            ),
+            SizedBox(height: 10),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Row(
+                    children: [
+                      Text(
+                        "General Admission",
+                        style: TextStyle(
+                            color: Color(0xFF050A31),
+                            fontSize: 18,
+                            fontWeight: FontWeight.w300),
                       ),
-                      child: Text("Resell")),
-                ],
-              ),
-            ],
-          ));
-    } else {
-      return Container(
-          padding: EdgeInsets.all(12),
-          width: MediaQuery.of(context).size.width * 0.9,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(15),
-            color: Color(0xFFB9A6E0).withOpacity(0.1),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                "Your Ticket Status",
-                style: TextStyle(
-                    color: Color(0xFF050A31),
-                    fontSize: 20,
-                    fontWeight: FontWeight.w500),
-              ),
-              SizedBox(height: 10),
-              Text("You don't own any tickets!"),
-              SizedBox(height: 10),
-            ],
-          ));
-    }
+                      SizedBox(width: 40),
+                      Text(
+                        "x ${_myOwnItems.length}",
+                        style: TextStyle(
+                            color: Color(0xFF050A31),
+                            fontSize: 18,
+                            fontWeight: FontWeight.w300),
+                      ),
+                    ],
+                  ),
+                ),
+                _myOwnItems.length > 0
+                    ? GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        child: Container(
+                          padding: EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(8),
+                              color: Color(0xFF050A31)),
+                          child: Center(
+                            child: Text(
+                              "Resell",
+                              style: TextStyle(color: Colors.white),
+                            ),
+                          ),
+                        ),
+                        onTap: () {
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => ResellTicketPage(
+                                        event: widget.event,
+                                        mintedTicketTokenIds:
+                                            _mintedTicketTokenIds,
+                                        userProvider: widget.userProvider!,
+                                        metamaskProvider:
+                                            widget.metamaskProvider!,
+                                        myOwnItems: _myOwnItems,
+                                      ))).then((value) async {
+                            refreshTicketStatus();
+                          });
+                        },
+                      )
+                    : SizedBox(),
+              ],
+            ),
+            Divider(thickness: 1),
+            Text(
+              "On Sale:",
+              style: TextStyle(
+                  color: Color(0xFF050A31),
+                  fontSize: 18,
+                  fontWeight: FontWeight.w400),
+            ),
+            SizedBox(height: 10),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Row(
+                    children: [
+                      Text(
+                        "General Admission",
+                        style: TextStyle(
+                            color: Color(0xFF050A31),
+                            fontSize: 18,
+                            fontWeight: FontWeight.w300),
+                      ),
+                      SizedBox(width: 40),
+                      Text(
+                        "x ${_myItemsOnSale.length}",
+                        style: TextStyle(
+                            color: Color(0xFF050A31),
+                            fontSize: 18,
+                            fontWeight: FontWeight.w300),
+                      ),
+                    ],
+                  ),
+                ),
+                _myItemsOnSale.length > 0
+                    ? (widget.userProvider?.user?.publicAddress !=
+                            widget.event.owner
+                        ? GestureDetector(
+                            behavior: HitTestBehavior.opaque,
+                            child: Container(
+                              padding: EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(8),
+                                  color: Color(0xFF050A31)),
+                              child: Center(
+                                child: Text(
+                                  "Stop Sale",
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                              ),
+                            ),
+                            onTap: () {
+                              Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) => ResellTicketPage(
+                                            event: widget.event,
+                                            mintedTicketTokenIds:
+                                                _mintedTicketTokenIds,
+                                            userProvider: widget.userProvider!,
+                                            metamaskProvider:
+                                                widget.metamaskProvider!,
+                                            myOwnItems: _myOwnItems,
+                                          ))).then((value) async {
+                                refreshTicketStatus();
+                              });
+                            },
+                          )
+                        : SizedBox())
+                    : SizedBox(),
+              ],
+            ),
+          ],
+        ));
   }
 
   buySection() {
