@@ -410,8 +410,6 @@ class _EventPageState extends State<EventPage> {
   }
 
   buyStopSaleButton() {
-    // for (var x in _myOwnItems) print(x);
-
     if (widget.event.owner == widget.userProvider?.user?.publicAddress) {
       // If i am the owner, show Stop Sale Button
       // Get all items that i sell
@@ -482,6 +480,8 @@ class _EventPageState extends State<EventPage> {
                           .sendCustomRequest(method: method, params: params);
 
                       print("signature:" + signature);
+
+                      refreshTicketStatus();
                     }
                   },
                 ),
@@ -491,48 +491,87 @@ class _EventPageState extends State<EventPage> {
         ],
       );
     } else {
+      // If i am a regular person, show Buy Button
+
+      // If i am the one selling the cheapest item, then disable buy button
+      bool isCheapestMine = widget.userProvider?.user?.publicAddress ==
+          _marketItemsOnSale[0]["seller"].toString().toLowerCase();
+
       return Row(
         children: [
           Expanded(
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
                 elevation: 0,
-                backgroundColor: Color(0xFFF99D23),
+                backgroundColor:
+                    isCheapestMine ? Colors.grey : Color(0xFFF99D23),
               ),
               onPressed: () async {
                 if (widget.metamaskProvider!.isConnected) {
-                  // Buy a ticket
-                  var transactionParameters = await marketService.buyTicket(
-                      widget.userProvider!.token,
-                      _marketItemsOnSale[0]["tokenID"],
-                      _marketItemsOnSale[0]["price"]);
-                  alchemy.init(
-                    httpRpcUrl:
-                        "https://polygon-mumbai.g.alchemy.com/v2/jq6Um8Vdb_j-F0vwzpqBjvjHiz3-v5wy",
-                    wsRpcUrl:
-                        "wss://polygon-mumbai.g.alchemy.com/v2/jq6Um8Vdb_j-F0vwzpqBjvjHiz3-v5wy",
-                    verbose: true,
-                  );
-                  List<dynamic> params = [
-                    {
-                      "from": transactionParameters["from"],
-                      "to": transactionParameters["to"],
-                      "value": transactionParameters["value"],
-                      "data": transactionParameters["data"],
-                    }
-                  ];
+                  if (!isCheapestMine) {
+                    // Buy a ticket
 
-                  String method = "eth_sendTransaction";
+                    var transactionParameters = await marketService.buyTicket(
+                        widget.userProvider!.token,
+                        _marketItemsOnSale[0]["tokenID"],
+                        _marketItemsOnSale[0]["price"]);
+                    alchemy.init(
+                      httpRpcUrl:
+                          "https://polygon-mumbai.g.alchemy.com/v2/jq6Um8Vdb_j-F0vwzpqBjvjHiz3-v5wy",
+                      wsRpcUrl:
+                          "wss://polygon-mumbai.g.alchemy.com/v2/jq6Um8Vdb_j-F0vwzpqBjvjHiz3-v5wy",
+                      verbose: true,
+                    );
+                    List<dynamic> params = [
+                      {
+                        "from": transactionParameters["from"],
+                        "to": transactionParameters["to"],
+                        "value": transactionParameters["value"],
+                        "data": transactionParameters["data"],
+                      }
+                    ];
 
-                  await launchUrl(
-                      Uri.parse(
-                          widget.metamaskProvider!.connector.session.toUri()),
-                      mode: LaunchMode.externalApplication);
+                    String method = "eth_sendTransaction";
 
-                  final signature = await widget.metamaskProvider!.connector
-                      .sendCustomRequest(method: method, params: params);
+                    await launchUrl(
+                        Uri.parse(
+                            widget.metamaskProvider!.connector.session.toUri()),
+                        mode: LaunchMode.externalApplication);
 
-                  refreshTicketStatus();
+                    final signature = await widget.metamaskProvider!.connector
+                        .sendCustomRequest(method: method, params: params);
+
+                    refreshTicketStatus();
+                  } else {
+                    showDialog<void>(
+                      context: context,
+                      barrierDismissible: false, // user must tap button!
+                      builder: (BuildContext context) {
+                        return AlertDialog(
+                          title: const Text("You Cannot Buy Your Own Ticket!"),
+                          content: SingleChildScrollView(
+                            child: ListBody(
+                              children: const <Widget>[
+                                Text('The cheapest ticket is yours right now.'),
+                                SizedBox(
+                                  height: 10,
+                                ),
+                                Text("You can only buy other's tickets"),
+                              ],
+                            ),
+                          ),
+                          actions: <Widget>[
+                            TextButton(
+                              child: const Text('Close'),
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                              },
+                            ),
+                          ],
+                        );
+                      },
+                    );
+                  }
                 } else {
                   showDialog<void>(
                     context: context,
@@ -589,12 +628,41 @@ class _EventPageState extends State<EventPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              "Your Ticket Status",
-              style: TextStyle(
-                  color: Color(0xFF050A31),
-                  fontSize: 20,
-                  fontWeight: FontWeight.w600),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  "Your Ticket Status",
+                  style: TextStyle(
+                      color: Color(0xFF050A31),
+                      fontSize: 20,
+                      fontWeight: FontWeight.w600),
+                ),
+                GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(15),
+                      color: Colors.white,
+                      boxShadow: [
+                        BoxShadow(
+                          offset: Offset(-2, 2),
+                          blurRadius: 4,
+                          spreadRadius: 2,
+                          color: Color.fromRGBO(5, 10, 49, 0.1),
+                        ),
+                      ],
+                    ),
+                    child: Icon(
+                      Icons.refresh,
+                      size: 30,
+                    ),
+                  ),
+                  onTap: () {
+                    refreshTicketStatus();
+                  },
+                )
+              ],
             ),
             Divider(
               thickness: 1,
@@ -658,7 +726,7 @@ class _EventPageState extends State<EventPage> {
                                         metamaskProvider:
                                             widget.metamaskProvider!,
                                         myOwnItems: _myOwnItems,
-                                      ))).then((value) async {
+                                      ))).then((value) {
                             refreshTicketStatus();
                           });
                         },
@@ -668,7 +736,7 @@ class _EventPageState extends State<EventPage> {
             ),
             Divider(thickness: 1),
             Text(
-              "On Sale:",
+              "You Sell:",
               style: TextStyle(
                   color: Color(0xFF050A31),
                   fontSize: 18,
@@ -716,21 +784,49 @@ class _EventPageState extends State<EventPage> {
                                 ),
                               ),
                             ),
-                            onTap: () {
-                              Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (context) => ResellTicketPage(
-                                            event: widget.event,
-                                            mintedTicketTokenIds:
-                                                _mintedTicketTokenIds,
-                                            userProvider: widget.userProvider!,
-                                            metamaskProvider:
-                                                widget.metamaskProvider!,
-                                            myOwnItems: _myOwnItems,
-                                          ))).then((value) async {
-                                refreshTicketStatus();
-                              });
+                            onTap: () async {
+                              dynamic transactionParameters =
+                                  await marketService.stopSale(
+                                      widget.userProvider!.token,
+                                      _myItemsOnSale[0]["tokenID"],
+                                      _myItemsOnSale[0]["price"]);
+
+                              print("xxx");
+
+                              alchemy.init(
+                                httpRpcUrl:
+                                    "https://polygon-mumbai.g.alchemy.com/v2/jq6Um8Vdb_j-F0vwzpqBjvjHiz3-v5wy",
+                                wsRpcUrl:
+                                    "wss://polygon-mumbai.g.alchemy.com/v2/jq6Um8Vdb_j-F0vwzpqBjvjHiz3-v5wy",
+                                verbose: true,
+                              );
+
+                              List<dynamic> params = [
+                                {
+                                  "from": transactionParameters["from"],
+                                  "to": transactionParameters["to"],
+                                  "data": transactionParameters["data"],
+                                }
+                              ];
+
+                              String method = "eth_sendTransaction";
+
+                              print(params);
+
+                              await launchUrl(
+                                  Uri.parse(widget
+                                      .metamaskProvider!.connector.session
+                                      .toUri()),
+                                  mode: LaunchMode.externalApplication);
+
+                              final signature = await widget
+                                  .metamaskProvider!.connector
+                                  .sendCustomRequest(
+                                      method: method, params: params);
+
+                              print("signature:" + signature);
+
+                              refreshTicketStatus();
                             },
                           )
                         : SizedBox())
