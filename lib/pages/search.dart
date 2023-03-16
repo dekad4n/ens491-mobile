@@ -229,22 +229,40 @@ class _SearchState extends State<Search> {
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 15),
             child: Container(
-              padding: EdgeInsets.fromLTRB(10, 2, 10, 3),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(width: 0.3, color: Color(0xFF5200FF)),
-              ),
-              child: TextFormField(
-                decoration: InputDecoration(
-                    hintText: 'Enter event name', border: InputBorder.none),
-                onChanged: (value) async {
-                  _searchText = value;
-                  if (_searchText.length > 3) {
-                    onSearch(_searchText);
-                  }
-                },
-              ),
-            ),
+                padding: EdgeInsets.fromLTRB(10, 2, 10, 3),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(width: 1, color: Colors.grey),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.grey.withOpacity(0.3),
+                      spreadRadius: 3,
+                      blurRadius: 5,
+                      offset: Offset(0, 3), // changes position of shadow
+                    ),
+                  ],
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Icon(Icons.search),
+                    SizedBox(width: 10),
+                    Expanded(
+                      child: TextFormField(
+                        decoration: InputDecoration(
+                            hintText: 'Enter event name',
+                            border: InputBorder.none),
+                        onChanged: (value) async {
+                          _searchText = value;
+                          if (_searchText.length > 3) {
+                            onSearch(_searchText);
+                          }
+                        },
+                      ),
+                    ),
+                  ],
+                )),
           ),
           Expanded(
             child: ListView.builder(

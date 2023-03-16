@@ -364,7 +364,7 @@ class _EventPageState extends State<EventPage> {
     );
   }
 
-  buyStopSaleButton() {
+  buyStopSaleButton(bool isSoldOut) {
     if (widget.event.owner == widget.userProvider?.user?.publicAddress) {
       // If i am the owner, show Stop Sale Button
       // Get all items that i sell
@@ -449,8 +449,9 @@ class _EventPageState extends State<EventPage> {
       // If i am a regular person, show Buy Button
 
       // If i am the one selling the cheapest item, then disable buy button
-      bool isCheapestMine = widget.userProvider?.user?.publicAddress ==
-          _marketItemsOnSale[0]["seller"].toString().toLowerCase();
+      bool isCheapestMine = _marketItemsOnSale.length > 0 &&
+          widget.userProvider?.user?.publicAddress ==
+              _marketItemsOnSale[0]["seller"].toString().toLowerCase();
 
       return Row(
         children: [
@@ -458,8 +459,9 @@ class _EventPageState extends State<EventPage> {
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
                 elevation: 0,
-                backgroundColor:
-                    isCheapestMine ? Colors.grey : Color(0xFFF99D23),
+                backgroundColor: (isCheapestMine || isSoldOut)
+                    ? Colors.grey
+                    : Color(0xFFF99D23),
               ),
               onPressed: () async {
                 if (widget.metamaskProvider!.isConnected) {
@@ -498,34 +500,64 @@ class _EventPageState extends State<EventPage> {
 
                     refreshTicketStatus();
                   } else {
-                    showDialog<void>(
-                      context: context,
-                      barrierDismissible: false, // user must tap button!
-                      builder: (BuildContext context) {
-                        return AlertDialog(
-                          title: const Text("You Cannot Buy Your Own Ticket!"),
-                          content: SingleChildScrollView(
-                            child: ListBody(
-                              children: const <Widget>[
-                                Text('The cheapest ticket is yours right now.'),
-                                SizedBox(
-                                  height: 10,
-                                ),
-                                Text("You can only buy other's tickets"),
-                              ],
+                    if (!isSoldOut) {
+                      showDialog<void>(
+                        context: context,
+                        barrierDismissible: false, // user must tap button!
+                        builder: (BuildContext context) {
+                          return AlertDialog(
+                            title: const Text("Sold Out!"),
+                            content: SingleChildScrollView(
+                              child: ListBody(
+                                children: const <Widget>[
+                                  Text(
+                                      'There is no ticket left for this event.'),
+                                ],
+                              ),
                             ),
-                          ),
-                          actions: <Widget>[
-                            TextButton(
-                              child: const Text('Close'),
-                              onPressed: () {
-                                Navigator.of(context).pop();
-                              },
+                            actions: <Widget>[
+                              TextButton(
+                                child: const Text('Close'),
+                                onPressed: () {
+                                  Navigator.of(context).pop();
+                                },
+                              ),
+                            ],
+                          );
+                        },
+                      );
+                    } else {
+                      showDialog<void>(
+                        context: context,
+                        barrierDismissible: false, // user must tap button!
+                        builder: (BuildContext context) {
+                          return AlertDialog(
+                            title:
+                                const Text("You Cannot Buy Your Own Ticket!"),
+                            content: SingleChildScrollView(
+                              child: ListBody(
+                                children: const <Widget>[
+                                  Text(
+                                      'The cheapest ticket is yours right now.'),
+                                  SizedBox(
+                                    height: 10,
+                                  ),
+                                  Text("You can only buy other's tickets"),
+                                ],
+                              ),
                             ),
-                          ],
-                        );
-                      },
-                    );
+                            actions: <Widget>[
+                              TextButton(
+                                child: const Text('Close'),
+                                onPressed: () {
+                                  Navigator.of(context).pop();
+                                },
+                              ),
+                            ],
+                          );
+                        },
+                      );
+                    }
                   }
                 } else {
                   showDialog<void>(
@@ -572,268 +604,274 @@ class _EventPageState extends State<EventPage> {
   }
 
   yourTicketsSection() {
-    // for (var x in _marketItemsAll) print(x);
-    return Container(
-        padding: EdgeInsets.all(12),
-        width: MediaQuery.of(context).size.width * 0.9,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(15),
-          color: Color(0xFFB9A6E0).withOpacity(0.1),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  "Your Ticket Status",
+    if (!widget.metamaskProvider!.isConnected) {
+      // If metamask is not connected, then don't show this section
+      return SizedBox();
+    } else {
+      return Container(
+          padding: EdgeInsets.all(12),
+          width: MediaQuery.of(context).size.width * 0.9,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(15),
+            color: Color(0xFFB9A6E0).withOpacity(0.1),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    "Your Ticket Status",
+                    style: TextStyle(
+                        color: Color(0xFF050A31),
+                        fontSize: 20,
+                        fontWeight: FontWeight.w600),
+                  ),
+                  GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(15),
+                        color: Colors.white,
+                        boxShadow: [
+                          BoxShadow(
+                            offset: Offset(-2, 2),
+                            blurRadius: 4,
+                            spreadRadius: 2,
+                            color: Color.fromRGBO(5, 10, 49, 0.1),
+                          ),
+                        ],
+                      ),
+                      child: Icon(
+                        Icons.refresh,
+                        size: 30,
+                      ),
+                    ),
+                    onTap: () {
+                      refreshTicketStatus();
+                    },
+                  )
+                ],
+              ),
+              Divider(
+                thickness: 1,
+              ),
+              GestureDetector(
+                child: Text(
+                  "You Own:",
                   style: TextStyle(
                       color: Color(0xFF050A31),
-                      fontSize: 20,
-                      fontWeight: FontWeight.w600),
+                      fontSize: 18,
+                      fontWeight: FontWeight.w400),
                 ),
-                GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(15),
-                      color: Colors.white,
-                      boxShadow: [
-                        BoxShadow(
-                          offset: Offset(-2, 2),
-                          blurRadius: 4,
-                          spreadRadius: 2,
-                          color: Color.fromRGBO(5, 10, 49, 0.1),
+                onTap: () {
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => TicketPage(
+                                event: widget.event,
+                                userProvider: widget.userProvider,
+                                metamaskProvider: widget.metamaskProvider,
+                              ))).then((value) {});
+                },
+              ),
+              SizedBox(height: 10),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Row(
+                      children: [
+                        Text(
+                          "General Admission",
+                          style: TextStyle(
+                              color: Color(0xFF050A31),
+                              fontSize: 16,
+                              fontWeight: FontWeight.w300),
+                        ),
+                        SizedBox(width: 20),
+                        Text(
+                          "x ${_myOwnItems.length}",
+                          style: TextStyle(
+                              color: Color(0xFF050A31),
+                              fontSize: 16,
+                              fontWeight: FontWeight.w300),
                         ),
                       ],
                     ),
-                    child: Icon(
-                      Icons.refresh,
-                      size: 30,
-                    ),
                   ),
-                  onTap: () {
-                    refreshTicketStatus();
-                  },
-                )
-              ],
-            ),
-            Divider(
-              thickness: 1,
-            ),
-            GestureDetector(
-              child: Text(
-                "You Own:",
+                  _myOwnItems.length > 0
+                      ? Row(
+                          children: [
+                            GestureDetector(
+                              behavior: HitTestBehavior.opaque,
+                              child: Container(
+                                padding: EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(8),
+                                    color: Color(0xFFF99D23)),
+                                child: Center(
+                                  child: Text(
+                                    "Transfer",
+                                    style: TextStyle(color: Colors.white),
+                                  ),
+                                ),
+                              ),
+                              onTap: () {
+                                Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (context) => TransferPage(
+                                              event: widget.event,
+                                              userProvider:
+                                                  widget.userProvider!,
+                                              metamaskProvider:
+                                                  widget.metamaskProvider!,
+                                              myOwnItems: _myOwnItems,
+                                            ))).then((value) {});
+                              },
+                            ),
+                            SizedBox(width: 15),
+                            GestureDetector(
+                              behavior: HitTestBehavior.opaque,
+                              child: Container(
+                                padding: EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(8),
+                                    color: Color(0xFF050A31)),
+                                child: Center(
+                                  child: Text(
+                                    "Resell",
+                                    style: TextStyle(color: Colors.white),
+                                  ),
+                                ),
+                              ),
+                              onTap: () {
+                                Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (context) => ResellTicketPage(
+                                              event: widget.event,
+                                              mintedTicketTokenIds:
+                                                  _mintedTicketTokenIds,
+                                              userProvider:
+                                                  widget.userProvider!,
+                                              metamaskProvider:
+                                                  widget.metamaskProvider!,
+                                              myOwnItems: _myOwnItems,
+                                            ))).then((value) {
+                                  refreshTicketStatus();
+                                });
+                              },
+                            ),
+                          ],
+                        )
+                      : SizedBox(),
+                ],
+              ),
+              Divider(thickness: 1),
+              Text(
+                "You Are Selling:",
                 style: TextStyle(
                     color: Color(0xFF050A31),
                     fontSize: 18,
                     fontWeight: FontWeight.w400),
               ),
-              onTap: () {
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => TicketPage(
-                              event: widget.event,
-                              userProvider: widget.userProvider,
-                              metamaskProvider: widget.metamaskProvider,
-                            ))).then((value) {});
-              },
-            ),
-            SizedBox(height: 10),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Row(
-                    children: [
-                      Text(
-                        "General Admission",
-                        style: TextStyle(
-                            color: Color(0xFF050A31),
-                            fontSize: 16,
-                            fontWeight: FontWeight.w300),
-                      ),
-                      SizedBox(width: 20),
-                      Text(
-                        "x ${_myOwnItems.length}",
-                        style: TextStyle(
-                            color: Color(0xFF050A31),
-                            fontSize: 16,
-                            fontWeight: FontWeight.w300),
-                      ),
-                    ],
+              SizedBox(height: 10),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Row(
+                      children: [
+                        Text(
+                          "General Admission",
+                          style: TextStyle(
+                              color: Color(0xFF050A31),
+                              fontSize: 16,
+                              fontWeight: FontWeight.w300),
+                        ),
+                        SizedBox(width: 20),
+                        Text(
+                          "x ${_myItemsOnSale.length}",
+                          style: TextStyle(
+                              color: Color(0xFF050A31),
+                              fontSize: 16,
+                              fontWeight: FontWeight.w300),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                _myOwnItems.length > 0
-                    ? Row(
-                        children: [
-                          GestureDetector(
-                            behavior: HitTestBehavior.opaque,
-                            child: Container(
-                              padding: EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(8),
-                                  color: Color(0xFFF99D23)),
-                              child: Center(
-                                child: Text(
-                                  "Transfer",
-                                  style: TextStyle(color: Colors.white),
+                  _myItemsOnSale.length > 0
+                      ? (widget.userProvider?.user?.publicAddress !=
+                              widget.event.owner
+                          ? GestureDetector(
+                              behavior: HitTestBehavior.opaque,
+                              child: Container(
+                                padding: EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(8),
+                                    color: Color(0xFF050A31)),
+                                child: Center(
+                                  child: Text(
+                                    "Stop Sale",
+                                    style: TextStyle(color: Colors.white),
+                                  ),
                                 ),
                               ),
-                            ),
-                            onTap: () {
-                              Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (context) => TransferPage(
-                                            event: widget.event,
-                                            userProvider: widget.userProvider!,
-                                            metamaskProvider:
-                                                widget.metamaskProvider!,
-                                            myOwnItems: _myOwnItems,
-                                          ))).then((value) {});
-                            },
-                          ),
-                          SizedBox(width: 15),
-                          GestureDetector(
-                            behavior: HitTestBehavior.opaque,
-                            child: Container(
-                              padding: EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(8),
-                                  color: Color(0xFF050A31)),
-                              child: Center(
-                                child: Text(
-                                  "Resell",
-                                  style: TextStyle(color: Colors.white),
-                                ),
-                              ),
-                            ),
-                            onTap: () {
-                              Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (context) => ResellTicketPage(
-                                            event: widget.event,
-                                            mintedTicketTokenIds:
-                                                _mintedTicketTokenIds,
-                                            userProvider: widget.userProvider!,
-                                            metamaskProvider:
-                                                widget.metamaskProvider!,
-                                            myOwnItems: _myOwnItems,
-                                          ))).then((value) {
+                              onTap: () async {
+                                dynamic transactionParameters =
+                                    await marketService.stopSale(
+                                        widget.userProvider!.token,
+                                        _myItemsOnSale[0]["tokenID"],
+                                        _myItemsOnSale[0]["price"]);
+
+                                print("xxx");
+
+                                alchemy.init(
+                                  httpRpcUrl:
+                                      "https://polygon-mumbai.g.alchemy.com/v2/jq6Um8Vdb_j-F0vwzpqBjvjHiz3-v5wy",
+                                  wsRpcUrl:
+                                      "wss://polygon-mumbai.g.alchemy.com/v2/jq6Um8Vdb_j-F0vwzpqBjvjHiz3-v5wy",
+                                  verbose: true,
+                                );
+
+                                List<dynamic> params = [
+                                  {
+                                    "from": transactionParameters["from"],
+                                    "to": transactionParameters["to"],
+                                    "data": transactionParameters["data"],
+                                  }
+                                ];
+
+                                String method = "eth_sendTransaction";
+
+                                print(params);
+
+                                await launchUrl(
+                                    Uri.parse(widget
+                                        .metamaskProvider!.connector.session
+                                        .toUri()),
+                                    mode: LaunchMode.externalApplication);
+
+                                final signature = await widget
+                                    .metamaskProvider!.connector
+                                    .sendCustomRequest(
+                                        method: method, params: params);
+
+                                print("signature:" + signature);
+
                                 refreshTicketStatus();
-                              });
-                            },
-                          ),
-                        ],
-                      )
-                    : SizedBox(),
-              ],
-            ),
-            Divider(thickness: 1),
-            Text(
-              "You Sell:",
-              style: TextStyle(
-                  color: Color(0xFF050A31),
-                  fontSize: 18,
-                  fontWeight: FontWeight.w400),
-            ),
-            SizedBox(height: 10),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Row(
-                    children: [
-                      Text(
-                        "General Admission",
-                        style: TextStyle(
-                            color: Color(0xFF050A31),
-                            fontSize: 16,
-                            fontWeight: FontWeight.w300),
-                      ),
-                      SizedBox(width: 20),
-                      Text(
-                        "x ${_myItemsOnSale.length}",
-                        style: TextStyle(
-                            color: Color(0xFF050A31),
-                            fontSize: 16,
-                            fontWeight: FontWeight.w300),
-                      ),
-                    ],
-                  ),
-                ),
-                _myItemsOnSale.length > 0
-                    ? (widget.userProvider?.user?.publicAddress !=
-                            widget.event.owner
-                        ? GestureDetector(
-                            behavior: HitTestBehavior.opaque,
-                            child: Container(
-                              padding: EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(8),
-                                  color: Color(0xFF050A31)),
-                              child: Center(
-                                child: Text(
-                                  "Stop Sale",
-                                  style: TextStyle(color: Colors.white),
-                                ),
-                              ),
-                            ),
-                            onTap: () async {
-                              dynamic transactionParameters =
-                                  await marketService.stopSale(
-                                      widget.userProvider!.token,
-                                      _myItemsOnSale[0]["tokenID"],
-                                      _myItemsOnSale[0]["price"]);
-
-                              print("xxx");
-
-                              alchemy.init(
-                                httpRpcUrl:
-                                    "https://polygon-mumbai.g.alchemy.com/v2/jq6Um8Vdb_j-F0vwzpqBjvjHiz3-v5wy",
-                                wsRpcUrl:
-                                    "wss://polygon-mumbai.g.alchemy.com/v2/jq6Um8Vdb_j-F0vwzpqBjvjHiz3-v5wy",
-                                verbose: true,
-                              );
-
-                              List<dynamic> params = [
-                                {
-                                  "from": transactionParameters["from"],
-                                  "to": transactionParameters["to"],
-                                  "data": transactionParameters["data"],
-                                }
-                              ];
-
-                              String method = "eth_sendTransaction";
-
-                              print(params);
-
-                              await launchUrl(
-                                  Uri.parse(widget
-                                      .metamaskProvider!.connector.session
-                                      .toUri()),
-                                  mode: LaunchMode.externalApplication);
-
-                              final signature = await widget
-                                  .metamaskProvider!.connector
-                                  .sendCustomRequest(
-                                      method: method, params: params);
-
-                              print("signature:" + signature);
-
-                              refreshTicketStatus();
-                            },
-                          )
-                        : SizedBox())
-                    : SizedBox(),
-              ],
-            ),
-          ],
-        ));
+                              },
+                            )
+                          : SizedBox())
+                      : SizedBox(),
+                ],
+              ),
+            ],
+          ));
+    }
   }
 
   buySection() {
@@ -914,7 +952,7 @@ class _EventPageState extends State<EventPage> {
                   style: TextStyle(fontSize: 18),
                 ),
                 SizedBox(height: 10),
-                buyStopSaleButton(),
+                buyStopSaleButton(isSoldOut),
               ],
             ));
       } else {

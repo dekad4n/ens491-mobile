@@ -28,6 +28,7 @@ class ResellTicketPage extends StatefulWidget {
 }
 
 class ResellTicketPageState extends State<ResellTicketPage> {
+  int _quantity = 0;
   double _price = 0.0;
 
   List<dynamic> marketItemsAll = [];
@@ -184,6 +185,14 @@ class ResellTicketPageState extends State<ResellTicketPage> {
                   fontSize: 20,
                   fontWeight: FontWeight.w500),
             ),
+            Divider(thickness: 1),
+            Text(
+              "You own:",
+              style: TextStyle(
+                  color: Color(0xFF050A31),
+                  fontSize: 18,
+                  fontWeight: FontWeight.w400),
+            ),
             SizedBox(height: 10),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -208,6 +217,69 @@ class ResellTicketPageState extends State<ResellTicketPage> {
         ));
   }
 
+  quantityContainer() {
+    return Container(
+      padding: EdgeInsets.all(8),
+      height: 90,
+      width: 100,
+      decoration: BoxDecoration(
+        border:
+            Border.all(color: _quantity != 0 ? Colors.deepPurple : Colors.grey),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            "Quantity",
+            style: TextStyle(
+                color: Colors.grey, fontSize: 12, fontWeight: FontWeight.bold),
+          ),
+          Row(
+            children: [
+              Expanded(
+                child: TextFormField(
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  decoration: InputDecoration(
+                      hintStyle: TextStyle(color: Colors.grey),
+                      border: null,
+                      hintText: widget.myOwnItems.length.toString()),
+                  // The validator receives the text that the user has entered.
+                  keyboardType: TextInputType.number,
+                  onChanged: (value) {
+                    if (value != null && value != "") {
+                      setState(() {
+                        _quantity = int.parse(value);
+                      });
+                    } else {
+                      setState(() {
+                        _quantity = 0;
+                      });
+                    }
+                  },
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return '';
+                    } else {
+                      setState(() {
+                        _quantity = int.parse(value);
+                      });
+                    }
+                    return null;
+                  },
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
   priceContainer() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -218,7 +290,7 @@ class ResellTicketPageState extends State<ResellTicketPage> {
           width: 150,
           decoration: BoxDecoration(
             border: Border.all(
-                color: _price != null ? Colors.deepPurple : Colors.grey),
+                color: _price != 0 ? Colors.deepPurple : Colors.grey),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Column(
@@ -257,6 +329,10 @@ class ResellTicketPageState extends State<ResellTicketPage> {
                         if (value != null && value != "") {
                           setState(() {
                             _price = double.parse(value);
+                          });
+                        } else {
+                          setState(() {
+                            _price = 0;
                           });
                         }
                       },
@@ -297,47 +373,79 @@ class ResellTicketPageState extends State<ResellTicketPage> {
               onPressed: () async {
                 // Validate returns true if the form is valid, or false otherwise.
                 try {
-                  dynamic transactionParameters = await marketService.resell(
-                    widget.userProvider!.token,
-                    _price,
-                    widget.myOwnItems[0]["tokenID"],
-                  );
+                  if (_price > 0 && _quantity > 0) {
+                    if (_quantity > widget.myOwnItems.length) {
+                      // Warn if user enters quantity larget than how many they own
+                      showDialog<void>(
+                        context: context,
+                        barrierDismissible: false, // user must tap button!
+                        builder: (BuildContext context) {
+                          return AlertDialog(
+                            title: const Text("Invalid Quantity!"),
+                            content: SingleChildScrollView(
+                              child: ListBody(
+                                children: const <Widget>[
+                                  Text(
+                                      'You cannot give quantity more than what you own.'),
+                                ],
+                              ),
+                            ),
+                            actions: <Widget>[
+                              TextButton(
+                                child: const Text('Close'),
+                                onPressed: () {
+                                  Navigator.of(context).pop();
+                                },
+                              ),
+                            ],
+                          );
+                        },
+                      );
+                    } else {
+                      dynamic transactionParameters =
+                          await marketService.resell(
+                        widget.userProvider!.token,
+                        _price,
+                        widget.myOwnItems[0]["tokenID"],
+                      );
 
-                  print("transcationParamters:" +
-                      transactionParameters.toString());
+                      print("transcationParamters:" +
+                          transactionParameters.toString());
 
-                  alchemy.init(
-                    httpRpcUrl:
-                        "https://polygon-mumbai.g.alchemy.com/v2/jq6Um8Vdb_j-F0vwzpqBjvjHiz3-v5wy",
-                    wsRpcUrl:
-                        "wss://polygon-mumbai.g.alchemy.com/v2/jq6Um8Vdb_j-F0vwzpqBjvjHiz3-v5wy",
-                    verbose: true,
-                  );
+                      alchemy.init(
+                        httpRpcUrl:
+                            "https://polygon-mumbai.g.alchemy.com/v2/jq6Um8Vdb_j-F0vwzpqBjvjHiz3-v5wy",
+                        wsRpcUrl:
+                            "wss://polygon-mumbai.g.alchemy.com/v2/jq6Um8Vdb_j-F0vwzpqBjvjHiz3-v5wy",
+                        verbose: true,
+                      );
 
-                  List<dynamic> params = [
-                    {
-                      "from": transactionParameters["from"],
-                      "to": transactionParameters["to"],
-                      "data": transactionParameters["data"],
+                      List<dynamic> params = [
+                        {
+                          "from": transactionParameters["from"],
+                          "to": transactionParameters["to"],
+                          "data": transactionParameters["data"],
+                        }
+                      ];
+
+                      String method = "eth_sendTransaction";
+
+                      await launchUrl(
+                          Uri.parse(widget.metamaskProvider!.connector.session
+                              .toUri()),
+                          mode: LaunchMode.externalApplication);
+
+                      final signature = await widget.metamaskProvider!.connector
+                          .sendCustomRequest(
+                        method: method,
+                        params: params,
+                      );
+
+                      print("signature:" + signature);
+
+                      Navigator.pop(context);
                     }
-                  ];
-
-                  String method = "eth_sendTransaction";
-
-                  await launchUrl(
-                      Uri.parse(
-                          widget.metamaskProvider!.connector.session.toUri()),
-                      mode: LaunchMode.externalApplication);
-
-                  final signature = await widget.metamaskProvider!.connector
-                      .sendCustomRequest(
-                    method: method,
-                    params: params,
-                  );
-
-                  print("signature:" + signature);
-
-                  Navigator.pop(context);
+                  }
                 } catch (e) {
                   print(e.toString() + " ERROR while /resell");
                 }
@@ -391,7 +499,13 @@ class ResellTicketPageState extends State<ResellTicketPage> {
 
                 yourTicketSection(),
                 SizedBox(height: 20),
-                priceContainer(),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    quantityContainer(),
+                    priceContainer(),
+                  ],
+                ),
                 SizedBox(height: 20),
 
                 confirmButton(widget.metamaskProvider),

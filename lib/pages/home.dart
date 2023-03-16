@@ -247,6 +247,10 @@ class _HomeState extends State<Home> {
                         Positioned(
                           child: cardExpiredBadge(e),
                         ),
+                        Positioned(
+                          right: 0,
+                          child: cardYouOrganiseBadge(e, userProvider),
+                        ),
                       ],
                     )),
               ],
@@ -283,6 +287,25 @@ class _HomeState extends State<Home> {
             )),
         child: Text(
           "Expired",
+          style: TextStyle(color: Colors.white),
+        ),
+      );
+    } else {
+      return SizedBox();
+    }
+  }
+
+  cardYouOrganiseBadge(Event event, UserProvider userProvider) {
+    if (event.owner == userProvider.user?.publicAddress) {
+      return Container(
+        padding: EdgeInsets.all(4),
+        decoration: BoxDecoration(
+            color: Colors.green,
+            borderRadius: BorderRadius.only(
+              bottomLeft: Radius.circular(8),
+            )),
+        child: Text(
+          "Organising",
           style: TextStyle(color: Colors.white),
         ),
       );

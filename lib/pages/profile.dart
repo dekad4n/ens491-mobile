@@ -330,8 +330,27 @@ class _ProfileState extends State<Profile> {
                 ),
               ),
             );
+          } else {
+            return Padding(
+              padding: EdgeInsets.fromLTRB(12, 20, 12, 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "Attending",
+                    style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 20,
+                    ),
+                  ),
+                  SizedBox(
+                    height: 10,
+                  ),
+                  Text("You don't attend any event right now...")
+                ],
+              ),
+            );
           }
-          return Text("yok");
         });
   }
 
