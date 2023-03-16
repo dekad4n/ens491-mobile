@@ -59,7 +59,8 @@ class _ProfileState extends State<Profile> {
     }
   }
 
-  Card horizontalEventCard(Event e, userProvider, User owner) {
+  Card horizontalEventCard(
+      Event e, userProvider, metamaskProvider, User owner) {
     //Get owner username and avatar
     String? ownerUsername = owner.username;
     String? ownerAvatar = owner.avatar;
@@ -84,6 +85,7 @@ class _ProfileState extends State<Profile> {
                     builder: (context) => EventPage(
                           event: e,
                           userProvider: userProvider,
+                          metamaskProvider: metamaskProvider,
                         )));
           },
           behavior: HitTestBehavior.opaque,
@@ -211,7 +213,7 @@ class _ProfileState extends State<Profile> {
     );
   }
 
-  getPastValues(var val, UserProvider userProvider) {
+  getPastValues(var val, UserProvider userProvider, metamaskProvider) {
     if (DateTime.parse(val["event"]["startDate"]).isBefore(DateTime.now())) {
       return FutureBuilder(
           future: getOwner(val["event"]["owner"]),
@@ -228,8 +230,8 @@ class _ProfileState extends State<Profile> {
                 // if we got our data
               } else if (snapshot.hasData) {
                 // Extracting data from snapshot object
-                return horizontalEventCard(
-                    Event.fromJson(val["event"]), userProvider, snapshot.data!);
+                return horizontalEventCard(Event.fromJson(val["event"]),
+                    userProvider, metamaskProvider, snapshot.data!);
               }
             }
             return Center(
@@ -240,7 +242,8 @@ class _ProfileState extends State<Profile> {
     return Container();
   }
 
-  getCurrentValues(var val, UserProvider userProvider) {
+  getCurrentValues(
+      var val, UserProvider userProvider, MetamaskProvider metamaskProvider) {
     if (!DateTime.parse(val["event"]["startDate"]).isBefore(DateTime.now())) {
       return FutureBuilder(
           future: getOwner(val["event"]["owner"]),
@@ -257,8 +260,8 @@ class _ProfileState extends State<Profile> {
                 // if we got our data
               } else if (snapshot.hasData) {
                 // Extracting data from snapshot object
-                return horizontalEventCard(
-                    Event.fromJson(val["event"]), userProvider, snapshot.data!);
+                return horizontalEventCard(Event.fromJson(val["event"]),
+                    userProvider, metamaskProvider, snapshot.data!);
               }
             }
             return Center(
@@ -269,7 +272,8 @@ class _ProfileState extends State<Profile> {
     return Container();
   }
 
-  attendingEventsSection(UserProvider userProvider) {
+  attendingEventsSection(
+      UserProvider userProvider, MetamaskProvider metamaskProvider) {
     return FutureBuilder(
         future: tickets,
         builder: (BuildContext context,
@@ -294,7 +298,8 @@ class _ProfileState extends State<Profile> {
                       child: Column(
                         children: [
                           for (var val in snapshot.data!.values)
-                            getCurrentValues(val, userProvider),
+                            getCurrentValues(
+                                val, userProvider, metamaskProvider),
                           if (snapshot.data!.values.length > 0)
                             Padding(
                               padding: const EdgeInsets.only(top: 15.0),
@@ -322,7 +327,7 @@ class _ProfileState extends State<Profile> {
                               ),
                             ),
                           for (var val in snapshot.data!.values)
-                            getPastValues(val, userProvider)
+                            getPastValues(val, userProvider, metamaskProvider)
                         ],
                       ),
                     )
@@ -470,7 +475,7 @@ class _ProfileState extends State<Profile> {
             children: [
               profileHeader(context, userProvider.user, setState),
               myEventsSection(userProvider),
-              attendingEventsSection(userProvider),
+              attendingEventsSection(userProvider, metamaskProvider),
             ],
             // Get Minted Tickets
           ),
