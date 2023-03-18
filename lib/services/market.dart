@@ -24,80 +24,6 @@ class MarketService {
     return body["marketItemsAll"];
   }
 
-  Future<List<dynamic>> getMarketItemsOnSaleByEventId(eventId) async {
-    final String url =
-        '${backendUrl!}/market/market-items-onsale?eventId=$eventId';
-
-    var headers = {
-      "Access-Control-Allow-Origin": '*',
-    };
-
-    Response res = await get(
-      Uri.parse(url),
-      headers: headers,
-    );
-
-    var body = jsonDecode(res.body);
-
-    return body["marketItemsOnSale"];
-  }
-
-  Future<List<dynamic>> getMarketItemsSoldByEventId(eventId) async {
-    final String url =
-        '${backendUrl!}/market/market-items-sold?eventId=$eventId';
-
-    var headers = {
-      "Access-Control-Allow-Origin": '*',
-    };
-
-    Response res = await get(
-      Uri.parse(url),
-      headers: headers,
-    );
-
-    var body = jsonDecode(res.body);
-
-    return body["marketItemsSold"];
-  }
-
-  Future<List<dynamic>> getMarketItemsOnSaleByPublicAddress(
-      publicAddress) async {
-    final String url =
-        '${backendUrl!}/market/market-items-onsale?publicAddress=$publicAddress';
-
-    var headers = {
-      "Access-Control-Allow-Origin": '*',
-    };
-
-    Response res = await get(
-      Uri.parse(url),
-      headers: headers,
-    );
-
-    var body = jsonDecode(res.body);
-
-    return body["marketItemsOnSale"];
-  }
-
-  Future<List<dynamic>> getMarketItemsOwnedByPublicAddress(
-      publicAddress) async {
-    final String url =
-        '${backendUrl!}/market/market-items-owned?publicAddress=$publicAddress';
-
-    var headers = {
-      "Access-Control-Allow-Origin": '*',
-    };
-
-    Response res = await get(
-      Uri.parse(url),
-      headers: headers,
-    );
-
-    var body = jsonDecode(res.body);
-
-    return body["marketItemsOwned"];
-  }
-
   Future<dynamic> sell(auth, eventId, price, amount) async {
     final String url = '${backendUrl!}/market/sell';
 
@@ -213,6 +139,32 @@ class MarketService {
     Map<String, dynamic> params = {
       "price": price.toString(),
       "tokenId": tokenId.toString(),
+    };
+
+    Response res = await post(
+      Uri.parse(url),
+      body: params,
+      headers: headers,
+    );
+
+    var body = jsonDecode(res.body);
+
+    return body;
+  }
+
+  Future<dynamic> resellMultiple(auth, price, tokenIds) async {
+    final String url = '${backendUrl!}/market/resell';
+
+    var headers = {
+      "Accept": "application/json",
+      "content-type": "application/json",
+      "Access-Control-Allow-Origin": '*',
+      "Authorization": "jwt $auth",
+    };
+
+    Map<String, dynamic> params = {
+      "price": price.toString(),
+      "tokenIds": tokenIds,
     };
 
     Response res = await post(

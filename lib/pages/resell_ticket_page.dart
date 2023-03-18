@@ -245,9 +245,10 @@ class ResellTicketPageState extends State<ResellTicketPage> {
                     fontWeight: FontWeight.bold,
                   ),
                   decoration: InputDecoration(
-                      hintStyle: TextStyle(color: Colors.grey),
-                      border: null,
-                      hintText: widget.myOwnItems.length.toString()),
+                    hintStyle: TextStyle(color: Colors.grey),
+                    border: null,
+                    hintText: "max. ${widget.myOwnItems.length.toString()}",
+                  ),
                   // The validator receives the text that the user has entered.
                   keyboardType: TextInputType.number,
                   onChanged: (value) {

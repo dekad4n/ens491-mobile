@@ -603,7 +603,7 @@ class _EventPageState extends State<EventPage> {
     }
   }
 
-  yourTicketsSection() {
+  yourTicketStatusSection() {
     if (!widget.metamaskProvider!.isConnected) {
       // If metamask is not connected, then don't show this section
       return SizedBox();
@@ -621,12 +621,41 @@ class _EventPageState extends State<EventPage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    "Your Ticket Status",
-                    style: TextStyle(
-                        color: Color(0xFF050A31),
-                        fontSize: 20,
-                        fontWeight: FontWeight.w600),
+                  Row(
+                    children: [
+                      Text(
+                        "Your Ticket Status",
+                        style: TextStyle(
+                            color: Color(0xFF050A31),
+                            fontSize: 20,
+                            fontWeight: FontWeight.w600),
+                      ),
+                      SizedBox(width: 10),
+                      GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(15),
+                            color: Colors.white,
+                            boxShadow: [
+                              BoxShadow(
+                                offset: Offset(-2, 2),
+                                blurRadius: 4,
+                                spreadRadius: 2,
+                                color: Color.fromRGBO(5, 10, 49, 0.1),
+                              ),
+                            ],
+                          ),
+                          child: Icon(
+                            Icons.refresh,
+                            size: 30,
+                          ),
+                        ),
+                        onTap: () {
+                          refreshTicketStatus();
+                        },
+                      )
+                    ],
                   ),
                   GestureDetector(
                     behavior: HitTestBehavior.opaque,
@@ -644,12 +673,21 @@ class _EventPageState extends State<EventPage> {
                         ],
                       ),
                       child: Icon(
-                        Icons.refresh,
+                        CupertinoIcons.arrow_right,
                         size: 30,
                       ),
                     ),
                     onTap: () {
-                      refreshTicketStatus();
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => TicketPage(
+                                    event: widget.event,
+                                    userProvider: widget.userProvider,
+                                    metamaskProvider: widget.metamaskProvider,
+                                    myItemsOnSale: _myItemsOnSale,
+                                    myOwnItems: _myOwnItems,
+                                  ))).then((value) {});
                     },
                   )
                 ],
@@ -657,24 +695,12 @@ class _EventPageState extends State<EventPage> {
               Divider(
                 thickness: 1,
               ),
-              GestureDetector(
-                child: Text(
-                  "You Own:",
-                  style: TextStyle(
-                      color: Color(0xFF050A31),
-                      fontSize: 18,
-                      fontWeight: FontWeight.w400),
-                ),
-                onTap: () {
-                  Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => TicketPage(
-                                event: widget.event,
-                                userProvider: widget.userProvider,
-                                metamaskProvider: widget.metamaskProvider,
-                              ))).then((value) {});
-                },
+              Text(
+                "You Own:",
+                style: TextStyle(
+                    color: Color(0xFF050A31),
+                    fontSize: 18,
+                    fontWeight: FontWeight.w400),
               ),
               SizedBox(height: 10),
               Row(
@@ -1151,7 +1177,7 @@ class _EventPageState extends State<EventPage> {
             SizedBox(height: 20),
             ticketStatusSection(),
             SizedBox(height: 30),
-            yourTicketsSection(),
+            yourTicketStatusSection(),
             SizedBox(height: 30),
             buySection(),
             SizedBox(height: 30),
