@@ -110,6 +110,7 @@ class _TicketPageState extends State<TicketPage> {
   }
 
   youAreSellingSection() {
+    for (var x in widget.myOwnItems!) print(x);
     if (widget.myItemsOnSale!.length > 0) {
       return Container(
         padding: EdgeInsets.all(12),

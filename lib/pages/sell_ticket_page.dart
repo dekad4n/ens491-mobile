@@ -27,6 +27,8 @@ class SellTicketPage extends StatefulWidget {
 
 class SellTicketPageState extends State<SellTicketPage> {
   double _price = 0.0;
+  int _transferRight = 0;
+  double _comission = 0;
 
   List<dynamic> marketItemsAll = [];
 
@@ -164,6 +166,62 @@ class SellTicketPageState extends State<SellTicketPage> {
     );
   }
 
+  transfersContainer() {
+    return Container(
+      padding: EdgeInsets.all(8),
+      height: 100,
+      width: 150,
+      decoration: BoxDecoration(
+        border: Border.all(
+            color: _transferRight != 0 ? Colors.deepPurple : Colors.grey),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            "How Many Transfers Do You Allow?",
+            style: TextStyle(
+                color: Colors.grey, fontSize: 12, fontWeight: FontWeight.bold),
+          ),
+          Row(
+            children: [
+              Expanded(
+                child: TextFormField(
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  decoration: InputDecoration(border: null, hintText: "e.g. 3"),
+                  // The validator receives the text that the user has entered.
+                  keyboardType: TextInputType.number,
+                  onChanged: (value) {
+                    if (value != null && value != "") {
+                      setState(() {
+                        _transferRight = int.parse(value);
+                      });
+                    }
+                  },
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return '';
+                    } else {
+                      setState(() {
+                        _transferRight = int.parse(value);
+                      });
+                    }
+                    return null;
+                  },
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
   priceContainer() {
     return Container(
       padding: EdgeInsets.all(8),
@@ -171,7 +229,7 @@ class SellTicketPageState extends State<SellTicketPage> {
       width: 150,
       decoration: BoxDecoration(
         border:
-            Border.all(color: _price != null ? Colors.deepPurple : Colors.grey),
+            Border.all(color: _price != 0 ? Colors.deepPurple : Colors.grey),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
@@ -230,6 +288,73 @@ class SellTicketPageState extends State<SellTicketPage> {
     );
   }
 
+  comissionContainer() {
+    return Container(
+      padding: EdgeInsets.all(8),
+      height: 100,
+      width: 150,
+      decoration: BoxDecoration(
+        border: Border.all(
+            color: _comission != 0 ? Colors.deepPurple : Colors.grey),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            "Comission per Sale",
+            style: TextStyle(
+                color: Colors.grey, fontSize: 12, fontWeight: FontWeight.bold),
+          ),
+          Row(
+            children: [
+              Text(
+                "%  ",
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
+              ),
+              Expanded(
+                child: TextFormField(
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  decoration: InputDecoration(
+                    border: null,
+                    hintText: "e.g. 12.5",
+                  ),
+                  // The validator receives the text that the user has entered.
+                  keyboardType: TextInputType.number,
+                  onChanged: (value) {
+                    if (value != null && value != "") {
+                      setState(() {
+                        _comission = double.parse(value);
+                      });
+                    }
+                  },
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return '';
+                    } else {
+                      setState(() {
+                        _comission = double.parse(value);
+                      });
+                    }
+                    return null;
+                  },
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
   confirmButton(metamaskProvider) {
     return Row(
       children: [
@@ -251,6 +376,7 @@ class SellTicketPageState extends State<SellTicketPage> {
                     widget.event.integerId,
                     _price,
                     widget.mintedTicketTokenIds.length,
+                    _transferRight,
                   );
 
                   print("transcationParamters:" +
@@ -342,8 +468,25 @@ class SellTicketPageState extends State<SellTicketPage> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
+                    transfersContainer(),
+                    comissionContainer(),
+                  ],
+                ),
+                SizedBox(height: 10),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
                     priceContainer(),
                   ],
+                ),
+                SizedBox(height: 20),
+                Padding(
+                  padding: EdgeInsets.all(12),
+                  child: Text(
+                    "Tickript will charge 15% comission for this operation: Listing items in the market",
+                    style: TextStyle(
+                        color: Colors.grey, fontWeight: FontWeight.w700),
+                  ),
                 ),
                 SizedBox(height: 20),
                 confirmButton(widget.metamaskProvider),

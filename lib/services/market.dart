@@ -24,7 +24,7 @@ class MarketService {
     return body["marketItemsAll"];
   }
 
-  Future<dynamic> sell(auth, eventId, price, amount) async {
+  Future<dynamic> sell(auth, eventId, price, amount, transferRight) async {
     final String url = '${backendUrl!}/market/sell';
 
     var headers = {
@@ -36,6 +36,7 @@ class MarketService {
       "eventId": eventId.toString(),
       "amount": amount.toString(),
       "price": price.toString(),
+      "transferRight": transferRight.toString(),
     };
 
     Response res = await post(
