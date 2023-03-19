@@ -466,19 +466,22 @@ class _TicketPageState extends State<TicketPage> {
                               ),
                             ],
                           ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                "price:",
-                                style: TextStyle(color: Colors.white),
-                              ),
-                              Text(
-                                "${item["price"]}",
-                                style: TextStyle(color: Colors.white),
-                              ),
-                            ],
-                          ),
+                          sellOrOwn == "sell"
+                              ? Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      "price:",
+                                      style: TextStyle(color: Colors.white),
+                                    ),
+                                    Text(
+                                      "${item["price"]}",
+                                      style: TextStyle(color: Colors.white),
+                                    ),
+                                  ],
+                                )
+                              : SizedBox(),
                         ],
                       ),
                     ),
@@ -491,6 +494,7 @@ class _TicketPageState extends State<TicketPage> {
     return Container(
       width: double.infinity,
       height: ((list.length / 3).ceil() + 1) * 70,
+      constraints: BoxConstraints(maxHeight: 4 * 70),
       child: GridView.count(
           primary: false,
           padding: const EdgeInsets.all(8),
@@ -614,12 +618,89 @@ class _TicketPageState extends State<TicketPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              "You Are Selling:",
-              style: TextStyle(
-                  color: Color(0xFF050A31),
-                  fontSize: 18,
-                  fontWeight: FontWeight.w400),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  "You Are Selling:",
+                  style: TextStyle(
+                      color: Color(0xFF050A31),
+                      fontSize: 18,
+                      fontWeight: FontWeight.w400),
+                ),
+                GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  child: Container(
+                    padding: EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(5),
+                      color: Color(0xFF050A31),
+                      boxShadow: [
+                        BoxShadow(
+                          offset: Offset(-2, 2),
+                          blurRadius: 4,
+                          spreadRadius: 2,
+                          color: Color.fromRGBO(5, 10, 49, 0.1),
+                        ),
+                      ],
+                    ),
+                    child: Text(
+                      "Stop Batch Sale",
+                      style: TextStyle(fontSize: 16, color: Colors.white),
+                    ),
+                  ),
+                  onTap: () async {
+                    /// TODO : Stop batch Sale
+                    if (widget.myItemsOnSale!.length > 0) {
+                      List<dynamic> tokenIds = widget.myItemsOnSale!
+                          .map((e) => e["tokenID"])
+                          .toList();
+
+                      dynamic transactionParameters =
+                          await marketService.stopBatchSale(
+                        widget.userProvider!.token,
+                        tokenIds,
+                        0,
+                        widget.event!.integerId,
+                      );
+
+                      print("xxx");
+
+                      alchemy.init(
+                        httpRpcUrl:
+                            "https://polygon-mumbai.g.alchemy.com/v2/jq6Um8Vdb_j-F0vwzpqBjvjHiz3-v5wy",
+                        wsRpcUrl:
+                            "wss://polygon-mumbai.g.alchemy.com/v2/jq6Um8Vdb_j-F0vwzpqBjvjHiz3-v5wy",
+                        verbose: true,
+                      );
+
+                      List<dynamic> params = [
+                        {
+                          "from": transactionParameters["from"],
+                          "to": transactionParameters["to"],
+                          "data": transactionParameters["data"],
+                        }
+                      ];
+
+                      String method = "eth_sendTransaction";
+
+                      print(params);
+
+                      await launchUrl(
+                          Uri.parse(widget.metamaskProvider!.connector.session
+                              .toUri()),
+                          mode: LaunchMode.externalApplication);
+
+                      final signature = await widget.metamaskProvider!.connector
+                          .sendCustomRequest(method: method, params: params);
+
+                      print("signature:" + signature);
+
+                      refreshTicketStatus();
+                    }
+                  },
+                )
+              ],
             ),
             Divider(thickness: 1),
             Row(
