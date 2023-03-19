@@ -9,7 +9,6 @@ import 'package:url_launcher/url_launcher.dart';
 
 class ResellTicketPage extends StatefulWidget {
   final Event event;
-  final List<dynamic> mintedTicketTokenIds;
   final UserProvider userProvider;
   final MetamaskProvider metamaskProvider;
   final List<dynamic> myOwnItems;
@@ -17,7 +16,6 @@ class ResellTicketPage extends StatefulWidget {
   const ResellTicketPage({
     Key? key,
     required this.event,
-    required this.mintedTicketTokenIds,
     required this.userProvider,
     required this.metamaskProvider,
     required this.myOwnItems,
@@ -31,7 +29,7 @@ class ResellTicketPageState extends State<ResellTicketPage> {
   int _quantity = 0;
   double _price = 0.0;
 
-  List<dynamic> marketItemsAll = [];
+  List<int> transferableIds = [];
 
   final alchemy = Alchemy();
 
@@ -212,6 +210,13 @@ class ResellTicketPageState extends State<ResellTicketPage> {
                       fontWeight: FontWeight.w300),
                 ),
               ],
+            ),
+            SizedBox(
+              height: 30,
+            ),
+            Text(
+              "Only ${transferableIds.length}/${widget.myOwnItems.length} are transferable!",
+              style: TextStyle(color: Colors.red[900]),
             ),
           ],
         ));

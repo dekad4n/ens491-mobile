@@ -2,8 +2,11 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tickrypt/models/event_model.dart';
+import 'package:tickrypt/pages/resell_ticket_page.dart';
+import 'package:tickrypt/pages/transfer_page.dart';
 import 'package:tickrypt/providers/metamask.dart';
 import 'package:tickrypt/providers/user_provider.dart';
+import 'package:tickrypt/services/market.dart';
 
 class TicketPage extends StatefulWidget {
   final Event? event;
@@ -25,23 +28,168 @@ class TicketPage extends StatefulWidget {
 }
 
 class _TicketPageState extends State<TicketPage> {
-  ticketRectangle() {
-    return Container(
-      width: MediaQuery.of(context).size.width * 0.9,
+  MarketService marketService = MarketService();
+
+  showDialogOnPressOwn(item) {
+    bool isTransferable = item["transferRight"] > 0;
+
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false, // user must tap button!
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text("Ticket"),
+              Text("id: ${item["tokenID"]}",
+                  style: TextStyle(color: Colors.grey)),
+            ],
+          ),
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: <Widget>[
+                Text(
+                    "This ticket is transferable ${item["transferRight"]} times."),
+                SizedBox(height: 30),
+                ElevatedButton(
+                  onPressed: () {
+                    if (isTransferable) {
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => TransferPage(
+                                    event: widget.event,
+                                    userProvider: widget.userProvider!,
+                                    metamaskProvider: widget.metamaskProvider!,
+                                    item: item,
+                                  ))).then((value) {});
+                    }
+                  },
+                  child: Text("Transfer"),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor:
+                        isTransferable ? Color(0xFFF99D23) : Colors.grey,
+                  ),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    if (isTransferable) {
+                      print("resell single item");
+                    }
+                  },
+                  child: Text("Resell"),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor:
+                        isTransferable ? Color(0xFFF99D23) : Colors.grey,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text(
+                'Close',
+                style: TextStyle(color: Color(0xFF5200FF)),
+              ),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
     );
   }
 
-  ticketsGridView(List<dynamic> list, Color color) {
+  ticketsGridView(List<dynamic> list, Color color, String sellOrOwn) {
     List<Widget> tickets = list
-        .map((item) => Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(5),
-                color: color,
-              ),
-              child: Center(
-                child: Text(
-                  item["tokenID"].toString(),
-                  style: TextStyle(color: Colors.white),
+        .map((item) => GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () {
+                if (sellOrOwn == "sell") {}
+                if (sellOrOwn == "own") {
+                  showDialogOnPressOwn(item);
+                }
+              },
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(5),
+                  color: color.withOpacity(0.5),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      padding: EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.only(
+                          topLeft: Radius.circular(5),
+                          topRight: Radius.circular(5),
+                        ),
+                        color: color,
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            "Ticket",
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      padding: EdgeInsets.all(8),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                "id:",
+                                style: TextStyle(color: Colors.white),
+                              ),
+                              Text(
+                                "${item["tokenID"]}",
+                                style: TextStyle(color: Colors.white),
+                              ),
+                            ],
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                "seat:",
+                                style: TextStyle(color: Colors.white),
+                              ),
+                              Text(
+                                "${item["seat"]}",
+                                style: TextStyle(color: Colors.white),
+                              ),
+                            ],
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                "transfer:",
+                                style: TextStyle(color: Colors.white),
+                              ),
+                              Text(
+                                "${item["transferRight"]}",
+                                style: TextStyle(color: Colors.white),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ))
@@ -49,13 +197,13 @@ class _TicketPageState extends State<TicketPage> {
 
     return Container(
       width: double.infinity,
-      height: (list.length / 10 + 1) * 30,
+      height: (list.length / 3 + 1) * 40,
       child: GridView.count(
           primary: false,
           padding: const EdgeInsets.all(8),
-          crossAxisSpacing: 5,
-          mainAxisSpacing: 5,
-          crossAxisCount: 10,
+          crossAxisSpacing: 10,
+          mainAxisSpacing: 10,
+          crossAxisCount: 3,
           children: tickets),
     );
   }
@@ -72,12 +220,79 @@ class _TicketPageState extends State<TicketPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              "You Own:",
-              style: TextStyle(
-                  color: Color(0xFF050A31),
-                  fontSize: 18,
-                  fontWeight: FontWeight.w400),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      "You Own:",
+                      style: TextStyle(
+                          color: Color(0xFF050A31),
+                          fontSize: 18,
+                          fontWeight: FontWeight.w400),
+                    ),
+                    SizedBox(width: 10),
+                    GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(15),
+                          color: Colors.white,
+                          boxShadow: [
+                            BoxShadow(
+                              offset: Offset(-2, 2),
+                              blurRadius: 4,
+                              spreadRadius: 2,
+                              color: Color.fromRGBO(5, 10, 49, 0.1),
+                            ),
+                          ],
+                        ),
+                        child: Icon(
+                          Icons.refresh,
+                          size: 30,
+                        ),
+                      ),
+                      onTap: () {
+                        // refreshTicketStatus();
+                      },
+                    )
+                  ],
+                ),
+                GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  child: Container(
+                    padding: EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(5),
+                      color: Colors.white,
+                      boxShadow: [
+                        BoxShadow(
+                          offset: Offset(-2, 2),
+                          blurRadius: 4,
+                          spreadRadius: 2,
+                          color: Color.fromRGBO(5, 10, 49, 0.1),
+                        ),
+                      ],
+                    ),
+                    child: Text(
+                      "Resell Multiple",
+                      style: TextStyle(fontSize: 16),
+                    ),
+                  ),
+                  onTap: () {
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => ResellTicketPage(
+                                  event: widget.event!,
+                                  userProvider: widget.userProvider!,
+                                  metamaskProvider: widget.metamaskProvider!,
+                                  myOwnItems: widget.myOwnItems!,
+                                )));
+                  },
+                )
+              ],
             ),
             Divider(thickness: 1),
             Row(
@@ -100,7 +315,7 @@ class _TicketPageState extends State<TicketPage> {
               ],
             ),
             SizedBox(height: 10),
-            ticketsGridView(widget.myOwnItems!, Colors.purple),
+            ticketsGridView(widget.myOwnItems!, Colors.deepPurple, "own"),
           ],
         ),
       );
@@ -150,7 +365,17 @@ class _TicketPageState extends State<TicketPage> {
               ],
             ),
             SizedBox(height: 10),
-            ticketsGridView(widget.myItemsOnSale!, Colors.deepOrange),
+            ticketsGridView(widget.myItemsOnSale!, Colors.deepOrange, "sell"),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.arrow_drop_down,
+                  size: 30,
+                  color: Colors.grey,
+                )
+              ],
+            ),
           ],
         ),
       );

@@ -9,14 +9,14 @@ class TransferPage extends StatefulWidget {
   final Event? event;
   final UserProvider? userProvider;
   final MetamaskProvider? metamaskProvider;
-  final List<dynamic>? myOwnItems;
+  final Map? item;
 
   const TransferPage(
       {super.key,
       this.event,
       this.userProvider,
       this.metamaskProvider,
-      this.myOwnItems});
+      this.item});
 
   @override
   State<TransferPage> createState() => _TransferPageState();
@@ -43,7 +43,7 @@ class _TransferPageState extends State<TransferPage> {
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Text(
-          "Viewing Ticket",
+          "Transfer Ticket",
           style: TextStyle(
             color: Color(0xff050a31),
             fontSize: 25,

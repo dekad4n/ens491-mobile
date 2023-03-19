@@ -744,19 +744,7 @@ class _EventPageState extends State<EventPage> {
                                   ),
                                 ),
                               ),
-                              onTap: () {
-                                Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                        builder: (context) => TransferPage(
-                                              event: widget.event,
-                                              userProvider:
-                                                  widget.userProvider!,
-                                              metamaskProvider:
-                                                  widget.metamaskProvider!,
-                                              myOwnItems: _myOwnItems,
-                                            ))).then((value) {});
-                              },
+                              onTap: () {},
                             ),
                             SizedBox(width: 15),
                             GestureDetector(
@@ -773,23 +761,7 @@ class _EventPageState extends State<EventPage> {
                                   ),
                                 ),
                               ),
-                              onTap: () {
-                                Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                        builder: (context) => ResellTicketPage(
-                                              event: widget.event,
-                                              mintedTicketTokenIds:
-                                                  _mintedTicketTokenIds,
-                                              userProvider:
-                                                  widget.userProvider!,
-                                              metamaskProvider:
-                                                  widget.metamaskProvider!,
-                                              myOwnItems: _myOwnItems,
-                                            ))).then((value) {
-                                  refreshTicketStatus();
-                                });
-                              },
+                              onTap: () {},
                             ),
                           ],
                         )

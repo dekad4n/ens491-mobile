@@ -181,7 +181,7 @@ class SellTicketPageState extends State<SellTicketPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            "How Many Transfers Do You Allow?",
+            "How Many Transfers per Ticket Do You Allow?",
             style: TextStyle(
                 color: Colors.grey, fontSize: 12, fontWeight: FontWeight.bold),
           ),
