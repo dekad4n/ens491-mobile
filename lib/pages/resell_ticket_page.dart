@@ -432,10 +432,10 @@ class ResellTicketPageState extends State<ResellTicketPage> {
                       );
                     } else {
                       dynamic transactionParameters =
-                          await marketService.resell(
+                          await marketService.resellMultiple(
                         widget.userProvider!.token,
                         _price,
-                        widget.myOwnItems[0]["tokenID"],
+                        _transferableIds.sublist(0, _quantity - 1),
                       );
 
                       print("transcationParamters:" +

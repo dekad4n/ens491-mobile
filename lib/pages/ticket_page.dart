@@ -9,13 +9,13 @@ import 'package:tickrypt/providers/user_provider.dart';
 import 'package:tickrypt/services/market.dart';
 
 class TicketPage extends StatefulWidget {
-  final Event? event;
-  final UserProvider? userProvider;
-  final MetamaskProvider? metamaskProvider;
-  final List<dynamic>? myOwnItems;
-  final List<dynamic>? myItemsOnSale;
+  Event? event;
+  UserProvider? userProvider;
+  MetamaskProvider? metamaskProvider;
+  List<dynamic>? myOwnItems;
+  List<dynamic>? myItemsOnSale;
 
-  const TicketPage(
+  TicketPage(
       {super.key,
       this.event,
       this.userProvider,
@@ -29,6 +29,191 @@ class TicketPage extends StatefulWidget {
 
 class _TicketPageState extends State<TicketPage> {
   MarketService marketService = MarketService();
+
+  String _targetPublicAdddress = "";
+  double _price = 0;
+  double comission = 0;
+
+  bool _isLoading = false;
+
+  int mySortComparison(dynamic item1, dynamic item2) {
+    if (item1["price"] < item2["price"]) {
+      return -1;
+    } else if (item1["price"] > item2["price"]) {
+      return 1;
+    } else {
+      return 0;
+    }
+  }
+
+  Future<List<dynamic>> getMarketItemsAll() async {
+    List<dynamic> marketItemsAll =
+        await marketService.getMarketItemsAllByEventId(widget.event!.integerId);
+
+    marketItemsAll.sort(mySortComparison);
+
+    return marketItemsAll;
+  }
+
+  void refreshTicketStatus() {
+    setState(() {
+      _isLoading = true;
+    });
+
+    getMarketItemsAll().then((value) {
+      List<dynamic> marketItemsAll = value;
+      List<dynamic> marketItemsSold = [];
+      List<dynamic> marketItemsOnSale = [];
+
+      List<dynamic> myOwnItems = [];
+      List<dynamic> myItemsOnSale = [];
+
+      for (dynamic marketItem in marketItemsAll) {
+        if (RegExp(r'^0x0+$').hasMatch(marketItem["seller"]) &&
+            marketItem["sold"]) {
+          // If seller address is zeroAddress (0x000000000000000)
+          // Then it means this ticket is already sold
+          marketItemsSold.add(marketItem);
+        } else {
+          marketItemsOnSale.add(marketItem);
+        }
+      }
+
+      // Filter my tickets that i sell currently
+      marketItemsOnSale.forEach((item) {
+        if (item["seller"].toString().toLowerCase() ==
+            widget.userProvider?.user?.publicAddress) {
+          myItemsOnSale.add(item);
+        }
+      });
+
+      // Filter my tickets that i own and don't sell
+      marketItemsSold.forEach((item) {
+        if (item["ticketOwner"].toString().toLowerCase() ==
+            widget.userProvider?.user?.publicAddress) {
+          myOwnItems.add(item);
+        }
+      });
+
+      setState(() {
+        widget.myItemsOnSale = myItemsOnSale;
+        widget.myOwnItems = myOwnItems;
+
+        _isLoading = false;
+      });
+    });
+  }
+
+  refreshButton() {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            padding: EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(8),
+              color: Color(0xFF050A31),
+              boxShadow: [
+                BoxShadow(
+                  offset: Offset(-2, 2),
+                  blurRadius: 4,
+                  spreadRadius: 2,
+                  color: Color.fromRGBO(5, 10, 49, 0.1),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                Text("Refresh", style: TextStyle(color: Colors.white)),
+                Icon(
+                  Icons.refresh,
+                  size: 30,
+                  color: Colors.white,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+      onTap: () {
+        refreshTicketStatus();
+      },
+    );
+  }
+
+  targetPublicAddressTextField() {
+    return TextFormField(
+      style: TextStyle(fontSize: 15),
+      // The validator receives the text that the user has entered.
+      decoration: InputDecoration(
+          focusedBorder: OutlineInputBorder(
+              borderSide: BorderSide(color: Colors.deepPurple)),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+          labelText: 'Public Address',
+          labelStyle: TextStyle(color: Colors.grey)),
+      cursorColor: Colors.deepPurple,
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          return 'Please enter some text';
+        } else {
+          setState(() {
+            _targetPublicAdddress = value;
+          });
+        }
+        return null;
+      },
+      onChanged: (value) {
+        if (value != null || value != "") {
+          setState(() {
+            _targetPublicAdddress = value;
+          });
+        }
+      },
+    );
+  }
+
+  priceContainer() {
+    return TextFormField(
+      style: TextStyle(
+        fontSize: 15,
+      ),
+      decoration: InputDecoration(
+          focusedBorder: OutlineInputBorder(
+              borderSide: BorderSide(color: Colors.deepPurple)),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+          labelText: 'Price (MATIC)',
+          labelStyle: TextStyle(color: Colors.grey)),
+      // The validator receives the text that the user has entered.
+      keyboardType: TextInputType.number,
+      onChanged: (value) {
+        if (value != null && value != "") {
+          setState(() {
+            _price = double.parse(value);
+          });
+        } else {
+          setState(() {
+            _price = 0;
+          });
+        }
+      },
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          return '';
+        } else {
+          setState(() {
+            _price = double.parse(value);
+          });
+        }
+        return null;
+      },
+    );
+  }
 
   showDialogOnPressOwn(item) {
     bool isTransferable = item["transferRight"] > 0;
@@ -50,8 +235,15 @@ class _TicketPageState extends State<TicketPage> {
             child: ListBody(
               children: <Widget>[
                 Text(
-                    "This ticket is transferable ${item["transferRight"]} times."),
-                SizedBox(height: 30),
+                  "This ticket is transferable ${item["transferRight"]} times.",
+                  style: TextStyle(color: Colors.red[900]),
+                ),
+                Divider(thickness: 1),
+                SizedBox(height: 10),
+                Text("Send this ticket to someone"),
+                SizedBox(height: 10),
+                targetPublicAddressTextField(),
+                SizedBox(height: 10),
                 ElevatedButton(
                   onPressed: () {
                     if (isTransferable) {
@@ -63,15 +255,23 @@ class _TicketPageState extends State<TicketPage> {
                                     userProvider: widget.userProvider!,
                                     metamaskProvider: widget.metamaskProvider!,
                                     item: item,
-                                  ))).then((value) {});
+                                  ))).then((value) {
+                        refreshTicketStatus();
+                      });
                     }
                   },
                   child: Text("Transfer"),
                   style: ElevatedButton.styleFrom(
                     backgroundColor:
-                        isTransferable ? Color(0xFFF99D23) : Colors.grey,
+                        isTransferable ? Color(0xFF050A31) : Colors.grey,
                   ),
                 ),
+                Divider(thickness: 1),
+                SizedBox(height: 10),
+                Text("Resell in the market"),
+                SizedBox(height: 10),
+                priceContainer(),
+                SizedBox(height: 10),
                 ElevatedButton(
                   onPressed: () {
                     if (isTransferable) {
@@ -81,7 +281,7 @@ class _TicketPageState extends State<TicketPage> {
                   child: Text("Resell"),
                   style: ElevatedButton.styleFrom(
                     backgroundColor:
-                        isTransferable ? Color(0xFFF99D23) : Colors.grey,
+                        isTransferable ? Color(0xFF050A31) : Colors.grey,
                   ),
                 ),
               ],
@@ -104,6 +304,10 @@ class _TicketPageState extends State<TicketPage> {
   }
 
   ticketsGridView(List<dynamic> list, Color color, String sellOrOwn) {
+    if (_isLoading) {
+      return Text("Loading tickets...");
+    }
+
     List<Widget> tickets = list
         .map((item) => GestureDetector(
               behavior: HitTestBehavior.opaque,
@@ -133,11 +337,9 @@ class _TicketPageState extends State<TicketPage> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text(
-                            "Ticket",
-                            style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w600),
+                          Icon(
+                            CupertinoIcons.tickets_fill,
+                            color: Colors.white,
                           ),
                         ],
                       ),
@@ -197,7 +399,7 @@ class _TicketPageState extends State<TicketPage> {
 
     return Container(
       width: double.infinity,
-      height: (list.length / 3 + 1) * 40,
+      height: ((list.length / 3).round() + 1) * 50,
       child: GridView.count(
           primary: false,
           padding: const EdgeInsets.all(8),
@@ -215,6 +417,7 @@ class _TicketPageState extends State<TicketPage> {
         width: MediaQuery.of(context).size.width * 0.9,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(15),
+          border: Border.all(color: Colors.deepPurple.withOpacity(0.3)),
           color: Color(0xFFB9A6E0).withOpacity(0.1),
         ),
         child: Column(
@@ -223,41 +426,12 @@ class _TicketPageState extends State<TicketPage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
-                  children: [
-                    Text(
-                      "You Own:",
-                      style: TextStyle(
-                          color: Color(0xFF050A31),
-                          fontSize: 18,
-                          fontWeight: FontWeight.w400),
-                    ),
-                    SizedBox(width: 10),
-                    GestureDetector(
-                      behavior: HitTestBehavior.opaque,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(15),
-                          color: Colors.white,
-                          boxShadow: [
-                            BoxShadow(
-                              offset: Offset(-2, 2),
-                              blurRadius: 4,
-                              spreadRadius: 2,
-                              color: Color.fromRGBO(5, 10, 49, 0.1),
-                            ),
-                          ],
-                        ),
-                        child: Icon(
-                          Icons.refresh,
-                          size: 30,
-                        ),
-                      ),
-                      onTap: () {
-                        // refreshTicketStatus();
-                      },
-                    )
-                  ],
+                Text(
+                  "You Own:",
+                  style: TextStyle(
+                      color: Color(0xFF050A31),
+                      fontSize: 18,
+                      fontWeight: FontWeight.w400),
                 ),
                 GestureDetector(
                   behavior: HitTestBehavior.opaque,
@@ -265,7 +439,7 @@ class _TicketPageState extends State<TicketPage> {
                     padding: EdgeInsets.all(8),
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(5),
-                      color: Colors.white,
+                      color: Color(0xFF050A31),
                       boxShadow: [
                         BoxShadow(
                           offset: Offset(-2, 2),
@@ -277,7 +451,7 @@ class _TicketPageState extends State<TicketPage> {
                     ),
                     child: Text(
                       "Resell Multiple",
-                      style: TextStyle(fontSize: 16),
+                      style: TextStyle(fontSize: 16, color: Colors.white),
                     ),
                   ),
                   onTap: () {
@@ -289,7 +463,9 @@ class _TicketPageState extends State<TicketPage> {
                                   userProvider: widget.userProvider!,
                                   metamaskProvider: widget.metamaskProvider!,
                                   myOwnItems: widget.myOwnItems!,
-                                )));
+                                ))).then((value) {
+                      refreshTicketStatus();
+                    });
                   },
                 )
               ],
@@ -305,13 +481,22 @@ class _TicketPageState extends State<TicketPage> {
                       fontWeight: FontWeight.w300),
                 ),
                 SizedBox(width: 20),
-                Text(
-                  "x ${widget.myOwnItems?.length}",
-                  style: TextStyle(
-                      color: Color(0xFF050A31),
-                      fontSize: 16,
-                      fontWeight: FontWeight.w300),
-                ),
+                _isLoading
+                    ? Container(
+                        width: 25,
+                        height: 25,
+                        child: CircularProgressIndicator(
+                          color: Colors.black,
+                          strokeWidth: 2,
+                        ),
+                      )
+                    : Text(
+                        "x ${widget.myOwnItems?.length}",
+                        style: TextStyle(
+                            color: Color(0xFF050A31),
+                            fontSize: 16,
+                            fontWeight: FontWeight.w300),
+                      ),
               ],
             ),
             SizedBox(height: 10),
@@ -325,13 +510,13 @@ class _TicketPageState extends State<TicketPage> {
   }
 
   youAreSellingSection() {
-    for (var x in widget.myOwnItems!) print(x);
     if (widget.myItemsOnSale!.length > 0) {
       return Container(
         padding: EdgeInsets.all(12),
         width: MediaQuery.of(context).size.width * 0.9,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(15),
+          border: Border.all(color: Colors.deepOrange.withOpacity(0.3)),
           color: Color.fromARGB(255, 224, 166, 166).withOpacity(0.1),
         ),
         child: Column(
@@ -355,27 +540,27 @@ class _TicketPageState extends State<TicketPage> {
                       fontWeight: FontWeight.w300),
                 ),
                 SizedBox(width: 20),
-                Text(
-                  "x ${widget.myItemsOnSale?.length}",
-                  style: TextStyle(
-                      color: Color(0xFF050A31),
-                      fontSize: 16,
-                      fontWeight: FontWeight.w300),
-                ),
+                _isLoading
+                    ? Container(
+                        width: 25,
+                        height: 25,
+                        child: CircularProgressIndicator(
+                          color: Colors.black,
+                          strokeWidth: 2,
+                        ),
+                      )
+                    : Text(
+                        "x ${widget.myItemsOnSale?.length}",
+                        style: TextStyle(
+                            color: Color(0xFF050A31),
+                            fontSize: 16,
+                            fontWeight: FontWeight.w300),
+                      ),
               ],
             ),
             SizedBox(height: 10),
-            ticketsGridView(widget.myItemsOnSale!, Colors.deepOrange, "sell"),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.arrow_drop_down,
-                  size: 30,
-                  color: Colors.grey,
-                )
-              ],
-            ),
+            ticketsGridView(widget.myItemsOnSale!,
+                Colors.deepOrange.withOpacity(0.7), "sell"),
           ],
         ),
       );
@@ -413,8 +598,10 @@ class _TicketPageState extends State<TicketPage> {
               padding: EdgeInsets.all(20),
               child: Column(
                 children: [
+                  refreshButton(),
+                  SizedBox(height: 20),
                   youOwnSection(),
-                  SizedBox(height: 10),
+                  SizedBox(height: 20),
                   youAreSellingSection(),
                 ],
               )),

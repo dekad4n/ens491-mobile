@@ -716,7 +716,7 @@ class _EventPageState extends State<EventPage> {
                               fontSize: 16,
                               fontWeight: FontWeight.w300),
                         ),
-                        SizedBox(width: 20),
+                        SizedBox(width: 30),
                         Text(
                           "x ${_myOwnItems.length}",
                           style: TextStyle(
@@ -727,45 +727,6 @@ class _EventPageState extends State<EventPage> {
                       ],
                     ),
                   ),
-                  _myOwnItems.length > 0
-                      ? Row(
-                          children: [
-                            GestureDetector(
-                              behavior: HitTestBehavior.opaque,
-                              child: Container(
-                                padding: EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(8),
-                                    color: Color(0xFFF99D23)),
-                                child: Center(
-                                  child: Text(
-                                    "Transfer",
-                                    style: TextStyle(color: Colors.white),
-                                  ),
-                                ),
-                              ),
-                              onTap: () {},
-                            ),
-                            SizedBox(width: 15),
-                            GestureDetector(
-                              behavior: HitTestBehavior.opaque,
-                              child: Container(
-                                padding: EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(8),
-                                    color: Color(0xFF050A31)),
-                                child: Center(
-                                  child: Text(
-                                    "Resell",
-                                    style: TextStyle(color: Colors.white),
-                                  ),
-                                ),
-                              ),
-                              onTap: () {},
-                            ),
-                          ],
-                        )
-                      : SizedBox(),
                 ],
               ),
               Divider(thickness: 1),
@@ -790,7 +751,7 @@ class _EventPageState extends State<EventPage> {
                               fontSize: 16,
                               fontWeight: FontWeight.w300),
                         ),
-                        SizedBox(width: 20),
+                        SizedBox(width: 30),
                         Text(
                           "x ${_myItemsOnSale.length}",
                           style: TextStyle(

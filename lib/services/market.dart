@@ -189,7 +189,7 @@ class MarketService {
 
     Response res = await post(
       Uri.parse(url),
-      body: params,
+      body: jsonEncode(params),
       headers: headers,
     );
 
