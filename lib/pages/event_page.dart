@@ -368,83 +368,7 @@ class _EventPageState extends State<EventPage> {
     if (widget.event.owner == widget.userProvider?.user?.publicAddress) {
       // If i am the owner, show Stop Sale Button
       // Get all items that i sell
-      return Column(
-        children: [
-          Text(
-            "You have ${_myItemsOnSale.length} tickets on sale.",
-            style: TextStyle(
-              color: Colors.red[900],
-            ),
-          ),
-          SizedBox(height: 5),
-          Row(
-            children: [
-              Expanded(
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    elevation: 0,
-                    backgroundColor: _myItemsOnSale.length > 0
-                        ? Color(0xFF050A31)
-                        : Colors.grey,
-                  ),
-                  child: Text(
-                    "Stop Batch Sale",
-                    style: TextStyle(fontSize: 22),
-                  ),
-                  onPressed: () async {
-                    if (_myItemsOnSale.length > 0) {
-                      List<dynamic> tokenIds =
-                          _myItemsOnSale.map((e) => e["tokenID"]).toList();
-
-                      dynamic transactionParameters =
-                          await marketService.stopBatchSale(
-                        widget.userProvider!.token,
-                        tokenIds,
-                        _myItemsOnSale[0]["price"],
-                        widget.event.integerId,
-                      );
-
-                      print("xxx");
-
-                      alchemy.init(
-                        httpRpcUrl:
-                            "https://polygon-mumbai.g.alchemy.com/v2/jq6Um8Vdb_j-F0vwzpqBjvjHiz3-v5wy",
-                        wsRpcUrl:
-                            "wss://polygon-mumbai.g.alchemy.com/v2/jq6Um8Vdb_j-F0vwzpqBjvjHiz3-v5wy",
-                        verbose: true,
-                      );
-
-                      List<dynamic> params = [
-                        {
-                          "from": transactionParameters["from"],
-                          "to": transactionParameters["to"],
-                          "data": transactionParameters["data"],
-                        }
-                      ];
-
-                      String method = "eth_sendTransaction";
-
-                      print(params);
-
-                      await launchUrl(
-                          Uri.parse(widget.metamaskProvider!.connector.session
-                              .toUri()),
-                          mode: LaunchMode.externalApplication);
-
-                      final signature = await widget.metamaskProvider!.connector
-                          .sendCustomRequest(method: method, params: params);
-
-                      print("signature:" + signature);
-
-                      refreshTicketStatus();
-                    }
-                  },
-                ),
-              ),
-            ],
-          ),
-        ],
-      );
+      return SizedBox();
     } else {
       // If i am a regular person, show Buy Button
 
@@ -657,39 +581,42 @@ class _EventPageState extends State<EventPage> {
                       )
                     ],
                   ),
-                  GestureDetector(
-                    behavior: HitTestBehavior.opaque,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(15),
-                        color: Colors.white,
-                        boxShadow: [
-                          BoxShadow(
-                            offset: Offset(-2, 2),
-                            blurRadius: 4,
-                            spreadRadius: 2,
-                            color: Color.fromRGBO(5, 10, 49, 0.1),
+                  (_myOwnItems.length > 0 || _myItemsOnSale.length > 0)
+                      ? GestureDetector(
+                          behavior: HitTestBehavior.opaque,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(15),
+                              color: Colors.white,
+                              boxShadow: [
+                                BoxShadow(
+                                  offset: Offset(-2, 2),
+                                  blurRadius: 4,
+                                  spreadRadius: 2,
+                                  color: Color.fromRGBO(5, 10, 49, 0.1),
+                                ),
+                              ],
+                            ),
+                            child: Icon(
+                              CupertinoIcons.arrow_right,
+                              size: 30,
+                            ),
                           ),
-                        ],
-                      ),
-                      child: Icon(
-                        CupertinoIcons.arrow_right,
-                        size: 30,
-                      ),
-                    ),
-                    onTap: () {
-                      Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => TicketPage(
-                                    event: widget.event,
-                                    userProvider: widget.userProvider,
-                                    metamaskProvider: widget.metamaskProvider,
-                                    myItemsOnSale: _myItemsOnSale,
-                                    myOwnItems: _myOwnItems,
-                                  ))).then((value) {});
-                    },
-                  )
+                          onTap: () {
+                            Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => TicketPage(
+                                          event: widget.event,
+                                          userProvider: widget.userProvider,
+                                          metamaskProvider:
+                                              widget.metamaskProvider,
+                                          myItemsOnSale: _myItemsOnSale,
+                                          myOwnItems: _myOwnItems,
+                                        ))).then((value) {});
+                          },
+                        )
+                      : SizedBox()
                 ],
               ),
               Divider(
@@ -782,9 +709,9 @@ class _EventPageState extends State<EventPage> {
                               onTap: () async {
                                 dynamic transactionParameters =
                                     await marketService.stopSale(
-                                        widget.userProvider!.token,
-                                        _myItemsOnSale[0]["tokenID"],
-                                        _myItemsOnSale[0]["price"]);
+                                  widget.userProvider!.token,
+                                  _myItemsOnSale[0]["tokenID"],
+                                );
 
                                 print("xxx");
 

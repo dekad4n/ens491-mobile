@@ -381,6 +381,89 @@ class _TicketPageState extends State<TicketPage> {
     );
   }
 
+  showDialogOnPressSell(item) {
+    showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Column(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text("Ticket"),
+                  Text("id: ${item["tokenID"]}",
+                      style: TextStyle(color: Colors.grey)),
+                ],
+              ),
+            ],
+          ),
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: <Widget>[
+                Text(
+                  "This ticket is transferable ${item["transferRight"]} times.",
+                  style: TextStyle(color: Colors.red[900]),
+                ),
+                Divider(thickness: 1),
+                SizedBox(height: 10),
+                ElevatedButton(
+                  onPressed: () async {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Processing Data')),
+                    );
+
+                    dynamic transactionParameters =
+                        await marketService.stopSale(
+                      widget.userProvider!.token,
+                      item["tokenID"],
+                    );
+
+                    alchemy.init(
+                      httpRpcUrl:
+                          "https://polygon-mumbai.g.alchemy.com/v2/jq6Um8Vdb_j-F0vwzpqBjvjHiz3-v5wy",
+                      wsRpcUrl:
+                          "wss://polygon-mumbai.g.alchemy.com/v2/jq6Um8Vdb_j-F0vwzpqBjvjHiz3-v5wy",
+                      verbose: true,
+                    );
+
+                    List<dynamic> params = [
+                      {
+                        "from": transactionParameters["from"],
+                        "to": transactionParameters["to"],
+                        "data": transactionParameters["data"],
+                      }
+                    ];
+
+                    String method = "eth_sendTransaction";
+
+                    await launchUrl(
+                        Uri.parse(
+                            widget.metamaskProvider!.connector.session.toUri()),
+                        mode: LaunchMode.externalApplication);
+
+                    final signature = await widget.metamaskProvider!.connector
+                        .sendCustomRequest(method: method, params: params);
+
+                    print("signature:" + signature);
+
+                    Navigator.of(context).pop();
+
+                    refreshTicketStatus();
+                  },
+                  child: Text("Stop Sale"),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Color(0xFF050A31),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   ticketsGridView(List<dynamic> list, Color color, String sellOrOwn) {
     if (_isLoading) {
       return Text("Loading tickets...");
@@ -390,7 +473,9 @@ class _TicketPageState extends State<TicketPage> {
         .map((item) => GestureDetector(
               behavior: HitTestBehavior.opaque,
               onTap: () {
-                if (sellOrOwn == "sell") {}
+                if (sellOrOwn == "sell") {
+                  showDialogOnPressSell(item);
+                }
                 if (sellOrOwn == "own") {
                   showDialogOnPressOwn(item);
                 }
@@ -404,7 +489,7 @@ class _TicketPageState extends State<TicketPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Container(
-                      padding: EdgeInsets.all(4),
+                      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.only(
                           topLeft: Radius.circular(5),
@@ -413,20 +498,9 @@ class _TicketPageState extends State<TicketPage> {
                         color: color,
                       ),
                       child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Icon(
-                            CupertinoIcons.tickets_fill,
-                            color: Colors.white,
-                          ),
-                        ],
-                      ),
-                    ),
-                    Container(
-                      padding: EdgeInsets.all(8),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
+                          Text("Ticket", style: TextStyle(color: Colors.white)),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
@@ -440,13 +514,26 @@ class _TicketPageState extends State<TicketPage> {
                               ),
                             ],
                           ),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 15, vertical: 8),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text(
-                                "seat:",
-                                style: TextStyle(color: Colors.white),
+                              Icon(
+                                Icons.event_seat,
+                                color: Colors.white,
                               ),
+                              // Text(
+                              //   "seat:",
+                              //   style: TextStyle(color: Colors.white),
+                              // ),
                               Text(
                                 "${item["seat"]}",
                                 style: TextStyle(color: Colors.white),
@@ -456,9 +543,14 @@ class _TicketPageState extends State<TicketPage> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text(
-                                "transfer:",
-                                style: TextStyle(color: Colors.white),
+                              // Text(
+                              //   "transfer:",
+                              //   style: TextStyle(color: Colors.white),
+                              // ),
+                              Icon(
+                                CupertinoIcons
+                                    .arrow_right_arrow_left_square_fill,
+                                color: Colors.white,
                               ),
                               Text(
                                 "${item["transferRight"]}",
@@ -471,9 +563,13 @@ class _TicketPageState extends State<TicketPage> {
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceBetween,
                                   children: [
-                                    Text(
-                                      "price:",
-                                      style: TextStyle(color: Colors.white),
+                                    // Text(
+                                    //   "price:",
+                                    //   style: TextStyle(color: Colors.white),
+                                    // ),
+                                    Icon(
+                                      Icons.payments_sharp,
+                                      color: Colors.white,
                                     ),
                                     Text(
                                       "${item["price"]}",
@@ -612,8 +708,8 @@ class _TicketPageState extends State<TicketPage> {
         width: MediaQuery.of(context).size.width * 0.9,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(15),
-          border: Border.all(color: Colors.deepOrange.withOpacity(0.3)),
-          color: Color.fromARGB(255, 224, 166, 166).withOpacity(0.1),
+          border: Border.all(color: Colors.blue.withOpacity(0.3)),
+          color: Color(0xFFE9F2F6),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -660,7 +756,6 @@ class _TicketPageState extends State<TicketPage> {
                           await marketService.stopBatchSale(
                         widget.userProvider!.token,
                         tokenIds,
-                        0,
                         widget.event!.integerId,
                       );
 
@@ -732,8 +827,8 @@ class _TicketPageState extends State<TicketPage> {
               ],
             ),
             SizedBox(height: 10),
-            ticketsGridView(widget.myItemsOnSale!,
-                Colors.deepOrange.withOpacity(0.7), "sell"),
+            ticketsGridView(
+                widget.myItemsOnSale!, Colors.blue.shade700, "sell"),
           ],
         ),
       );

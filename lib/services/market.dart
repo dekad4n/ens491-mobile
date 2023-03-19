@@ -69,7 +69,7 @@ class MarketService {
     return body;
   }
 
-  Future<dynamic> stopSale(auth, tokenId, price) async {
+  Future<dynamic> stopSale(auth, tokenId) async {
     final String url = '${backendUrl!}/market/stop-sale';
 
     var headers = {
@@ -80,7 +80,7 @@ class MarketService {
     };
 
     Map<String, dynamic> params = {
-      "price": price.toString(),
+      "price": "0",
       "tokenId": tokenId,
     };
 
@@ -95,7 +95,7 @@ class MarketService {
     return body;
   }
 
-  Future<dynamic> stopBatchSale(auth, tokenIds, price, eventId) async {
+  Future<dynamic> stopBatchSale(auth, tokenIds, eventId) async {
     final String url = '${backendUrl!}/market/stop-batch-sale';
 
     var headers = {
@@ -106,7 +106,7 @@ class MarketService {
     };
 
     Map<String, dynamic> params = {
-      "price": price.toString(),
+      "price": "0",
       "tokenIds": tokenIds,
       "eventId": eventId,
     };
