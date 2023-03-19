@@ -29,12 +29,24 @@ class ResellTicketPageState extends State<ResellTicketPage> {
   int _quantity = 0;
   double _price = 0.0;
 
-  List<int> transferableIds = [];
+  List<dynamic> _transferableIds = [];
 
   final alchemy = Alchemy();
 
   TicketService ticketService = TicketService();
   MarketService marketService = MarketService();
+
+  Future<List<dynamic>> getTransferableIds() async {
+    List<dynamic> transferableIds = await marketService.getTransferableIds(
+      widget.userProvider.token,
+      widget.event.integerId,
+      widget.userProvider.user!.publicAddress,
+    );
+    setState(() {
+      _transferableIds = transferableIds;
+    });
+    return transferableIds;
+  }
 
   eventPreviewContainer() {
     return Column(
@@ -214,10 +226,21 @@ class ResellTicketPageState extends State<ResellTicketPage> {
             SizedBox(
               height: 30,
             ),
-            Text(
-              "Only ${transferableIds.length}/${widget.myOwnItems.length} are transferable!",
-              style: TextStyle(color: Colors.red[900]),
-            ),
+            FutureBuilder(
+                future: getTransferableIds(),
+                builder: (context, snapshot) {
+                  if (snapshot.hasData) {
+                    return Text(
+                      "Only ${snapshot.data!.length}/${widget.myOwnItems.length} are transferable!",
+                      style: TextStyle(color: Colors.red[900]),
+                    );
+                  } else {
+                    return Text(
+                      "Loading transferability status of tickets...",
+                      style: TextStyle(color: Colors.red[900]),
+                    );
+                  }
+                }),
           ],
         ));
   }
@@ -252,7 +275,7 @@ class ResellTicketPageState extends State<ResellTicketPage> {
                   decoration: InputDecoration(
                     hintStyle: TextStyle(color: Colors.grey),
                     border: null,
-                    hintText: "max. ${widget.myOwnItems.length.toString()}",
+                    hintText: "max. ${_transferableIds.length.toString()}",
                   ),
                   // The validator receives the text that the user has entered.
                   keyboardType: TextInputType.number,
@@ -380,7 +403,7 @@ class ResellTicketPageState extends State<ResellTicketPage> {
                 // Validate returns true if the form is valid, or false otherwise.
                 try {
                   if (_price > 0 && _quantity > 0) {
-                    if (_quantity > widget.myOwnItems.length) {
+                    if (_quantity > _transferableIds.length) {
                       // Warn if user enters quantity larget than how many they own
                       showDialog<void>(
                         context: context,

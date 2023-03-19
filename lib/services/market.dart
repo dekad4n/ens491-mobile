@@ -24,6 +24,25 @@ class MarketService {
     return body["marketItemsAll"];
   }
 
+  Future<List<dynamic>> getTransferableIds(auth, eventId, publicAddress) async {
+    final String url =
+        '${backendUrl!}/market/transferable-ids?eventId=$eventId&publicAddress=$publicAddress';
+
+    var headers = {
+      "Access-Control-Allow-Origin": '*',
+      "Authorization": "jwt $auth",
+    };
+
+    Response res = await get(
+      Uri.parse(url),
+      headers: headers,
+    );
+
+    var body = jsonDecode(res.body);
+
+    return body["transferableIds"];
+  }
+
   Future<dynamic> sell(auth, eventId, price, amount, transferRight) async {
     final String url = '${backendUrl!}/market/sell';
 
