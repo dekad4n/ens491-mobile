@@ -1,3 +1,4 @@
+import 'package:alchemy_web3/alchemy_web3.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -7,6 +8,7 @@ import 'package:tickrypt/pages/transfer_page.dart';
 import 'package:tickrypt/providers/metamask.dart';
 import 'package:tickrypt/providers/user_provider.dart';
 import 'package:tickrypt/services/market.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class TicketPage extends StatefulWidget {
   Event? event;
@@ -35,6 +37,8 @@ class _TicketPageState extends State<TicketPage> {
   double comission = 0;
 
   bool _isLoading = false;
+
+  final alchemy = Alchemy();
 
   int mySortComparison(dynamic item1, dynamic item2) {
     if (item1["price"] < item2["price"]) {
@@ -220,15 +224,18 @@ class _TicketPageState extends State<TicketPage> {
 
     showDialog<void>(
       context: context,
-      barrierDismissible: false, // user must tap button!
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          title: Column(
             children: [
-              Text("Ticket"),
-              Text("id: ${item["tokenID"]}",
-                  style: TextStyle(color: Colors.grey)),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text("Ticket"),
+                  Text("id: ${item["tokenID"]}",
+                      style: TextStyle(color: Colors.grey)),
+                ],
+              ),
             ],
           ),
           content: SingleChildScrollView(
@@ -273,9 +280,55 @@ class _TicketPageState extends State<TicketPage> {
                 priceContainer(),
                 SizedBox(height: 10),
                 ElevatedButton(
-                  onPressed: () {
-                    if (isTransferable) {
-                      print("resell single item");
+                  onPressed: () async {
+                    if (isTransferable && _price > 0) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Processing Data')),
+                      );
+
+                      dynamic transactionParameters =
+                          await marketService.resellMultiple(
+                        widget.userProvider!.token,
+                        _price,
+                        [item["tokenID"]],
+                      );
+
+                      print("transcationParamters:" +
+                          transactionParameters.toString());
+
+                      alchemy.init(
+                        httpRpcUrl:
+                            "https://polygon-mumbai.g.alchemy.com/v2/jq6Um8Vdb_j-F0vwzpqBjvjHiz3-v5wy",
+                        wsRpcUrl:
+                            "wss://polygon-mumbai.g.alchemy.com/v2/jq6Um8Vdb_j-F0vwzpqBjvjHiz3-v5wy",
+                        verbose: true,
+                      );
+
+                      List<dynamic> params = [
+                        {
+                          "from": transactionParameters["from"],
+                          "to": transactionParameters["to"],
+                          "data": transactionParameters["data"],
+                        }
+                      ];
+
+                      String method = "eth_sendTransaction";
+
+                      await launchUrl(
+                          Uri.parse(widget.metamaskProvider!.connector.session
+                              .toUri()),
+                          mode: LaunchMode.externalApplication);
+
+                      final signature = await widget.metamaskProvider!.connector
+                          .sendCustomRequest(
+                        method: method,
+                        params: params,
+                      );
+
+                      print("signature:" + signature);
+
+                      Navigator.of(context).pop();
+                      refreshTicketStatus();
                     }
                   },
                   child: Text("Resell"),
@@ -287,17 +340,6 @@ class _TicketPageState extends State<TicketPage> {
               ],
             ),
           ),
-          actions: <Widget>[
-            TextButton(
-              child: const Text(
-                'Close',
-                style: TextStyle(color: Color(0xFF5200FF)),
-              ),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
         );
       },
     );
@@ -388,6 +430,19 @@ class _TicketPageState extends State<TicketPage> {
                               ),
                             ],
                           ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                "price:",
+                                style: TextStyle(color: Colors.white),
+                              ),
+                              Text(
+                                "${item["price"]}",
+                                style: TextStyle(color: Colors.white),
+                              ),
+                            ],
+                          ),
                         ],
                       ),
                     ),
@@ -399,10 +454,11 @@ class _TicketPageState extends State<TicketPage> {
 
     return Container(
       width: double.infinity,
-      height: ((list.length / 3).round() + 1) * 50,
+      height: ((list.length / 3).round() + 1) * 70,
       child: GridView.count(
           primary: false,
           padding: const EdgeInsets.all(8),
+          childAspectRatio: (4 / 5),
           crossAxisSpacing: 10,
           mainAxisSpacing: 10,
           crossAxisCount: 3,
