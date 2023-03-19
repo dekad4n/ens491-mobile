@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:tickrypt/models/category_model.dart';
 import 'package:tickrypt/models/event_model.dart';
 import 'package:tickrypt/models/user_model.dart';
+import 'package:tickrypt/pages/category_page.dart';
 import 'package:tickrypt/pages/mint_ticket_page.dart';
 import 'package:tickrypt/pages/event_page.dart';
 import 'package:tickrypt/providers/metamask.dart';
 import 'package:tickrypt/providers/user_provider.dart';
 import 'package:tickrypt/services/user.dart';
+import 'package:tickrypt/services/category.dart';
 import 'package:tickrypt/services/utils.dart';
 import 'package:tickrypt/widgets/navbars.dart';
 
@@ -22,6 +25,7 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> {
   UtilsService utilsService = UtilsService();
   UserService userService = UserService();
+  CategoryService categoryService = CategoryService();
 
   bannerContainer() {
     return Container(
@@ -98,6 +102,59 @@ class _HomeState extends State<Home> {
       eventCards.add(eventCard);
     }
     return eventCards;
+  }
+
+  Future<List<Card>> getCategories(userProvider, metamaskProvider) async {
+    List<Category> categories = await categoryService.getAllCategories();
+    List<Card> categoryCards = [];
+    for (Category c in categories) {
+      categoryCards.add(Card(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10.0),
+        ),
+        child: SizedBox(
+          width: 200,
+          height: 115,
+          child: GestureDetector(
+            onTap: () {
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => CategoryPage(
+                            category: c,
+                            userProvider: userProvider,
+                            metamaskProvider: metamaskProvider,
+                          )));
+            },
+            child: ClipPath(
+              clipper: ShapeBorderClipper(
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10))),
+              child: Stack(
+                children: [
+                  Image.network(
+                    c.image,
+                    width: 225,
+                    height: 125,
+                    fit: BoxFit.fill,
+                  ),
+                  Positioned(
+                    right: 10,
+                    bottom: 10,
+                    child: Text(c.name,
+                        style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black)),
+                  )
+                ],
+              ),
+            ),
+          ),
+        ),
+      ));
+    }
+    return categoryCards;
   }
 
   Future<Card> horizontalEventCard(
@@ -314,6 +371,48 @@ class _HomeState extends State<Home> {
     }
   }
 
+  categoriesSection(userProvider, metamaskProvider) {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        children: [
+          Text(
+            "Categories",
+            style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18),
+          ),
+          Divider(
+            thickness: 1,
+          ),
+          FutureBuilder(
+              future: getCategories(userProvider, metamaskProvider),
+              builder: (ctx, snapshot) {
+                if (snapshot.connectionState == ConnectionState.done) {
+                  if (snapshot.hasError) {
+                    return Center(
+                      child: Text(
+                        '${snapshot.error} occurred',
+                        style: TextStyle(fontSize: 18),
+                      ),
+                    );
+
+                    // if we got our data
+                  } else if (snapshot.hasData) {
+                    // Extracting data from snapshot object
+                    return SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(children: snapshot.data!),
+                    );
+                  }
+                }
+                return Center(
+                  child: CircularProgressIndicator(),
+                );
+              })
+        ],
+      ),
+    );
+  }
+
   eventsSection(userProvider, metamaskProvider) {
     return Padding(
       padding: const EdgeInsets.all(16.0),
@@ -402,6 +501,7 @@ class _HomeState extends State<Home> {
               // ])
               bannerContainer(),
               SizedBox(height: 30),
+              categoriesSection(userProvider, metamaskProvider),
               eventsSection(userProvider, metamaskProvider),
             ],
           ),

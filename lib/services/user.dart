@@ -52,6 +52,5 @@ class UserService {
     );
 
     var body = jsonDecode(res.body);
-    print(body);
   }
 }

@@ -372,6 +372,7 @@ class _CreateEventState extends State<CreateEvent> {
       ),
       child: DropdownButton<String>(
           value: _category,
+          menuMaxHeight: MediaQuery.of(context).size.height * 0.5,
           hint: Text(
             "Select Event Category",
             style: TextStyle(
@@ -397,33 +398,47 @@ class _CreateEventState extends State<CreateEvent> {
           },
           items: [
             DropdownMenuItem<String>(
-              value: "Category 1",
+              value: "Art",
               child: Text(
-                "Category 1",
+                "Sports",
                 style: TextStyle(color: Colors.black, fontSize: 18),
               ),
             ),
             DropdownMenuItem<String>(
-              value: "Category 2",
+              value: "Sports",
               child: Text(
-                "Category 2",
+                "Sports",
                 style: TextStyle(color: Colors.black, fontSize: 18),
               ),
             ),
             DropdownMenuItem<String>(
-              value: "Category 3",
+              value: "Party",
               child: Text(
-                "Category 3",
+                "Party",
                 style: TextStyle(color: Colors.black, fontSize: 18),
               ),
             ),
             DropdownMenuItem<String>(
-              value: "Category 4",
+              value: "Gathering",
               child: Text(
-                "Category 4",
+                "Gathering",
                 style: TextStyle(color: Colors.black, fontSize: 18),
               ),
-            )
+            ),
+            DropdownMenuItem<String>(
+              value: "Concert",
+              child: Text(
+                "Concert",
+                style: TextStyle(color: Colors.black, fontSize: 18),
+              ),
+            ),
+            DropdownMenuItem<String>(
+              value: "Conferance",
+              child: Text(
+                "Conferance",
+                style: TextStyle(color: Colors.black, fontSize: 18),
+              ),
+            ),
           ]),
     );
   }
@@ -572,11 +587,11 @@ class _CreateEventState extends State<CreateEvent> {
                   children: [
                     titleTextFormField(),
                     SizedBox(height: 30),
+                    categoryDropdown(),
+                    SizedBox(height: 30),
                     pickDatesRow(),
                     SizedBox(height: 10),
                     pickTimesRow(),
-                    SizedBox(height: 30),
-                    categoryDropdown(),
                     SizedBox(height: 30),
                     descriptionTextFormField(),
                     SizedBox(height: 30),

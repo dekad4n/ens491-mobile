@@ -56,7 +56,6 @@ class EventService {
     Response res = await get(Uri.parse(url));
 
     Event body = Event.fromJson(jsonDecode(res.body));
-    print(body);
     return body;
   }
 }

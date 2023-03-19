@@ -28,4 +28,14 @@ class UtilsService {
 
     return events;
   }
+
+  Future<List<Event>> getEventsByCategory(String category) async {
+    final String url =
+        '${backendUrl}/utils/get-events-by-category?category=$category';
+    ;
+    Response res = await get(Uri.parse(url));
+    var body = jsonDecode(res.body);
+    List<Event> events = [...body.map((i) => Event.fromJson(i))];
+    return events;
+  }
 }
