@@ -252,19 +252,55 @@ class _TicketPageState extends State<TicketPage> {
                 targetPublicAddressTextField(),
                 SizedBox(height: 10),
                 ElevatedButton(
-                  onPressed: () {
+                  onPressed: () async {
                     if (isTransferable) {
-                      Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => TransferPage(
-                                    event: widget.event,
-                                    userProvider: widget.userProvider!,
-                                    metamaskProvider: widget.metamaskProvider!,
-                                    item: item,
-                                  ))).then((value) {
-                        refreshTicketStatus();
-                      });
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Processing Data')),
+                      );
+
+                      dynamic transactionParameters =
+                          await marketService.transfer(
+                        widget.userProvider!.token,
+                        item["tokenID"],
+                        _targetPublicAdddress,
+                      );
+
+                      print("transcationParamters:" +
+                          transactionParameters.toString());
+
+                      alchemy.init(
+                        httpRpcUrl:
+                            "https://polygon-mumbai.g.alchemy.com/v2/jq6Um8Vdb_j-F0vwzpqBjvjHiz3-v5wy",
+                        wsRpcUrl:
+                            "wss://polygon-mumbai.g.alchemy.com/v2/jq6Um8Vdb_j-F0vwzpqBjvjHiz3-v5wy",
+                        verbose: true,
+                      );
+
+                      List<dynamic> params = [
+                        {
+                          "from": transactionParameters["from"],
+                          "to": transactionParameters["to"],
+                          "data": transactionParameters["data"],
+                        }
+                      ];
+
+                      String method = "eth_sendTransaction";
+
+                      await launchUrl(
+                          Uri.parse(widget.metamaskProvider!.connector.session
+                              .toUri()),
+                          mode: LaunchMode.externalApplication);
+
+                      final signature = await widget.metamaskProvider!.connector
+                          .sendCustomRequest(
+                        method: method,
+                        params: params,
+                      );
+
+                      print("signature:" + signature);
+
+                      Navigator.of(context).pop();
+                      refreshTicketStatus();
                     }
                   },
                   child: Text("Transfer"),
@@ -287,7 +323,7 @@ class _TicketPageState extends State<TicketPage> {
                       );
 
                       dynamic transactionParameters =
-                          await marketService.resellMultiple(
+                          await marketService.resell(
                         widget.userProvider!.token,
                         _price,
                         [item["tokenID"]],
@@ -454,7 +490,7 @@ class _TicketPageState extends State<TicketPage> {
 
     return Container(
       width: double.infinity,
-      height: ((list.length / 3).round() + 1) * 70,
+      height: ((list.length / 3).ceil() + 1) * 70,
       child: GridView.count(
           primary: false,
           padding: const EdgeInsets.all(8),

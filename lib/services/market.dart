@@ -148,31 +148,7 @@ class MarketService {
     return body;
   }
 
-  Future<dynamic> resell(auth, price, tokenId) async {
-    final String url = '${backendUrl!}/market/resell';
-
-    var headers = {
-      "Access-Control-Allow-Origin": '*',
-      "Authorization": "jwt $auth",
-    };
-
-    Map<String, dynamic> params = {
-      "price": price.toString(),
-      "tokenId": tokenId.toString(),
-    };
-
-    Response res = await post(
-      Uri.parse(url),
-      body: params,
-      headers: headers,
-    );
-
-    var body = jsonDecode(res.body);
-
-    return body;
-  }
-
-  Future<dynamic> resellMultiple(auth, price, tokenIds) async {
+  Future<dynamic> resell(auth, price, tokenIds) async {
     final String url = '${backendUrl!}/market/resell';
 
     var headers = {
@@ -185,6 +161,32 @@ class MarketService {
     Map<String, dynamic> params = {
       "price": price.toString(),
       "tokenIds": tokenIds,
+    };
+
+    Response res = await post(
+      Uri.parse(url),
+      body: jsonEncode(params),
+      headers: headers,
+    );
+
+    var body = jsonDecode(res.body);
+
+    return body;
+  }
+
+  Future<dynamic> transfer(auth, tokenId, toAddr) async {
+    final String url = '${backendUrl!}/market/transfer';
+
+    var headers = {
+      "Accept": "application/json",
+      "content-type": "application/json",
+      "Access-Control-Allow-Origin": '*',
+      "Authorization": "jwt $auth",
+    };
+
+    Map<String, dynamic> params = {
+      "tokenId": tokenId,
+      "toAddr": toAddr,
     };
 
     Response res = await post(
