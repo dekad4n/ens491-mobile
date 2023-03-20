@@ -10,14 +10,14 @@ import 'package:tickrypt/providers/user_provider.dart';
 import 'package:tickrypt/services/market.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-class TicketPage extends StatefulWidget {
+class YourTicketsPage extends StatefulWidget {
   Event? event;
   UserProvider? userProvider;
   MetamaskProvider? metamaskProvider;
   List<dynamic>? myOwnItems;
   List<dynamic>? myItemsOnSale;
 
-  TicketPage(
+  YourTicketsPage(
       {super.key,
       this.event,
       this.userProvider,
@@ -26,10 +26,10 @@ class TicketPage extends StatefulWidget {
       this.myItemsOnSale});
 
   @override
-  State<TicketPage> createState() => _TicketPageState();
+  State<YourTicketsPage> createState() => _YourTicketsPageState();
 }
 
-class _TicketPageState extends State<TicketPage> {
+class _YourTicketsPageState extends State<YourTicketsPage> {
   MarketService marketService = MarketService();
 
   String _targetPublicAdddress = "";
@@ -241,10 +241,47 @@ class _TicketPageState extends State<TicketPage> {
           content: SingleChildScrollView(
             child: ListBody(
               children: <Widget>[
+                SizedBox(height: 10),
+                GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  child: Container(
+                    padding: EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(5),
+                      color: Color(0xFF050A31),
+                      boxShadow: [
+                        BoxShadow(
+                          offset: Offset(-2, 2),
+                          blurRadius: 4,
+                          spreadRadius: 2,
+                          color: Color.fromRGBO(5, 10, 49, 0.1),
+                        ),
+                      ],
+                    ),
+                    child: Center(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text("View QR",
+                              style: TextStyle(color: Colors.orange[200])),
+                          SizedBox(width: 10),
+                          Icon(
+                            CupertinoIcons.qrcode,
+                            color: Colors.orange[200],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(height: 10),
+                Divider(thickness: 1),
+                SizedBox(height: 10),
                 Text(
                   "This ticket is transferable ${item["transferRight"]} times.",
                   style: TextStyle(color: Colors.red[900]),
                 ),
+                SizedBox(height: 10),
                 Divider(thickness: 1),
                 SizedBox(height: 10),
                 Text("Send this ticket to someone"),

@@ -5,9 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:tickrypt/models/user_model.dart';
 import 'package:tickrypt/pages/resell_ticket_page.dart';
+import 'package:tickrypt/pages/scan_page.dart';
 import 'package:tickrypt/pages/sell_ticket_page.dart';
 import 'package:tickrypt/pages/mint_ticket_page.dart';
-import 'package:tickrypt/pages/ticket_page.dart';
+import 'package:tickrypt/pages/your_tickets_page.dart';
 import 'package:tickrypt/pages/transfer_page.dart';
 import 'package:tickrypt/providers/metamask.dart';
 import 'package:tickrypt/providers/user_provider.dart';
@@ -606,7 +607,7 @@ class _EventPageState extends State<EventPage> {
                             Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                    builder: (context) => TicketPage(
+                                    builder: (context) => YourTicketsPage(
                                           event: widget.event,
                                           userProvider: widget.userProvider,
                                           metamaskProvider:
@@ -865,6 +866,36 @@ class _EventPageState extends State<EventPage> {
     );
   }
 
+  floatingActionButton() {
+    if (widget.event.owner == widget.userProvider?.user?.publicAddress &&
+        _marketItemsAll.length > 0) {
+      return FloatingActionButton(
+        elevation: 0.0,
+        child: new Icon(
+          CupertinoIcons.qrcode_viewfinder,
+          color: Colors.white,
+          size: 40,
+        ),
+        backgroundColor: Color(0xFF050A31),
+        onPressed: () {
+          Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (context) => ScanPage(
+                        event: widget.event,
+                        userProvider: widget.userProvider!,
+                        metamaskProvider: widget.metamaskProvider!,
+                        marketItemsAll: _marketItemsAll,
+                      ))).then((value) async {
+            refreshTicketStatus();
+          });
+        },
+      );
+    } else {
+      return SizedBox();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     DateTime date = DateTime.parse(widget.event.startDate!);
@@ -876,6 +907,7 @@ class _EventPageState extends State<EventPage> {
 
     getOwner();
     return Scaffold(
+      floatingActionButton: floatingActionButton(),
       body: SingleChildScrollView(
         child: Column(
           children: [
