@@ -3,6 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tickrypt/models/event_model.dart';
+import 'package:tickrypt/pages/qr_page.dart';
 import 'package:tickrypt/pages/resell_ticket_page.dart';
 import 'package:tickrypt/pages/transfer_page.dart';
 import 'package:tickrypt/providers/metamask.dart';
@@ -244,6 +245,19 @@ class _YourTicketsPageState extends State<YourTicketsPage> {
                 SizedBox(height: 10),
                 GestureDetector(
                   behavior: HitTestBehavior.opaque,
+                  onTap: () {
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => QRPage(
+                                  event: widget.event!,
+                                  userProvider: widget.userProvider!,
+                                  metamaskProvider: widget.metamaskProvider!,
+                                  item: item,
+                                ))).then((value) {
+                      refreshTicketStatus();
+                    });
+                  },
                   child: Container(
                     padding: EdgeInsets.all(12),
                     decoration: BoxDecoration(
