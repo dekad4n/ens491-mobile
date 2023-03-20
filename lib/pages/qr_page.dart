@@ -1,21 +1,26 @@
+import 'dart:convert';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:tickrypt/models/event_model.dart';
 import 'package:tickrypt/providers/metamask.dart';
 import 'package:tickrypt/providers/user_provider.dart';
+import 'package:qr_flutter/qr_flutter.dart';
+import 'dart:async';
+import 'dart:ui' as ui;
 
 class QRPage extends StatefulWidget {
-  Event? event;
-  UserProvider? userProvider;
-  MetamaskProvider? metamaskProvider;
-  Map<dynamic, dynamic>? item;
+  Event event;
+  UserProvider userProvider;
+  MetamaskProvider metamaskProvider;
+  Map<dynamic, dynamic> item;
 
   QRPage({
     super.key,
-    this.event,
-    this.userProvider,
-    this.metamaskProvider,
-    this.item,
+    required this.event,
+    required this.userProvider,
+    required this.metamaskProvider,
+    required this.item,
   });
 
   @override
@@ -23,6 +28,14 @@ class QRPage extends StatefulWidget {
 }
 
 class QRPageState extends State<QRPage> {
+  late String message;
+  @override
+  void initState() {
+    message = widget.item.toString();
+    print(message);
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -47,13 +60,13 @@ class QRPageState extends State<QRPage> {
         centerTitle: true,
       ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: EdgeInsets.all(20),
-            child: Column(
-              children: [
-                Text("test"),
-              ],
+        child: Padding(
+          padding: EdgeInsets.all(20),
+          child: Center(
+            child: QrImage(
+              data: message,
+              version: QrVersions.auto,
+              size: 300.0,
             ),
           ),
         ),

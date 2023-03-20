@@ -432,7 +432,7 @@ class _YourTicketsPageState extends State<YourTicketsPage> {
     );
   }
 
-  showDialogOnPressSell(item) {
+  showDialogOnPressSell(Map<dynamic, dynamic> item) {
     showDialog<void>(
       context: context,
       builder: (BuildContext context) {
@@ -520,123 +520,122 @@ class _YourTicketsPageState extends State<YourTicketsPage> {
       return Text("Loading tickets...");
     }
 
-    List<Widget> tickets = list
-        .map((item) => GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: () {
-                if (sellOrOwn == "sell") {
-                  showDialogOnPressSell(item);
-                }
-                if (sellOrOwn == "own") {
-                  showDialogOnPressOwn(item);
-                }
-              },
-              child: Container(
+    List<Widget> tickets = list.map((item) {
+      bool isUsed = item.keys.contains("used") && item["used"];
+
+      return GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () {
+          if (sellOrOwn == "sell") {
+            showDialogOnPressSell(item);
+          }
+          if (sellOrOwn == "own") {
+            showDialogOnPressOwn(item);
+          }
+        },
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(5),
+            color: color.withOpacity(0.5),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(5),
-                  color: color.withOpacity(0.5),
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(5),
+                    topRight: Radius.circular(5),
+                  ),
+                  color: color,
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Container(
-                      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.only(
-                          topLeft: Radius.circular(5),
-                          topRight: Radius.circular(5),
+                    Text("Ticket", style: TextStyle(color: Colors.white)),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          "id:",
+                          style: TextStyle(color: Colors.white),
                         ),
-                        color: color,
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text("Ticket", style: TextStyle(color: Colors.white)),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                "id:",
-                                style: TextStyle(color: Colors.white),
-                              ),
-                              Text(
-                                "${item["tokenID"]}",
-                                style: TextStyle(color: Colors.white),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                    Container(
-                      padding:
-                          EdgeInsets.symmetric(horizontal: 15, vertical: 8),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Icon(
-                                Icons.event_seat,
-                                color: Colors.white,
-                              ),
-                              // Text(
-                              //   "seat:",
-                              //   style: TextStyle(color: Colors.white),
-                              // ),
-                              Text(
-                                "${item["seat"]}",
-                                style: TextStyle(color: Colors.white),
-                              ),
-                            ],
-                          ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              // Text(
-                              //   "transfer:",
-                              //   style: TextStyle(color: Colors.white),
-                              // ),
-                              Icon(
-                                CupertinoIcons
-                                    .arrow_right_arrow_left_square_fill,
-                                color: Colors.white,
-                              ),
-                              Text(
-                                "${item["transferRight"]}",
-                                style: TextStyle(color: Colors.white),
-                              ),
-                            ],
-                          ),
-                          sellOrOwn == "sell"
-                              ? Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    // Text(
-                                    //   "price:",
-                                    //   style: TextStyle(color: Colors.white),
-                                    // ),
-                                    Icon(
-                                      Icons.payments_sharp,
-                                      color: Colors.white,
-                                    ),
-                                    Text(
-                                      "${item["price"]}",
-                                      style: TextStyle(color: Colors.white),
-                                    ),
-                                  ],
-                                )
-                              : SizedBox(),
-                        ],
-                      ),
+                        Text(
+                          "${item["tokenID"]}",
+                          style: TextStyle(color: Colors.white),
+                        ),
+                      ],
                     ),
                   ],
                 ),
               ),
-            ))
-        .toList();
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 15, vertical: 8),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Icon(
+                          Icons.event_seat,
+                          color: Colors.white,
+                        ),
+                        // Text(
+                        //   "seat:",
+                        //   style: TextStyle(color: Colors.white),
+                        // ),
+                        Text(
+                          "${item["seat"]}",
+                          style: TextStyle(color: Colors.white),
+                        ),
+                      ],
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        // Text(
+                        //   "transfer:",
+                        //   style: TextStyle(color: Colors.white),
+                        // ),
+                        Icon(
+                          CupertinoIcons.arrow_right_arrow_left_square_fill,
+                          color: Colors.white,
+                        ),
+                        Text(
+                          "${item["transferRight"]}",
+                          style: TextStyle(color: Colors.white),
+                        ),
+                      ],
+                    ),
+                    sellOrOwn == "sell"
+                        ? Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              // Text(
+                              //   "price:",
+                              //   style: TextStyle(color: Colors.white),
+                              // ),
+                              Icon(
+                                Icons.payments_sharp,
+                                color: Colors.white,
+                              ),
+                              Text(
+                                "${item["price"]}",
+                                style: TextStyle(color: Colors.white),
+                              ),
+                            ],
+                          )
+                        : SizedBox(),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }).toList();
 
     return Container(
       width: double.infinity,
