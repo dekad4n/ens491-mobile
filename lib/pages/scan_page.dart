@@ -1,3 +1,6 @@
+import 'dart:convert';
+
+import 'package:elegant_notification/elegant_notification.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:tickrypt/models/event_model.dart';
@@ -10,6 +13,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:qr_code_scanner/qr_code_scanner.dart';
+import 'package:tickrypt/services/ticket.dart';
 
 class ScanPage extends StatefulWidget {
   final Event? event;
@@ -60,7 +64,7 @@ class _ScanPageState extends State<ScanPage> {
     // buildTokenIDtoUsedInfoMap();
   }
 
-  finishButton() {
+  finishButton(token) {
     return GestureDetector(
         child: Container(
             padding: EdgeInsets.all(20),
@@ -72,71 +76,98 @@ class _ScanPageState extends State<ScanPage> {
                 style: TextStyle(color: Colors.white, fontSize: 18))),
         behavior: HitTestBehavior.opaque,
         onTap: () {
-          print("finish");
+          ticketService.changeTicketUsedState(_checkedIds, token);
         });
   }
 
-  // Widget _buildQrView(BuildContext context) {
-  //   // For this example we check how width or tall the device is and change the scanArea and overlay accordingly.
-  //   var scanArea = (MediaQuery.of(context).size.width < 400 ||
-  //           MediaQuery.of(context).size.height < 400)
-  //       ? 150.0
-  //       : 300.0;
-  //   // To ensure the Scanner view is properly sizes after rotation
-  //   // we need to listen for Flutter SizeChanged notification and update controller
-  //   return QRView(
-  //     key: qrKey,
-  //     onQRViewCreated: _onQRViewCreated,
-  //     overlay: QrScannerOverlayShape(
-  //         borderColor: Colors.red,
-  //         borderRadius: 10,
-  //         borderLength: 30,
-  //         borderWidth: 10,
-  //         cutOutSize: scanArea),
-  //     onPermissionSet: (ctrl, p) => _onPermissionSet(context, ctrl, p),
-  //   );
-  // }
+  Widget _buildQrView(BuildContext context) {
+    // For this example we check how width or tall the device is and change the scanArea and overlay accordingly.
+    var scanArea = (MediaQuery.of(context).size.width < 400 ||
+            MediaQuery.of(context).size.height < 400)
+        ? 150.0
+        : 300.0;
+    // To ensure the Scanner view is properly sizes after rotation
+    // we need to listen for Flutter SizeChanged notification and update controller
+    return QRView(
+      key: qrKey,
+      onQRViewCreated: (QRViewController controller) {
+        _onQRViewCreated(controller, context);
+      },
+      overlay: QrScannerOverlayShape(
+          borderColor: Colors.red,
+          borderRadius: 10,
+          borderLength: 30,
+          borderWidth: 10,
+          cutOutSize: scanArea),
+      onPermissionSet: (ctrl, p) => _onPermissionSet(context, ctrl, p),
+    );
+  }
 
-  // // SCAN RESULT IS HERE
-  // void _onQRViewCreated(QRViewController controller) {
-  //   setState(() {
-  //     this.controller = controller;
-  //   });
-  //   controller.scannedDataStream.listen((scanData) {
-  //     // Scanning will verify that shown ticket has not been used.
-  //     // Otherwise show error message
+  TicketService ticketService = TicketService();
+  // SCAN RESULT IS HERE
+  void _onQRViewCreated(QRViewController controller, context) {
+    setState(() {
+      this.controller = controller;
+    });
+    controller.scannedDataStream.listen((scanData) {
+      // Scanning will verify that shown ticket has not been used.
+      // Otherwise show error message
+      controller.pauseCamera();
+      var decodedQR = jsonDecode(scanData.code!);
+      ticketService
+          .getTicketCheckedInfo(
+              decodedQR["tokenId"].toString(),
+              decodedQR["nonce"],
+              decodedQR["signature"],
+              widget.userProvider!.token)
+          .then((res) {
+        if (res["value"]) {
+          ElegantNotification.error(
+            title: Text("Ticket"),
+            description: Text("Ticket is used!"),
+            onProgressFinished: () {
+              controller.resumeCamera();
+            },
+          ).show(context);
+        } else {
+          ElegantNotification.success(
+              title: Text("Ticket"),
+              description: Text("Ticket is not used!"),
+              onProgressFinished: () {
+                _checkedIds.add(decodedQR["tokenId"]);
+                controller.resumeCamera();
+              }).show(context);
+        }
+      });
+    });
+  }
 
-  //     setState(() {
-  //       result = scanData;
-  //     });
-  //   });
-  // }
+  void _onPermissionSet(BuildContext context, QRViewController ctrl, bool p) {
+    log('${DateTime.now().toIso8601String()}_onPermissionSet $p');
+    if (!p) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('no Permission')),
+      );
+    }
+  }
 
-  // void _onPermissionSet(BuildContext context, QRViewController ctrl, bool p) {
-  //   log('${DateTime.now().toIso8601String()}_onPermissionSet $p');
-  //   if (!p) {
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       const SnackBar(content: Text('no Permission')),
-  //     );
-  //   }
-  // }
+  @override
+  void dispose() {
+    controller?.dispose();
+    super.dispose();
+  }
 
-  // @override
-  // void dispose() {
-  //   controller?.dispose();
-  //   super.dispose();
-  // }
-
-  // // In order to get hot reload to work we need to pause the camera if the platform
-  // // is android, or resume the camera if the platform is iOS.
-  // @override
-  // void reassemble() {
-  //   super.reassemble();
-  //   if (Platform.isAndroid) {
-  //     controller!.pauseCamera();
-  //   }
-  //   controller!.resumeCamera();
-  // }
+  // In order to get hot reload to work we need to pause the camera if the platform
+  // is android, or resume the camera if the platform is iOS.
+  @override
+  void reassemble() {
+    super.reassemble();
+    if (Platform.isAndroid) {
+      controller!.pauseCamera();
+    } else {
+      controller!.resumeCamera();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -164,8 +195,7 @@ class _ScanPageState extends State<ScanPage> {
       body: SafeArea(
           child: Column(
         children: <Widget>[
-          // Expanded(flex: 4, child: _buildQrView(context)),
-
+          Expanded(flex: 4, child: _buildQrView(context)),
           Column(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: <Widget>[
@@ -174,7 +204,7 @@ class _ScanPageState extends State<ScanPage> {
                     'Barcode Type: ${describeEnum(result!.format)}   Data: ${result!.code}')
               else
                 const Text('Scan a code'),
-              finishButton(),
+              finishButton(widget.userProvider!.token!),
             ],
           )
         ],

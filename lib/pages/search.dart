@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tickrypt/models/event_model.dart';
 import 'package:tickrypt/pages/event_page.dart';
+import 'package:tickrypt/providers/metamask.dart';
 import 'package:tickrypt/services/user.dart';
 import 'package:tickrypt/services/utils.dart';
 import 'package:tickrypt/widgets/molecules/cards/vertical_event_card.dart';
@@ -68,7 +69,8 @@ class _SearchState extends State<Search> {
     });
   }
 
-  Card horizontalEventCard(Event e, userProvider, User owner) {
+  Card horizontalEventCard(
+      Event e, userProvider, User owner, metamaskProvider) {
     //Get owner username and avatar
     String? ownerUsername = owner.username;
     String? ownerAvatar = owner.avatar;
@@ -93,6 +95,7 @@ class _SearchState extends State<Search> {
                     builder: (context) => EventPage(
                           event: e,
                           userProvider: userProvider,
+                          metamaskProvider: metamaskProvider,
                         )));
           },
           behavior: HitTestBehavior.opaque,
@@ -223,6 +226,7 @@ class _SearchState extends State<Search> {
   @override
   Widget build(BuildContext context) {
     var userProvider = Provider.of<UserProvider>(context);
+    var metamaskProvider = Provider.of<MetamaskProvider>(context);
     return (Scaffold(
       body: SafeArea(
         child: Column(children: [
@@ -285,7 +289,7 @@ class _SearchState extends State<Search> {
                       } else if (snapshot.hasData) {
                         // Extracting data from snapshot object
                         return horizontalEventCard(searchResultEventList[index],
-                            userProvider, snapshot.data!);
+                            userProvider, snapshot.data!, metamaskProvider);
                       }
                     }
                     return Center(

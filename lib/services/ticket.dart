@@ -71,4 +71,48 @@ class TicketService {
       print("Error during getTicket():" + e.toString());
     }
   }
+
+  getTicketCheckedInfo(tokenId, nonce, signature, auth) async {
+    final String url = '${backendUrl!}/ticket/is-ticket-checked';
+
+    var headers = {
+      "Access-Control-Allow-Origin": '*',
+      "Authorization": "jwt $auth",
+    };
+
+    Map<String, dynamic> params = {
+      "tokenId": tokenId,
+      "nonce": nonce,
+      "signature": signature
+    };
+
+    Response res = await post(
+      Uri.parse(url),
+      body: params,
+      headers: headers,
+    );
+    var body = jsonDecode(res.body);
+    return body;
+  }
+
+  changeTicketUsedState(tokenIds, auth) async {
+    final String url = '${backendUrl!}/ticket/change-ticket-used-state';
+
+    var headers = {
+      "Access-Control-Allow-Origin": '*',
+      "Authorization": "jwt $auth",
+    };
+
+    Map<String, dynamic> params = {
+      "tokenIds": tokenIds,
+    };
+
+    Response res = await post(
+      Uri.parse(url),
+      body: params,
+      headers: headers,
+    );
+    var body = jsonDecode(res.body);
+    return body;
+  }
 }

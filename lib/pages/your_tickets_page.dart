@@ -245,16 +245,18 @@ class _YourTicketsPageState extends State<YourTicketsPage> {
                 SizedBox(height: 10),
                 GestureDetector(
                   behavior: HitTestBehavior.opaque,
-                  onTap: () {
+                  onTap: () async {
+                    var signature = await widget.metamaskProvider!
+                        .sign(widget.userProvider!.user!.nonce);
                     Navigator.push(
                         context,
                         MaterialPageRoute(
                             builder: (context) => QRPage(
-                                  event: widget.event!,
-                                  userProvider: widget.userProvider!,
-                                  metamaskProvider: widget.metamaskProvider!,
-                                  item: item,
-                                ))).then((value) {
+                                event: widget.event!,
+                                userProvider: widget.userProvider!,
+                                metamaskProvider: widget.metamaskProvider!,
+                                item: item,
+                                signature: signature))).then((value) {
                       refreshTicketStatus();
                     });
                   },

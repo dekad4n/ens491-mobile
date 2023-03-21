@@ -62,6 +62,7 @@ class _LoggedInState extends State<LoggedIn> {
 
   Widget build(BuildContext context) {
     var metamaskProvider = Provider.of<MetamaskProvider>(context);
+
     return (ChangeNotifierProvider(
         create: (context) => UserProvider()..init(),
         builder: (context, child) {

@@ -14,14 +14,15 @@ class QRPage extends StatefulWidget {
   UserProvider userProvider;
   MetamaskProvider metamaskProvider;
   Map<dynamic, dynamic> item;
+  String signature;
 
-  QRPage({
-    super.key,
-    required this.event,
-    required this.userProvider,
-    required this.metamaskProvider,
-    required this.item,
-  });
+  QRPage(
+      {super.key,
+      required this.event,
+      required this.userProvider,
+      required this.metamaskProvider,
+      required this.item,
+      required this.signature});
 
   @override
   State<QRPage> createState() => QRPageState();
@@ -31,7 +32,12 @@ class QRPageState extends State<QRPage> {
   late String message;
   @override
   void initState() {
-    message = widget.item.toString();
+    Map<dynamic, dynamic> qrMap = {
+      "tokenId": widget.item["tokenID"],
+      "signature": widget.signature,
+      "nonce": widget.userProvider.user!.nonce
+    };
+    message = jsonEncode(qrMap);
     print(message);
     super.initState();
   }

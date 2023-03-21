@@ -46,6 +46,7 @@ dependencies:
   intl: ^0.18.0
   qr_code_scanner: ^1.0.1
   qr_flutter: ^4.0.0
+  elegant_notification: ^1.6.4
 
 dev_dependencies:
   flutter_test:
