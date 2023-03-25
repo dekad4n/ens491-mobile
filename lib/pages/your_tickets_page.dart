@@ -110,12 +110,12 @@ class _YourTicketsPageState extends State<YourTicketsPage> {
   }
 
   refreshButton() {
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          child: Container(
             padding: EdgeInsets.all(8),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(8),
@@ -140,11 +140,11 @@ class _YourTicketsPageState extends State<YourTicketsPage> {
               ],
             ),
           ),
-        ],
-      ),
-      onTap: () {
-        refreshTicketStatus();
-      },
+          onTap: () {
+            refreshTicketStatus();
+          },
+        ),
+      ],
     );
   }
 
@@ -222,6 +222,7 @@ class _YourTicketsPageState extends State<YourTicketsPage> {
 
   showDialogOnPressOwn(item) {
     bool isTransferable = item["transferRight"] > 0;
+    bool isUsed = item["used"];
 
     showDialog<void>(
       context: context,
@@ -293,139 +294,161 @@ class _YourTicketsPageState extends State<YourTicketsPage> {
                 SizedBox(height: 10),
                 Divider(thickness: 1),
                 SizedBox(height: 10),
-                Text(
-                  "This ticket is transferable ${item["transferRight"]} times.",
-                  style: TextStyle(color: Colors.red[900]),
-                ),
-                SizedBox(height: 10),
-                Divider(thickness: 1),
-                SizedBox(height: 10),
-                Text("Send this ticket to someone"),
-                SizedBox(height: 10),
-                targetPublicAddressTextField(),
-                SizedBox(height: 10),
-                ElevatedButton(
-                  onPressed: () async {
-                    if (isTransferable) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Processing Data')),
-                      );
+                isUsed == true
+                    ? Column(
+                        children: [
+                          Text("This ticket is used!",
+                              style: TextStyle(color: Colors.red[900])),
+                          Text("You cannot resell or transfer it!",
+                              style: TextStyle(color: Colors.red[900]))
+                        ],
+                      )
+                    : Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Text(
+                            "This ticket is transferable ${item["transferRight"]} times.",
+                            style: TextStyle(color: Colors.red[900]),
+                          ),
+                          SizedBox(height: 10),
+                          Divider(thickness: 1),
+                          SizedBox(height: 10),
+                          Text("Send this ticket to someone"),
+                          SizedBox(height: 10),
+                          targetPublicAddressTextField(),
+                          SizedBox(height: 10),
+                          ElevatedButton(
+                            onPressed: () async {
+                              if (isTransferable) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                      content: Text('Processing Data')),
+                                );
 
-                      dynamic transactionParameters =
-                          await marketService.transfer(
-                        widget.userProvider!.token,
-                        item["tokenID"],
-                        _targetPublicAdddress,
-                      );
+                                dynamic transactionParameters =
+                                    await marketService.transfer(
+                                  widget.userProvider!.token,
+                                  item["tokenID"],
+                                  _targetPublicAdddress,
+                                );
 
-                      print("transcationParamters:" +
-                          transactionParameters.toString());
+                                print("transcationParamters:" +
+                                    transactionParameters.toString());
 
-                      alchemy.init(
-                        httpRpcUrl:
-                            "https://polygon-mumbai.g.alchemy.com/v2/jq6Um8Vdb_j-F0vwzpqBjvjHiz3-v5wy",
-                        wsRpcUrl:
-                            "wss://polygon-mumbai.g.alchemy.com/v2/jq6Um8Vdb_j-F0vwzpqBjvjHiz3-v5wy",
-                        verbose: true,
-                      );
+                                alchemy.init(
+                                  httpRpcUrl:
+                                      "https://polygon-mumbai.g.alchemy.com/v2/jq6Um8Vdb_j-F0vwzpqBjvjHiz3-v5wy",
+                                  wsRpcUrl:
+                                      "wss://polygon-mumbai.g.alchemy.com/v2/jq6Um8Vdb_j-F0vwzpqBjvjHiz3-v5wy",
+                                  verbose: true,
+                                );
 
-                      List<dynamic> params = [
-                        {
-                          "from": transactionParameters["from"],
-                          "to": transactionParameters["to"],
-                          "data": transactionParameters["data"],
-                        }
-                      ];
+                                List<dynamic> params = [
+                                  {
+                                    "from": transactionParameters["from"],
+                                    "to": transactionParameters["to"],
+                                    "data": transactionParameters["data"],
+                                  }
+                                ];
 
-                      String method = "eth_sendTransaction";
+                                String method = "eth_sendTransaction";
 
-                      await launchUrl(
-                          Uri.parse(widget.metamaskProvider!.connector.session
-                              .toUri()),
-                          mode: LaunchMode.externalApplication);
+                                await launchUrl(
+                                    Uri.parse(widget
+                                        .metamaskProvider!.connector.session
+                                        .toUri()),
+                                    mode: LaunchMode.externalApplication);
 
-                      final signature = await widget.metamaskProvider!.connector
-                          .sendCustomRequest(
-                        method: method,
-                        params: params,
-                      );
+                                final signature = await widget
+                                    .metamaskProvider!.connector
+                                    .sendCustomRequest(
+                                  method: method,
+                                  params: params,
+                                );
 
-                      print("signature:" + signature);
+                                print("signature:" + signature);
 
-                      Navigator.of(context).pop();
-                      refreshTicketStatus();
-                    }
-                  },
-                  child: Text("Transfer"),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor:
-                        isTransferable ? Color(0xFF050A31) : Colors.grey,
-                  ),
-                ),
-                Divider(thickness: 1),
-                SizedBox(height: 10),
-                Text("Resell in the market"),
-                SizedBox(height: 10),
-                priceContainer(),
-                SizedBox(height: 10),
-                ElevatedButton(
-                  onPressed: () async {
-                    if (isTransferable && _price > 0) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Processing Data')),
-                      );
+                                Navigator.of(context).pop();
+                                refreshTicketStatus();
+                              }
+                            },
+                            child: Text("Transfer"),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: isTransferable
+                                  ? Color(0xFF050A31)
+                                  : Colors.grey,
+                            ),
+                          ),
+                          Divider(thickness: 1),
+                          SizedBox(height: 10),
+                          Text("Resell in the market"),
+                          SizedBox(height: 10),
+                          priceContainer(),
+                          SizedBox(height: 10),
+                          ElevatedButton(
+                            onPressed: () async {
+                              if (isTransferable && _price > 0) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                      content: Text('Processing Data')),
+                                );
 
-                      dynamic transactionParameters =
-                          await marketService.resell(
-                        widget.userProvider!.token,
-                        _price,
-                        [item["tokenID"]],
-                      );
+                                dynamic transactionParameters =
+                                    await marketService.resell(
+                                  widget.userProvider!.token,
+                                  _price,
+                                  [item["tokenID"]],
+                                );
 
-                      print("transcationParamters:" +
-                          transactionParameters.toString());
+                                print("transcationParamters:" +
+                                    transactionParameters.toString());
 
-                      alchemy.init(
-                        httpRpcUrl:
-                            "https://polygon-mumbai.g.alchemy.com/v2/jq6Um8Vdb_j-F0vwzpqBjvjHiz3-v5wy",
-                        wsRpcUrl:
-                            "wss://polygon-mumbai.g.alchemy.com/v2/jq6Um8Vdb_j-F0vwzpqBjvjHiz3-v5wy",
-                        verbose: true,
-                      );
+                                alchemy.init(
+                                  httpRpcUrl:
+                                      "https://polygon-mumbai.g.alchemy.com/v2/jq6Um8Vdb_j-F0vwzpqBjvjHiz3-v5wy",
+                                  wsRpcUrl:
+                                      "wss://polygon-mumbai.g.alchemy.com/v2/jq6Um8Vdb_j-F0vwzpqBjvjHiz3-v5wy",
+                                  verbose: true,
+                                );
 
-                      List<dynamic> params = [
-                        {
-                          "from": transactionParameters["from"],
-                          "to": transactionParameters["to"],
-                          "data": transactionParameters["data"],
-                        }
-                      ];
+                                List<dynamic> params = [
+                                  {
+                                    "from": transactionParameters["from"],
+                                    "to": transactionParameters["to"],
+                                    "data": transactionParameters["data"],
+                                  }
+                                ];
 
-                      String method = "eth_sendTransaction";
+                                String method = "eth_sendTransaction";
 
-                      await launchUrl(
-                          Uri.parse(widget.metamaskProvider!.connector.session
-                              .toUri()),
-                          mode: LaunchMode.externalApplication);
+                                await launchUrl(
+                                    Uri.parse(widget
+                                        .metamaskProvider!.connector.session
+                                        .toUri()),
+                                    mode: LaunchMode.externalApplication);
 
-                      final signature = await widget.metamaskProvider!.connector
-                          .sendCustomRequest(
-                        method: method,
-                        params: params,
-                      );
+                                final signature = await widget
+                                    .metamaskProvider!.connector
+                                    .sendCustomRequest(
+                                  method: method,
+                                  params: params,
+                                );
 
-                      print("signature:" + signature);
+                                print("signature:" + signature);
 
-                      Navigator.of(context).pop();
-                      refreshTicketStatus();
-                    }
-                  },
-                  child: Text("Resell"),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor:
-                        isTransferable ? Color(0xFF050A31) : Colors.grey,
-                  ),
-                ),
+                                Navigator.of(context).pop();
+                                refreshTicketStatus();
+                              }
+                            },
+                            child: Text("Resell"),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: isTransferable
+                                  ? Color(0xFF050A31)
+                                  : Colors.grey,
+                            ),
+                          ),
+                        ],
+                      )
               ],
             ),
           ),
@@ -541,6 +564,7 @@ class _YourTicketsPageState extends State<YourTicketsPage> {
             color: color.withOpacity(0.5),
           ),
           child: Column(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
@@ -572,67 +596,93 @@ class _YourTicketsPageState extends State<YourTicketsPage> {
                   ],
                 ),
               ),
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 15, vertical: 8),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              Column(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: 15, vertical: 8),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Icon(
-                          Icons.event_seat,
-                          color: Colors.white,
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Icon(
+                              Icons.event_seat,
+                              color: Colors.white,
+                            ),
+                            // Text(
+                            //   "seat:",
+                            //   style: TextStyle(color: Colors.white),
+                            // ),
+                            Text(
+                              "${item["seat"]}",
+                              style: TextStyle(color: Colors.white),
+                            ),
+                          ],
                         ),
-                        // Text(
-                        //   "seat:",
-                        //   style: TextStyle(color: Colors.white),
-                        // ),
-                        Text(
-                          "${item["seat"]}",
-                          style: TextStyle(color: Colors.white),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            // Text(
+                            //   "transfer:",
+                            //   style: TextStyle(color: Colors.white),
+                            // ),
+                            Icon(
+                              CupertinoIcons.arrow_right_arrow_left_square_fill,
+                              color: Colors.white,
+                            ),
+                            Text(
+                              "${item["transferRight"]}",
+                              style: TextStyle(color: Colors.white),
+                            ),
+                          ],
                         ),
+                        sellOrOwn == "sell"
+                            ? Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  // Text(
+                                  //   "price:",
+                                  //   style: TextStyle(color: Colors.white),
+                                  // ),
+                                  Icon(
+                                    Icons.payments_sharp,
+                                    color: Colors.white,
+                                  ),
+                                  Text(
+                                    "${item["price"]}",
+                                    style: TextStyle(color: Colors.white),
+                                  ),
+                                ],
+                              )
+                            : SizedBox(),
                       ],
                     ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        // Text(
-                        //   "transfer:",
-                        //   style: TextStyle(color: Colors.white),
-                        // ),
-                        Icon(
-                          CupertinoIcons.arrow_right_arrow_left_square_fill,
-                          color: Colors.white,
-                        ),
-                        Text(
-                          "${item["transferRight"]}",
-                          style: TextStyle(color: Colors.white),
-                        ),
-                      ],
-                    ),
-                    sellOrOwn == "sell"
-                        ? Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              // Text(
-                              //   "price:",
-                              //   style: TextStyle(color: Colors.white),
-                              // ),
-                              Icon(
-                                Icons.payments_sharp,
-                                color: Colors.white,
-                              ),
-                              Text(
-                                "${item["price"]}",
-                                style: TextStyle(color: Colors.white),
-                              ),
-                            ],
-                          )
-                        : SizedBox(),
-                  ],
-                ),
+                  ),
+                ],
               ),
+              sellOrOwn == "own"
+                  ? (item["used"] == true
+                      ? Container(
+                          padding: EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.only(
+                              bottomLeft: Radius.circular(5),
+                              bottomRight: Radius.circular(5),
+                            ),
+                            color: Colors.red,
+                          ),
+                          child: Center(
+                            child: Text("USED",
+                                style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold)),
+                          ),
+                        )
+                      : SizedBox())
+                  : SizedBox()
             ],
           ),
         ),
@@ -754,6 +804,7 @@ class _YourTicketsPageState extends State<YourTicketsPage> {
   }
 
   youAreSellingSection() {
+    print(widget.myOwnItems!);
     if (widget.myItemsOnSale!.length > 0) {
       return Container(
         padding: EdgeInsets.all(12),
@@ -793,12 +844,11 @@ class _YourTicketsPageState extends State<YourTicketsPage> {
                       ],
                     ),
                     child: Text(
-                      "Stop Batch Sale",
+                      "Stop Sale All",
                       style: TextStyle(fontSize: 16, color: Colors.white),
                     ),
                   ),
                   onTap: () async {
-                    /// TODO : Stop batch Sale
                     if (widget.myItemsOnSale!.length > 0) {
                       List<dynamic> tokenIds = widget.myItemsOnSale!
                           .map((e) => e["tokenID"])
