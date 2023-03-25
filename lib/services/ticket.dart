@@ -8,7 +8,7 @@ class TicketService {
     "Access-Control-Allow-Origin": '*',
   };
 
-  mint({
+  Future<dynamic> mint({
     auth,
     eventId,
     amount,
@@ -51,7 +51,7 @@ class TicketService {
     }
   }
 
-  getTicketDetails({ticketToken}) async {
+  Future<dynamic> getTicketDetails({ticketToken}) async {
     final String authUrl = '${backendUrl!}/ticket?token=$ticketToken';
 
     try {
@@ -72,7 +72,7 @@ class TicketService {
     }
   }
 
-  getTicketCheckedInfo(tokenId, nonce, signature, auth) async {
+  Future<dynamic> getTicketCheckedInfo(tokenId, nonce, signature, auth) async {
     final String url = '${backendUrl!}/ticket/is-ticket-checked';
 
     var headers = {
@@ -95,7 +95,7 @@ class TicketService {
     return body;
   }
 
-  changeTicketUsedState(tokenIds, auth) async {
+  Future<dynamic> changeTicketUsedState(auth, eventId) async {
     final String url = '${backendUrl!}/ticket/change-ticket-used-state';
 
     var headers = {
@@ -104,7 +104,7 @@ class TicketService {
     };
 
     Map<String, dynamic> params = {
-      "tokenIds": tokenIds,
+      "eventID": eventId,
     };
 
     Response res = await post(

@@ -804,7 +804,6 @@ class _YourTicketsPageState extends State<YourTicketsPage> {
   }
 
   youAreSellingSection() {
-    print(widget.myOwnItems!);
     if (widget.myItemsOnSale!.length > 0) {
       return Container(
         padding: EdgeInsets.all(12),
@@ -860,8 +859,6 @@ class _YourTicketsPageState extends State<YourTicketsPage> {
                         tokenIds,
                         widget.event!.integerId,
                       );
-
-                      print("xxx");
 
                       alchemy.init(
                         httpRpcUrl:

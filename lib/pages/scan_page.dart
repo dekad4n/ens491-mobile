@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:alchemy_web3/alchemy_web3.dart';
 import 'package:elegant_notification/elegant_notification.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -14,6 +15,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:qr_code_scanner/qr_code_scanner.dart';
 import 'package:tickrypt/services/ticket.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class ScanPage extends StatefulWidget {
   final Event? event;
@@ -37,47 +39,62 @@ class _ScanPageState extends State<ScanPage> {
   QRViewController? controller;
   final GlobalKey qrKey = GlobalKey(debugLabel: 'QR');
 
+  final alchemy = Alchemy();
+
   List<int> _checkedIds = [];
 
-  bool checkTicket(int tokenId) {
-    _checkedIds.add(tokenId);
-    return true;
-  }
-
-  int isTicketUsed(int tokenId) {
-    for (dynamic item in widget.marketItemsAll!) {
-      if (item["tokenId"] == tokenId) {
-        if (item["used"])
-          // Meaning this token is already used before
-          return 1;
-        else
-          // Meaning this token is not used
-          return 0;
-      }
-    }
-    // Meaning this token doesn't belong to this event
-    return -1;
-  }
-
-  @override
-  void initState() {
-    // buildTokenIDtoUsedInfoMap();
-  }
-
-  finishButton(token) {
+  finishButton(userProvider) {
     return GestureDetector(
-        child: Container(
-            padding: EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(5),
-              color: Colors.green[700],
-            ),
-            child: Text("Finish Control",
-                style: TextStyle(color: Colors.white, fontSize: 18))),
-        behavior: HitTestBehavior.opaque,
-        onTap: () {
-          ticketService.changeTicketUsedState(_checkedIds, token);
-        });
+      child: Container(
+          padding: EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(5),
+            color: Colors.green[700],
+          ),
+          child: Text("Finish Control",
+              style: TextStyle(color: Colors.white, fontSize: 18))),
+      behavior: HitTestBehavior.opaque,
+      onTap: () async {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Processing Data')),
+        );
+
+        dynamic transactionParameters = ticketService.changeTicketUsedState(
+            userProvider!.token, widget.event!.integerId);
+
+        print("transcationParameters:" + transactionParameters.toString());
+
+        alchemy.init(
+          httpRpcUrl:
+              "https://polygon-mumbai.g.alchemy.com/v2/jq6Um8Vdb_j-F0vwzpqBjvjHiz3-v5wy",
+          wsRpcUrl:
+              "wss://polygon-mumbai.g.alchemy.com/v2/jq6Um8Vdb_j-F0vwzpqBjvjHiz3-v5wy",
+          verbose: true,
+        );
+
+        List<dynamic> params = [
+          {
+            "from": transactionParameters["from"],
+            "to": transactionParameters["to"],
+            "data": transactionParameters["data"],
+          }
+        ];
+
+        String method = "eth_sendTransaction";
+
+        await launchUrl(
+            Uri.parse(widget.metamaskProvider!.connector.session.toUri()),
+            mode: LaunchMode.externalApplication);
+
+        final signature =
+            await widget.metamaskProvider!.connector.sendCustomRequest(
+          method: method,
+          params: params,
+        );
+
+        print("signature:" + signature);
+      },
+    );
   }
 
   Widget _buildQrView(BuildContext context) {
@@ -104,6 +121,7 @@ class _ScanPageState extends State<ScanPage> {
   }
 
   TicketService ticketService = TicketService();
+
   // SCAN RESULT IS HERE
   void _onQRViewCreated(QRViewController controller, context) {
     setState(() {
@@ -113,7 +131,9 @@ class _ScanPageState extends State<ScanPage> {
       // Scanning will verify that shown ticket has not been used.
       // Otherwise show error message
       controller.pauseCamera();
+
       var decodedQR = jsonDecode(scanData.code!);
+
       ticketService
           .getTicketCheckedInfo(
               decodedQR["tokenId"].toString(),
@@ -121,18 +141,20 @@ class _ScanPageState extends State<ScanPage> {
               decodedQR["signature"],
               widget.userProvider!.token)
           .then((res) {
-        if (res["value"]) {
+        bool alreadyChecked = res["value"];
+
+        if (alreadyChecked) {
           ElegantNotification.error(
-            title: Text("Ticket"),
-            description: Text("Ticket is used!"),
+            title: Text("Ticket is used before!"),
+            description: Text("Therefore, you cannot use this ticket anymore."),
             onProgressFinished: () {
               controller.resumeCamera();
             },
           ).show(context);
         } else {
           ElegantNotification.success(
-              title: Text("Ticket"),
-              description: Text("Ticket is not used!"),
+              title: Text("Ticket is usable."),
+              description: Text("Ticket id: ${decodedQR}"),
               onProgressFinished: () {
                 _checkedIds.add(decodedQR["tokenId"]);
                 controller.resumeCamera();
@@ -196,16 +218,19 @@ class _ScanPageState extends State<ScanPage> {
           child: Column(
         children: <Widget>[
           Expanded(flex: 4, child: _buildQrView(context)),
-          Column(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: <Widget>[
-              if (result != null)
-                Text(
-                    'Barcode Type: ${describeEnum(result!.format)}   Data: ${result!.code}')
-              else
-                const Text('Scan a code'),
-              finishButton(widget.userProvider!.token!),
-            ],
+          Padding(
+            padding: const EdgeInsets.all(12.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: <Widget>[
+                if (result != null)
+                  Text(
+                      'Barcode Type: ${describeEnum(result!.format)}   Data: ${result!.code}')
+                else
+                  const Text('Scan a code'),
+                finishButton(widget.userProvider),
+              ],
+            ),
           )
         ],
       )),
