@@ -8,6 +8,7 @@ import 'package:tickrypt/pages/resell_ticket_page.dart';
 import 'package:tickrypt/pages/scan_page.dart';
 import 'package:tickrypt/pages/sell_ticket_page.dart';
 import 'package:tickrypt/pages/mint_ticket_page.dart';
+import 'package:tickrypt/pages/set_ticket_controller.dart';
 import 'package:tickrypt/pages/your_tickets_page.dart';
 import 'package:tickrypt/pages/transfer_page.dart';
 import 'package:tickrypt/providers/metamask.dart';
@@ -866,13 +867,57 @@ class _EventPageState extends State<EventPage> {
     );
   }
 
+  Future<bool> getIsTicketController(publicAddress, eventID) async {
+    bool res = await eventService.isTicketController(publicAddress, eventID);
+    return res;
+  }
+
+  // _marketItemsAll.length > 0
   floatingActionButton() {
+    if (_marketItemsAll.length > 0) {
+      return FutureBuilder(
+          future: getIsTicketController(
+              widget.userProvider?.user?.publicAddress, widget.event.integerId),
+          builder: (context, snapshot) {
+            if (snapshot.hasData && snapshot.data!) {
+              return FloatingActionButton(
+                heroTag: "qrButton",
+                elevation: 0.0,
+                child: new Icon(
+                  CupertinoIcons.qrcode_viewfinder,
+                  color: Colors.white,
+                  size: 40,
+                ),
+                backgroundColor: Color(0xFF050A31),
+                onPressed: () {
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => ScanPage(
+                                event: widget.event,
+                                userProvider: widget.userProvider!,
+                                metamaskProvider: widget.metamaskProvider!,
+                                marketItemsAll: _marketItemsAll,
+                              ))).then((value) async {
+                    refreshTicketStatus();
+                  });
+                },
+              );
+            }
+            return Container();
+          });
+    }
+    return Container();
+  }
+
+  setTicketController() {
     if (widget.event.owner == widget.userProvider?.user?.publicAddress &&
         _marketItemsAll.length > 0) {
       return FloatingActionButton(
+        heroTag: "ticketControllerButton",
         elevation: 0.0,
         child: new Icon(
-          CupertinoIcons.qrcode_viewfinder,
+          CupertinoIcons.person_2_square_stack,
           color: Colors.white,
           size: 40,
         ),
@@ -881,11 +926,10 @@ class _EventPageState extends State<EventPage> {
           Navigator.push(
               context,
               MaterialPageRoute(
-                  builder: (context) => ScanPage(
+                  builder: (context) => SetTicketControllerPage(
                         event: widget.event,
                         userProvider: widget.userProvider!,
                         metamaskProvider: widget.metamaskProvider!,
-                        marketItemsAll: _marketItemsAll,
                       ))).then((value) async {
             refreshTicketStatus();
           });
@@ -907,7 +951,16 @@ class _EventPageState extends State<EventPage> {
 
     getOwner();
     return Scaffold(
-      floatingActionButton: floatingActionButton(),
+      floatingActionButton: Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            setTicketController(),
+            Padding(
+              padding: EdgeInsets.only(left: 10),
+              child: floatingActionButton(),
+            )
+          ]),
       body: SingleChildScrollView(
         child: Column(
           children: [

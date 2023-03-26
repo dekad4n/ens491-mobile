@@ -58,4 +58,42 @@ class EventService {
     Event body = Event.fromJson(jsonDecode(res.body));
     return body;
   }
+
+  Future<dynamic> setTicketController(publicAddress, eventId, auth) async {
+    final String url = '${backendUrl!}/event/set-ticket-controller';
+
+    var headers = {
+      "Access-Control-Allow-Origin": '*',
+      "Authorization": "jwt $auth",
+    };
+    Map<String, dynamic> params = {
+      "publicAddress": publicAddress,
+      "eventID": eventId.toString(),
+    };
+    Response res = await post(
+      Uri.parse(url),
+      body: params,
+      headers: headers,
+    );
+    var body = jsonDecode(res.body);
+    return body;
+  }
+
+  Future<bool> isTicketController(publicAddress, eventID) async {
+    final String url = '${backendUrl!}/event/is-ticket-controller';
+    var headers = {
+      "Access-Control-Allow-Origin": '*',
+    };
+    Map<String, dynamic> params = {
+      "publicAddress": publicAddress,
+      "eventID": eventID.toString(),
+    };
+    Response res = await post(
+      Uri.parse(url),
+      body: params,
+      headers: headers,
+    );
+    bool body = jsonDecode(res.body);
+    return body;
+  }
 }
