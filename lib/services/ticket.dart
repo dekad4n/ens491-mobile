@@ -104,15 +104,17 @@ class TicketService {
     };
 
     Map<String, dynamic> params = {
-      "eventID": eventId,
+      "eventID": eventId.toString(),
     };
-
+    print("here1");
     Response res = await post(
       Uri.parse(url),
       body: params,
       headers: headers,
     );
+    print("here2");
     var body = jsonDecode(res.body);
+    print("here");
     return body;
   }
 }

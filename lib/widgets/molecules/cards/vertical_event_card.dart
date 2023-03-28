@@ -35,7 +35,7 @@ GestureDetector verticalEventCard(BuildContext context, Event event) {
     child: Container(
       alignment: Alignment.topLeft,
       width: (MediaQuery.of(context).size.width - 47) / 2,
-      height: (MediaQuery.of(context).size.width - 47) * 258 / 330,
+      height: (MediaQuery.of(context).size.width - 47) * 275 / 330,
       decoration: const BoxDecoration(
           boxShadow: [
             BoxShadow(

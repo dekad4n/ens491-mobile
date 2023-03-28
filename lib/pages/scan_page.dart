@@ -59,8 +59,9 @@ class _ScanPageState extends State<ScanPage> {
           const SnackBar(content: Text('Processing Data')),
         );
 
-        dynamic transactionParameters = ticketService.changeTicketUsedState(
-            userProvider!.token, widget.event!.integerId);
+        dynamic transactionParameters =
+            await ticketService.changeTicketUsedState(
+                userProvider!.token, widget.event!.integerId);
 
         print("transcationParameters:" + transactionParameters.toString());
 
@@ -101,7 +102,7 @@ class _ScanPageState extends State<ScanPage> {
     // For this example we check how width or tall the device is and change the scanArea and overlay accordingly.
     var scanArea = (MediaQuery.of(context).size.width < 400 ||
             MediaQuery.of(context).size.height < 400)
-        ? 150.0
+        ? 200.0
         : 300.0;
     // To ensure the Scanner view is properly sizes after rotation
     // we need to listen for Flutter SizeChanged notification and update controller
@@ -142,10 +143,10 @@ class _ScanPageState extends State<ScanPage> {
               widget.userProvider!.token)
           .then((res) {
         bool alreadyChecked = res["value"];
-
+        print(res);
         if (alreadyChecked) {
           ElegantNotification.error(
-            title: Text("Ticket is used before!"),
+            title: Text(res["message"]),
             description: Text("Therefore, you cannot use this ticket anymore."),
             onProgressFinished: () {
               controller.resumeCamera();
@@ -225,9 +226,7 @@ class _ScanPageState extends State<ScanPage> {
               children: <Widget>[
                 if (result != null)
                   Text(
-                      'Barcode Type: ${describeEnum(result!.format)}   Data: ${result!.code}')
-                else
-                  const Text('Scan a code'),
+                      'Barcode Type: ${describeEnum(result!.format)}   Data: ${result!.code}'),
                 finishButton(widget.userProvider),
               ],
             ),

@@ -474,14 +474,6 @@ class _ProfileState extends State<Profile> {
           child: Column(
             children: [
               profileHeader(context, userProvider.user, setState),
-              TextButton(
-                  onPressed: () async {
-                    var sign =
-                        await metamaskProvider.sign(userProvider.user!.nonce);
-                    print(userProvider.user!.nonce);
-                    print(sign);
-                  },
-                  child: Text("Get nonce and sign")),
               myEventsSection(userProvider),
               attendingEventsSection(userProvider, metamaskProvider),
             ],
