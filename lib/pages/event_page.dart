@@ -823,12 +823,14 @@ class _EventPageState extends State<EventPage> {
                                     "Starting at",
                                     style: TextStyle(color: Colors.grey),
                                   ),
-                                  Text(
-                                    "MATIC ${_marketItemsOnSale[0]['price']}",
-                                    style: TextStyle(
-                                        fontSize: 16,
-                                        color: Colors.grey,
-                                        fontWeight: FontWeight.w600),
+                                  FittedBox(
+                                    fit: BoxFit.fitWidth,
+                                    child: Text(
+                                      "MATIC ${_marketItemsOnSale[0]['price']}",
+                                      style: TextStyle(
+                                          color: Colors.grey,
+                                          fontWeight: FontWeight.w600),
+                                    ),
                                   )
                                 ],
                               ))

@@ -35,7 +35,7 @@ GestureDetector verticalEventCard(BuildContext context, Event event) {
     child: Container(
       alignment: Alignment.topLeft,
       width: (MediaQuery.of(context).size.width - 47) / 2,
-      height: (MediaQuery.of(context).size.width - 47) * 275 / 330,
+      height: (MediaQuery.of(context).size.width - 47) * 258 / 330,
       decoration: const BoxDecoration(
           boxShadow: [
             BoxShadow(
@@ -101,14 +101,17 @@ GestureDetector verticalEventCard(BuildContext context, Event event) {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(10.0, 0, 10, 17),
-            child: Text(
-              time ?? "",
-              textAlign: TextAlign.start,
-              style: const TextStyle(
-                color: Color(0xFF050A31),
-                fontFamily: 'Avenir',
-                fontSize: 13,
+            padding: const EdgeInsets.fromLTRB(10.0, 0, 10, 10),
+            child: FittedBox(
+              fit: BoxFit.fitHeight,
+              child: Text(
+                time ?? "",
+                textAlign: TextAlign.start,
+                style: const TextStyle(
+                  color: Color(0xFF050A31),
+                  fontFamily: 'Avenir',
+                  fontSize: 13,
+                ),
               ),
             ),
           ),

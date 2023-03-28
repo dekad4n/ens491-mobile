@@ -155,7 +155,7 @@ class _ScanPageState extends State<ScanPage> {
         } else {
           ElegantNotification.success(
             title: Text("Ticket is usable."),
-            description: Text("Ticket id: ${decodedQR}"),
+            description: Text("Ticket id: ${decodedQR["tokenId"]}"),
             onProgressFinished: () {
               controller.resumeCamera();
             },

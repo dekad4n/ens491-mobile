@@ -51,7 +51,7 @@ Container profileEvents(
           padding: const EdgeInsets.only(top: 30.0),
           child: Container(
             width: MediaQuery.of(context).size.width - 39,
-            height: (MediaQuery.of(context).size.width - 39) * 300 / 330,
+            height: (MediaQuery.of(context).size.width - 39) * 258 / 330,
             child: ListView(
               scrollDirection: Axis.horizontal,
               children: [
