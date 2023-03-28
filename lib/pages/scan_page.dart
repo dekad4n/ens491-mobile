@@ -153,12 +153,12 @@ class _ScanPageState extends State<ScanPage> {
           ).show(context);
         } else {
           ElegantNotification.success(
-              title: Text("Ticket is usable."),
-              description: Text("Ticket id: ${decodedQR}"),
-              onProgressFinished: () {
-                _checkedIds.add(decodedQR["tokenId"]);
-                controller.resumeCamera();
-              }).show(context);
+            title: Text("Ticket is usable."),
+            description: Text("Ticket id: ${decodedQR}"),
+            onProgressFinished: () {
+              controller.resumeCamera();
+            },
+          ).show(context);
         }
       });
     });
@@ -223,11 +223,15 @@ class _ScanPageState extends State<ScanPage> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: <Widget>[
-                if (result != null)
-                  Text(
-                      'Barcode Type: ${describeEnum(result!.format)}   Data: ${result!.code}')
-                else
-                  const Text('Scan a code'),
+                // if (result != null)
+                //   Text(
+                //       'Barcode Type: ${describeEnum(result!.format)}   Data: ${result!.code}')
+                // else
+                //   const Text('Scan a code'),
+                Text("Keep scanning QR codes..."),
+                SizedBox(
+                  height: 10,
+                ),
                 finishButton(widget.userProvider),
               ],
             ),
