@@ -22,6 +22,68 @@ class ViewAuctionsPage extends StatefulWidget {
 
 class _ViewAuctionsPageState extends State<ViewAuctionsPage> {
   List<dynamic> auctions = [];
+  bool _isLoading = true;
+
+  void refreshTicketStatus() {
+    setState(() {
+      _isLoading = true;
+    });
+
+    //TODO: refresh data
+  }
+
+  ticketsGridView() {
+    if (_isLoading) {
+      return Center(child: Text("Loading auctions..."));
+    } else {
+      return Container(padding: EdgeInsets.all(12), color: Colors.red);
+      //   return Container(
+      //   width: double.infinity,
+      //   height: ((list.length / 3).ceil() + 1) * 70,
+      //   constraints: BoxConstraints(maxHeight: 4 * 70),
+      //   child: GridView.count(
+      //       primary: false,
+      //       padding: const EdgeInsets.all(8),
+      //       childAspectRatio: (4 / 5),
+      //       crossAxisSpacing: 10,
+      //       mainAxisSpacing: 10,
+      //       crossAxisCount: 3,
+      //       children: tickets),
+      // );
+    }
+  }
+
+  auctionTicketsSection() {
+    return Container(
+      padding: EdgeInsets.all(12),
+      width: MediaQuery.of(context).size.width * 0.9,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(15),
+        border: Border.all(color: Colors.grey.shade500, width: 1),
+        color: Colors.grey.withOpacity(0.1),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                "Tickets On Auction:",
+                style: TextStyle(
+                    color: Color(0xFF050A31),
+                    fontSize: 18,
+                    fontWeight: FontWeight.w400),
+              ),
+            ],
+          ),
+          Divider(thickness: 1),
+          SizedBox(height: 10),
+          ticketsGridView(),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -46,8 +108,14 @@ class _ViewAuctionsPageState extends State<ViewAuctionsPage> {
         ),
         centerTitle: true,
       ),
-      body: Center(
-        child: Text("View Auctions"),
+      body: Container(
+        padding: EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            auctionTicketsSection(),
+          ],
+        ),
       ),
     );
   }

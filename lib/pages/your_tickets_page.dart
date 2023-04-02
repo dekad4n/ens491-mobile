@@ -3,6 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tickrypt/models/event_model.dart';
+import 'package:tickrypt/pages/create_auction_page.dart';
 import 'package:tickrypt/pages/qr_page.dart';
 import 'package:tickrypt/pages/resell_ticket_page.dart';
 import 'package:tickrypt/pages/transfer_page.dart';
@@ -372,7 +373,17 @@ class _YourTicketsPageState extends State<YourTicketsPage> {
                                 refreshTicketStatus();
                               }
                             },
-                            child: Text("Transfer"),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text("Transfer"),
+                                SizedBox(width: 5),
+                                Icon(
+                                  Icons.send,
+                                  color: Colors.white,
+                                ),
+                              ],
+                            ),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: isTransferable
                                   ? Color(0xFF050A31)
@@ -440,7 +451,47 @@ class _YourTicketsPageState extends State<YourTicketsPage> {
                                 refreshTicketStatus();
                               }
                             },
-                            child: Text("Resell"),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text("Resell"),
+                                SizedBox(width: 5),
+                                Icon(
+                                  CupertinoIcons.cart_fill,
+                                  color: Colors.white,
+                                ),
+                              ],
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: isTransferable
+                                  ? Color(0xFF050A31)
+                                  : Colors.grey,
+                            ),
+                          ),
+                          Divider(thickness: 1),
+                          ElevatedButton(
+                            onPressed: () async {
+                              Navigator.push(context, MaterialPageRoute(
+                                builder: (context) {
+                                  return CreateAuctionPage(
+                                      userProvider: widget.userProvider,
+                                      metamaskProvider: widget.metamaskProvider,
+                                      event: widget.event,
+                                      item: item);
+                                },
+                              ));
+                            },
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text("Put Up For Auction"),
+                                SizedBox(width: 5),
+                                Icon(
+                                  CupertinoIcons.hand_raised_fill,
+                                  color: Colors.white,
+                                ),
+                              ],
+                            ),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: isTransferable
                                   ? Color(0xFF050A31)
