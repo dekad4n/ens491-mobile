@@ -3,7 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tickrypt/models/event_model.dart';
-import 'package:tickrypt/pages/create_auction_page.dart';
+import 'package:tickrypt/pages/auction_page.dart';
 import 'package:tickrypt/pages/qr_page.dart';
 import 'package:tickrypt/pages/resell_ticket_page.dart';
 import 'package:tickrypt/pages/transfer_page.dart';
@@ -473,7 +473,7 @@ class _YourTicketsPageState extends State<YourTicketsPage> {
                             onPressed: () async {
                               Navigator.push(context, MaterialPageRoute(
                                 builder: (context) {
-                                  return CreateAuctionPage(
+                                  return AuctionPage(
                                       userProvider: widget.userProvider,
                                       metamaskProvider: widget.metamaskProvider,
                                       event: widget.event,
