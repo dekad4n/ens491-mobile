@@ -9,6 +9,7 @@ import 'package:tickrypt/pages/scan_page.dart';
 import 'package:tickrypt/pages/sell_ticket_page.dart';
 import 'package:tickrypt/pages/mint_ticket_page.dart';
 import 'package:tickrypt/pages/set_ticket_controller.dart';
+import 'package:tickrypt/pages/view_auctions_page.dart';
 import 'package:tickrypt/pages/your_tickets_page.dart';
 import 'package:tickrypt/pages/transfer_page.dart';
 import 'package:tickrypt/providers/metamask.dart';
@@ -366,7 +367,7 @@ class _EventPageState extends State<EventPage> {
     );
   }
 
-  buyStopSaleButton(bool isSoldOut) {
+  buyButton(bool isSoldOut) {
     if (widget.event.owner == widget.userProvider?.user?.publicAddress) {
       // If i am the owner, show Stop Sale Button
       // Get all items that i sell
@@ -527,6 +528,71 @@ class _EventPageState extends State<EventPage> {
         ],
       );
     }
+  }
+
+  viewAuctionsButton() {
+    return Row(
+      children: [
+        Expanded(
+          child: ElevatedButton(
+            style: ElevatedButton.styleFrom(
+                elevation: 0,
+                backgroundColor: widget.metamaskProvider!.isConnected
+                    ? Color(0xFF050A31)
+                    : Colors.grey),
+            onPressed: () async {
+              if (widget.metamaskProvider!.isConnected) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ViewAuctionsPage(
+                      event: widget.event,
+                      userProvider: widget.userProvider,
+                      metamaskProvider: widget.metamaskProvider,
+                    ),
+                  ),
+                );
+              } else {
+                showDialog<void>(
+                  context: context,
+                  barrierDismissible: false, // user must tap button!
+                  builder: (BuildContext context) {
+                    return AlertDialog(
+                      title: const Text("You Need To Login First"),
+                      content: SingleChildScrollView(
+                        child: ListBody(
+                          children: const <Widget>[
+                            Text(
+                                'In order to see auctions, you need to login using your Metamask account.'),
+                            SizedBox(
+                              height: 10,
+                            ),
+                            Text(
+                                "Please go to the Profile page to perform login."),
+                          ],
+                        ),
+                      ),
+                      actions: <Widget>[
+                        TextButton(
+                          child: const Text('Close'),
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                          },
+                        ),
+                      ],
+                    );
+                  },
+                );
+              }
+            },
+            child: Text(
+              "View Auctions",
+              style: TextStyle(fontSize: 22, color: Colors.white),
+            ),
+          ),
+        ),
+      ],
+    );
   }
 
   yourTicketStatusSection() {
@@ -842,7 +908,9 @@ class _EventPageState extends State<EventPage> {
                   style: TextStyle(fontSize: 18),
                 ),
                 SizedBox(height: 10),
-                buyStopSaleButton(isSoldOut),
+                buyButton(isSoldOut),
+                SizedBox(height: 10),
+                viewAuctionsButton(),
               ],
             ));
       } else {
