@@ -37,7 +37,7 @@ class _AuctionPageState extends State<AuctionPage> {
   double _bid = 0;
   int _timeSeconds = 0;
 
-  bool _isHighestBidder = true;
+  bool _isHighestBidder = false;
 
   bool _alreadyAucted = false;
   Map _alreadyAuctedItem = {};
@@ -46,7 +46,9 @@ class _AuctionPageState extends State<AuctionPage> {
 
   List _prevBids = [];
 
-  void checkAlreadyAucted() async {
+  double _myTotalPrevBids = 0;
+
+  void fetchAuctionDetails() async {
     setState(() {
       _isLoading = true;
     });
@@ -62,14 +64,36 @@ class _AuctionPageState extends State<AuctionPage> {
         Map auctionInfo =
             await auctionService.getAuctionInfo(auction["auctionId"]);
 
+        // And fetch all previous bids
+        List prevBids = await auctionService.listPrevBids(
+            auction["auctionId"], widget.userProvider!.token!);
+
+        double myTotalPrevBids = 0;
+        // Calculate my total prev bids
+        for (var bidItem in prevBids) {
+          if (bidItem["bidder"].toLowerCase() ==
+                  widget.userProvider!.user!.publicAddress.toLowerCase() &&
+              bidItem["isBack"] == false) {
+            myTotalPrevBids += double.parse(bidItem["bid"]);
+          }
+        }
+
         setState(() {
           _alreadyAucted = true;
           _alreadyAuctedItem = auction;
           _auctionInfo = auctionInfo;
+          _prevBids = prevBids;
+
+          _myTotalPrevBids = myTotalPrevBids;
+
+          if ((auctionInfo["highestBidder"].toLowerCase() ==
+                  widget.userProvider!.user!.publicAddress.toLowerCase()) &&
+              prevBids.length > 0) {
+            _isHighestBidder = true;
+          }
 
           _isLoading = false;
         });
-        print(auctionInfo);
         return;
       }
     }
@@ -253,31 +277,46 @@ class _AuctionPageState extends State<AuctionPage> {
             Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(
-                  "There are 5 bids on this item.",
-                  style: TextStyle(color: Color(0xFF050A31)),
-                ),
+                _prevBids.length > 0
+                    ? Text(
+                        "There are 5 bids on this item.",
+                        style: TextStyle(color: Color(0xFF050A31)),
+                      )
+                    : Text(
+                        "There is no bid on this item.",
+                        style: TextStyle(color: Color(0xFF050A31)),
+                      ),
                 SizedBox(
                   height: 10,
                 ),
-                Text(
-                  "You are the highest bidder!",
-                  style: TextStyle(
-                    color: Colors.deepPurple,
-                    fontSize: 15,
-                  ),
-                ),
+                _isHighestBidder
+                    ? Text(
+                        "You are the highest bidder!",
+                        style: TextStyle(
+                          color: Colors.deepPurple,
+                          fontSize: 15,
+                        ),
+                      )
+                    : SizedBox(),
                 Divider(thickness: 1),
-                Text(
-                  "Highest Bid:",
-                  style: TextStyle(
-                    color: Color(0xFF050A31),
-                    fontSize: 18,
-                  ),
-                ),
+                _prevBids.length > 0
+                    ? Text(
+                        "Highest Bid",
+                        style: TextStyle(
+                          color: Color(0xFF050A31),
+                          fontSize: 18,
+                        ),
+                      )
+                    : Text(
+                        "Start Price",
+                        style: TextStyle(
+                          color: Color(0xFF050A31),
+                          fontSize: 18,
+                        ),
+                      ),
                 SizedBox(height: 5),
                 Text(
-                  "MATIC  3.49",
+                  "MATIC  ${_auctionInfo['highestBid']}",
                   style: TextStyle(
                       color: Color.fromARGB(255, 165, 134, 227),
                       fontSize: 20,
@@ -289,7 +328,7 @@ class _AuctionPageState extends State<AuctionPage> {
     );
   }
 
-  // BIDDER SECTION  ---------------------------------------------------------
+  // IF BIDDER, RENDER THESE  ---------------------------------------------------------
 
   placeBidSection() {
     return Container(
@@ -326,8 +365,51 @@ class _AuctionPageState extends State<AuctionPage> {
                         child: Text("Place Bid",
                             style: TextStyle(color: Colors.white))),
                   ),
-                  onTap: () {
-                    print("bid");
+                  onTap: () async {
+                    try {
+                      dynamic transactionParameters =
+                          await auctionService.placeBid(
+                        _auctionInfo['auctionId'],
+                        _bid,
+                        widget.userProvider!.token,
+                      );
+
+                      print("transcationParamters:" +
+                          transactionParameters.toString());
+
+                      alchemy.init(
+                        httpRpcUrl:
+                            "https://polygon-mumbai.g.alchemy.com/v2/jq6Um8Vdb_j-F0vwzpqBjvjHiz3-v5wy",
+                        wsRpcUrl:
+                            "wss://polygon-mumbai.g.alchemy.com/v2/jq6Um8Vdb_j-F0vwzpqBjvjHiz3-v5wy",
+                        verbose: true,
+                      );
+
+                      List<dynamic> params = [
+                        {
+                          "from": transactionParameters["from"],
+                          "to": transactionParameters["to"],
+                          "data": transactionParameters["data"],
+                        }
+                      ];
+
+                      String method = "eth_sendTransaction";
+
+                      await launchUrl(
+                          Uri.parse(widget.metamaskProvider!.connector.session
+                              .toUri()),
+                          mode: LaunchMode.externalApplication);
+
+                      final signature = await widget.metamaskProvider!.connector
+                          .sendCustomRequest(
+                        method: method,
+                        params: params,
+                      );
+
+                      print("signature:" + signature);
+                    } catch (e) {
+                      print(e.toString() + " ERROR while /bid");
+                    }
                   },
                 ),
               ],
@@ -355,7 +437,7 @@ class _AuctionPageState extends State<AuctionPage> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                "MATIC  7.25",
+                "MATIC  ${_myTotalPrevBids}",
                 style: TextStyle(
                     color: Color.fromARGB(255, 165, 134, 227),
                     fontSize: 20,
@@ -408,7 +490,7 @@ class _AuctionPageState extends State<AuctionPage> {
     );
   }
 
-  // TICKET OWNER ----------------------------------------------
+  // IF TICKET OWNER, RENDER THESE ----------------------------------------------
   startAuctionSection() {
     return Container(
       padding: EdgeInsets.all(20),
@@ -500,7 +582,7 @@ class _AuctionPageState extends State<AuctionPage> {
 
                 print("signature:" + signature);
               } catch (e) {
-                print(e.toString() + " ERROR while /sell");
+                print(e.toString() + " ERROR while /create-bid-item");
               }
             },
           ),
@@ -585,7 +667,7 @@ class _AuctionPageState extends State<AuctionPage> {
   void initState() {
     // TODO: implement initState
     super.initState();
-    checkAlreadyAucted();
+    fetchAuctionDetails();
   }
 
   @override
@@ -620,14 +702,26 @@ class _AuctionPageState extends State<AuctionPage> {
               children: [
                 eventPreviewContainer(),
                 SizedBox(height: 10),
+                // _isLoading
+                //     ? Center(
+                //         child: Text("Loading..."),
+                //       )
+                //     : widget.userProvider!.user!.publicAddress !=
+                //             widget.item!["ticketOwner"]!
+                //         ? ticketOwnerSection()
+                //         : bidderSection(),
+
                 _isLoading
                     ? Center(
                         child: Text("Loading..."),
                       )
-                    : widget.userProvider!.user!.publicAddress !=
-                            widget.item!["ticketOwner"]!
-                        ? ticketOwnerSection()
-                        : bidderSection(),
+                    : Column(
+                        children: [
+                          ticketOwnerSection(),
+                          Divider(thickness: 1),
+                          bidderSection(),
+                        ],
+                      )
               ],
             ),
           ),
