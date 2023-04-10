@@ -4,10 +4,22 @@ import 'package:http/http.dart';
 
 class AuctionService {
   var backendUrl = dotenv.env["BACKEND_URL"];
+
   final headers = {
     'Access-Control-Allow-Origin': '*',
     'Content-Type': 'application/json',
   };
+
+  Future<List<dynamic>> getOngoingAuctions(eventId) async {
+    String url = '${backendUrl!}/auction/ongoing/${eventId}';
+
+    Response res = await get(Uri.parse(url), headers: headers);
+
+    var body = jsonDecode(res.body);
+
+    return body;
+  }
+
   dynamic createBidItem(ticketId, eventId, price, time, auth) async {
     final String authUrl = '${backendUrl!}/auction/create-bid-item';
     try {
@@ -42,7 +54,7 @@ class AuctionService {
         '${backendUrl!}/auction/get-auction-info?auctionId=${auctionId}';
 
     Response res = await get(Uri.parse(authUrl),
-        headers: {"Authorization": "jyw $auth", ...headers});
+        headers: {"Authorization": "jwt $auth", ...headers});
     var body = jsonDecode(res.body);
     return body;
   }

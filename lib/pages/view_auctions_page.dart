@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:tickrypt/models/event_model.dart';
 import 'package:tickrypt/providers/metamask.dart';
 import 'package:tickrypt/providers/user_provider.dart';
+import 'package:tickrypt/services/auction.dart';
 
 class ViewAuctionsPage extends StatefulWidget {
   final Event? event;
@@ -21,39 +22,143 @@ class ViewAuctionsPage extends StatefulWidget {
 }
 
 class _ViewAuctionsPageState extends State<ViewAuctionsPage> {
+  AuctionService auctionService = AuctionService();
+
   List<dynamic> auctions = [];
   bool _isLoading = true;
 
-  void refreshTicketStatus() {
+  void fetchOngoingAuctions() async {
     setState(() {
       _isLoading = true;
     });
 
-    //TODO: refresh data
+    List<dynamic> fetchedAuctions =
+        await auctionService.getOngoingAuctions(widget.event!.integerId);
+
+    setState(() {
+      auctions = fetchedAuctions;
+      _isLoading = false;
+    });
   }
 
-  ticketsGridView() {
+  ticketsGridView(color) {
     if (_isLoading) {
       return Center(child: Text("Loading auctions..."));
     } else {
-      return Container(padding: EdgeInsets.all(12), color: Colors.red);
-      //   return Container(
-      //   width: double.infinity,
-      //   height: ((list.length / 3).ceil() + 1) * 70,
-      //   constraints: BoxConstraints(maxHeight: 4 * 70),
-      //   child: GridView.count(
-      //       primary: false,
-      //       padding: const EdgeInsets.all(8),
-      //       childAspectRatio: (4 / 5),
-      //       crossAxisSpacing: 10,
-      //       mainAxisSpacing: 10,
-      //       crossAxisCount: 3,
-      //       children: tickets),
-      // );
+      List<Widget> tickets = auctions.map((item) {
+        return GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: () {},
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(5),
+              color: color.withOpacity(0.5),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(5),
+                      topRight: Radius.circular(5),
+                    ),
+                    color: color,
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text("Auction", style: TextStyle(color: Colors.white)),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            "id:",
+                            style: TextStyle(color: Colors.white),
+                          ),
+                          Text(
+                            "${item["auctionId"]}",
+                            style: TextStyle(color: Colors.white),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Container(
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 15, vertical: 8),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Icon(
+                                CupertinoIcons.ticket_fill,
+                                color: Colors.white,
+                              ),
+                              // Text(
+                              //   "seat:",
+                              //   style: TextStyle(color: Colors.white),
+                              // ),
+                              Text(
+                                "${item["ticketId"]}",
+                                style: TextStyle(color: Colors.white),
+                              ),
+                            ],
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              // Text(
+                              //   "price:",
+                              //   style: TextStyle(color: Colors.white),
+                              // ),
+                              Icon(
+                                Icons.payments_sharp,
+                                color: Colors.white,
+                              ),
+                              Text(
+                                "${item["price"]}",
+                                style: TextStyle(color: Colors.white),
+                              ),
+                            ],
+                          )
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      }).toList();
+
+      print(tickets);
+
+      return Container(
+        width: double.infinity,
+        height: ((auctions.length / 3).ceil() + 1) * 70,
+        constraints: BoxConstraints(maxHeight: 4 * 70),
+        child: GridView.count(
+            primary: false,
+            padding: const EdgeInsets.all(8),
+            childAspectRatio: (4 / 5),
+            crossAxisSpacing: 10,
+            mainAxisSpacing: 10,
+            crossAxisCount: 3,
+            children: tickets),
+      );
     }
   }
 
-  ticketsOnAuctionSection() {
+  ticketsOnAuction() {
     return Container(
       padding: EdgeInsets.all(12),
       width: MediaQuery.of(context).size.width * 0.9,
@@ -69,7 +174,7 @@ class _ViewAuctionsPageState extends State<ViewAuctionsPage> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                "Tickets On Auction:",
+                "Tickets on auction:",
                 style: TextStyle(
                     color: Color(0xFF050A31),
                     fontSize: 18,
@@ -79,10 +184,16 @@ class _ViewAuctionsPageState extends State<ViewAuctionsPage> {
           ),
           Divider(thickness: 1),
           SizedBox(height: 10),
-          ticketsGridView(),
+          ticketsGridView(Colors.grey[700]),
         ],
       ),
     );
+  }
+
+  initState() {
+    super.initState();
+
+    fetchOngoingAuctions();
   }
 
   @override
@@ -113,7 +224,7 @@ class _ViewAuctionsPageState extends State<ViewAuctionsPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            ticketsOnAuctionSection(),
+            ticketsOnAuction(),
           ],
         ),
       ),
