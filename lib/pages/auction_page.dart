@@ -43,6 +43,14 @@ class _AuctionPageState extends State<AuctionPage> {
             fontWeight: FontWeight.w700,
           ),
         ),
+        SizedBox(height: 5),
+        Text(
+          "Ticket id: ${widget.item!["tokenID"]}",
+          style: TextStyle(
+            color: Colors.grey,
+            fontSize: 18,
+          ),
+        ),
         SizedBox(height: 10),
         Container(
           width: 250,
@@ -64,7 +72,7 @@ class _AuctionPageState extends State<AuctionPage> {
     );
   }
 
-  priceContainer(double input, String label) {
+  priceContainer(double input) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -144,26 +152,28 @@ class _AuctionPageState extends State<AuctionPage> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  "You are the highest bidderx!",
+                  "There are 5 bids on this item.",
+                  style: TextStyle(color: Color(0xFF050A31)),
+                ),
+                SizedBox(
+                  height: 10,
+                ),
+                Text(
+                  "You are the highest bidder!",
                   style: TextStyle(
                     color: Colors.deepPurple,
                     fontSize: 15,
                   ),
                 ),
-                SizedBox(height: 10),
-                Text(
-                  "There are 5 bids on this item.",
-                  style: TextStyle(color: Colors.grey),
-                ),
+                Divider(thickness: 1),
                 Text(
                   "Highest Bid:",
                   style: TextStyle(
-                    color: Colors.grey,
+                    color: Color(0xFF050A31),
                     fontSize: 18,
                   ),
                 ),
                 SizedBox(height: 5),
-                Divider(thickness: 1),
                 Text(
                   "MATIC  3.49",
                   style: TextStyle(
@@ -177,56 +187,7 @@ class _AuctionPageState extends State<AuctionPage> {
     );
   }
 
-  createAuctionSection() {
-    return Column(
-      children: [
-        Text(
-          "You haven't created an auction for this item yet.",
-          style: TextStyle(color: Colors.grey),
-        ),
-        SizedBox(height: 10),
-        priceContainer(_startPrice, "Starting Price"),
-        SizedBox(height: 10),
-        GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          child: Container(
-            width: 150,
-            padding: EdgeInsets.all(15),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(8),
-              color: Color(0xFF050A31),
-              boxShadow: [
-                BoxShadow(
-                  offset: Offset(-2, 2),
-                  blurRadius: 4,
-                  spreadRadius: 2,
-                  color: Color.fromRGBO(5, 10, 49, 0.1),
-                ),
-              ],
-            ),
-            child: Center(
-                child: Text("Create Auction",
-                    style: TextStyle(color: Colors.white))),
-          ),
-          onTap: () {
-            print("create auction");
-          },
-        ),
-      ],
-    );
-  }
-
-  stopAuctionSection() {}
-
-  ticketOwnerSection() {
-    return createAuctionSection();
-  }
-
-  // SizedBox(height: 5),
-  //       Text(
-  //         "You haven't bid on this item yet.",
-  //         style: TextStyle(color: Colors.grey),
-  //       ),
+  // BIDDER SECTION  ---------------------------------------------------------
 
   placeBidSection() {
     return Container(
@@ -241,7 +202,7 @@ class _AuctionPageState extends State<AuctionPage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                priceContainer(_bid, "Your Bid:"),
+                priceContainer(_bid),
                 SizedBox(width: 10),
                 GestureDetector(
                   behavior: HitTestBehavior.opaque,
@@ -284,7 +245,7 @@ class _AuctionPageState extends State<AuctionPage> {
       child: Column(
         children: [
           Text(
-            "You have bid on this item:",
+            "You have total bid on this item:",
             style: TextStyle(color: Colors.grey),
           ),
           SizedBox(height: 10),
@@ -345,6 +306,127 @@ class _AuctionPageState extends State<AuctionPage> {
     );
   }
 
+  // TICKET OWNER SECTION----------------------------------------------
+  startAuctionSection() {
+    return Container(
+      padding: EdgeInsets.all(20),
+      // width: MediaQuery.of(context).size.width * 0.8,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(15),
+        color: Color.fromARGB(255, 136, 210, 135).withOpacity(0.1),
+      ),
+      child: Column(
+        children: [
+          Text(
+            "Start an auction by setting a price:",
+            style: TextStyle(color: Colors.black),
+          ),
+          SizedBox(height: 10),
+          priceContainer(_startPrice),
+          SizedBox(height: 10),
+          GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            child: Container(
+              width: 150,
+              padding: EdgeInsets.all(15),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8),
+                color: Color(0xFF050A31),
+                boxShadow: [
+                  BoxShadow(
+                    offset: Offset(-2, 2),
+                    blurRadius: 4,
+                    spreadRadius: 2,
+                    color: Color.fromRGBO(5, 10, 49, 0.1),
+                  ),
+                ],
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text("Start Auction",
+                      style:
+                          TextStyle(color: Color.fromARGB(255, 177, 254, 186))),
+                  Icon(CupertinoIcons.check_mark_circled_solid,
+                      color: Color.fromARGB(255, 177, 254, 186)),
+                ],
+              ),
+            ),
+            onTap: () {
+              print("create auction");
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  stopAuctionSection() {
+    return Container(
+      padding: EdgeInsets.all(20),
+      width: MediaQuery.of(context).size.width * 0.8,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(15),
+        color: Color.fromARGB(255, 255, 102, 102).withOpacity(0.1),
+      ),
+      child: Column(
+        children: [
+          Text(
+            "There is an active auction for this item.",
+            style: TextStyle(color: Colors.black),
+          ),
+          SizedBox(height: 10),
+          GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            child: Container(
+              width: 150,
+              padding: EdgeInsets.all(15),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8),
+                color: Color(0xFF050A31),
+                boxShadow: [
+                  BoxShadow(
+                    offset: Offset(-2, 2),
+                    blurRadius: 4,
+                    spreadRadius: 2,
+                    color: Color.fromRGBO(5, 10, 49, 0.1),
+                  ),
+                ],
+              ),
+              child: Center(
+                  child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text("Stop Auction",
+                      style: TextStyle(
+                        color: Color.fromARGB(255, 255, 178, 178),
+                      )),
+                  Icon(Icons.cancel, color: Color.fromARGB(255, 255, 178, 178)),
+                ],
+              )),
+            ),
+            onTap: () {
+              print("stop auction");
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  ticketOwnerSection() {
+    return Column(
+      children: [
+        highestBidSection(),
+        SizedBox(height: 20),
+        startAuctionSection(),
+        SizedBox(height: 20),
+        stopAuctionSection(),
+      ],
+    );
+  }
+  //------------------------------------------------------------------
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -359,7 +441,7 @@ class _AuctionPageState extends State<AuctionPage> {
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Text(
-          "Auction",
+          "Ticket Auction",
           style: TextStyle(
             color: Color(0xff050a31),
             fontSize: 25,
@@ -377,7 +459,7 @@ class _AuctionPageState extends State<AuctionPage> {
               children: [
                 eventPreviewContainer(),
                 SizedBox(height: 10),
-                widget.userProvider!.user!.publicAddress ==
+                widget.userProvider!.user!.publicAddress !=
                         widget.item!["ticketOwner"]!
                     ? ticketOwnerSection()
                     : bidderSection(),

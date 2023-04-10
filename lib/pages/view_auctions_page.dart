@@ -53,7 +53,7 @@ class _ViewAuctionsPageState extends State<ViewAuctionsPage> {
     }
   }
 
-  auctionTicketsSection() {
+  ticketsOnAuctionSection() {
     return Container(
       padding: EdgeInsets.all(12),
       width: MediaQuery.of(context).size.width * 0.9,
@@ -113,7 +113,7 @@ class _ViewAuctionsPageState extends State<ViewAuctionsPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            auctionTicketsSection(),
+            ticketsOnAuctionSection(),
           ],
         ),
       ),
