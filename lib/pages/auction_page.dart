@@ -48,54 +48,69 @@ class _AuctionPageState extends State<AuctionPage> {
 
   double _myTotalPrevBids = 0;
 
-  void fetchAuctionDetails() async {
+  late DateTime _endAt;
+
+  Future<void> fetchAuctionDetails() async {
     setState(() {
       _isLoading = true;
     });
 
-    // Fetch all auction items at once
-    List<dynamic> fetchedAuctions =
-        await auctionService.getOngoingAuctions(widget.event!.integerId);
+    try {
+      // Fetch all auction items at once
+      List<dynamic> fetchedAuctions =
+          await auctionService.getOngoingAuctions(widget.event!.integerId);
 
-    // Check if this ticket's id exists in the fetched auctions
-    for (var auction in fetchedAuctions) {
-      if (auction["ticketId"] == widget.item!["tokenID"]) {
-        // If it is already aucted, fetch auction info then
-        Map auctionInfo =
-            await auctionService.getAuctionInfo(auction["auctionId"]);
+      // Check if this ticket's id exists in the fetched auctions
+      for (var auction in fetchedAuctions) {
+        if (auction["ticketId"] == widget.item!["tokenID"]) {
+          // If it is already aucted, fetch auction info then
+          Map auctionInfo =
+              await auctionService.getAuctionInfo(auction["auctionId"]);
 
-        // And fetch all previous bids
-        List prevBids = await auctionService.listPrevBids(
-            auction["auctionId"], widget.userProvider!.token!);
+          // Parse endAt to DateTime
+          var endAt = DateTime.fromMillisecondsSinceEpoch(
+              int.parse(auctionInfo["endAt"]) * 1000);
 
-        double myTotalPrevBids = 0;
-        // Calculate my total prev bids
-        for (var bidItem in prevBids) {
-          if (bidItem["bidder"].toLowerCase() ==
-                  widget.userProvider!.user!.publicAddress.toLowerCase() &&
-              bidItem["isBack"] == false) {
-            myTotalPrevBids += double.parse(bidItem["bid"]);
+          // And fetch all previous bids
+          List prevBids = await auctionService.listPrevBids(
+              auction["auctionId"], widget.userProvider!.token!);
+
+          double myTotalPrevBids = 0;
+          // Calculate my total prev bids
+          for (var bidItem in prevBids) {
+            if (bidItem["bidder"].toLowerCase() ==
+                    widget.userProvider!.user!.publicAddress.toLowerCase() &&
+                bidItem["isBack"] == false) {
+              myTotalPrevBids += double.parse(bidItem["bid"]);
+            }
           }
+
+          setState(() {
+            _alreadyAucted = true;
+            _alreadyAuctedItem = auction;
+            _auctionInfo = auctionInfo;
+            _endAt = endAt;
+
+            _prevBids = prevBids;
+
+            _myTotalPrevBids = myTotalPrevBids;
+
+            if ((auctionInfo["highestBidder"].toLowerCase() ==
+                    widget.userProvider!.user!.publicAddress.toLowerCase()) &&
+                prevBids.length > 0) {
+              _isHighestBidder = true;
+            }
+
+            _isLoading = false;
+          });
+          return;
         }
-
-        setState(() {
-          _alreadyAucted = true;
-          _alreadyAuctedItem = auction;
-          _auctionInfo = auctionInfo;
-          _prevBids = prevBids;
-
-          _myTotalPrevBids = myTotalPrevBids;
-
-          if ((auctionInfo["highestBidder"].toLowerCase() ==
-                  widget.userProvider!.user!.publicAddress.toLowerCase()) &&
-              prevBids.length > 0) {
-            _isHighestBidder = true;
-          }
-
-          _isLoading = false;
-        });
-        return;
       }
+    } catch (e) {
+      print(e);
+      setState(() {
+        _isLoading = false;
+      });
     }
 
     setState(() {
@@ -106,6 +121,7 @@ class _AuctionPageState extends State<AuctionPage> {
   eventPreviewContainer() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
+      mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Text(
           widget.event!.title!,
@@ -325,6 +341,29 @@ class _AuctionPageState extends State<AuctionPage> {
               ],
             ),
           ]),
+    );
+  }
+
+  endDateSection() {
+    int days = _endAt.day;
+    int hours = _endAt.hour;
+    int minutes = _endAt.minute;
+
+    return Container(
+      padding: EdgeInsets.all(20),
+      width: MediaQuery.of(context).size.width * 0.8,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(15),
+        color: Color.fromARGB(255, 185, 244, 178).withOpacity(0.3),
+      ),
+      child: Center(
+          child: Column(
+        children: [
+          Text("Ends in"),
+          Divider(thickness: 1),
+          Text("${days} days ${hours} hours ${minutes} minutes")
+        ],
+      )),
     );
   }
 
@@ -681,8 +720,50 @@ class _AuctionPageState extends State<AuctionPage> {
                 ],
               )),
             ),
-            onTap: () {
-              print("stop auction");
+            onTap: () async {
+              try {
+                dynamic transactionParameters =
+                    await auctionService.stopAuction(
+                  _auctionInfo['auctionId'],
+                  widget.userProvider!.token,
+                );
+
+                print(
+                    "transcationParamters:" + transactionParameters.toString());
+
+                alchemy.init(
+                  httpRpcUrl:
+                      "https://polygon-mumbai.g.alchemy.com/v2/jq6Um8Vdb_j-F0vwzpqBjvjHiz3-v5wy",
+                  wsRpcUrl:
+                      "wss://polygon-mumbai.g.alchemy.com/v2/jq6Um8Vdb_j-F0vwzpqBjvjHiz3-v5wy",
+                  verbose: true,
+                );
+
+                List<dynamic> params = [
+                  {
+                    "from": transactionParameters["from"],
+                    "to": transactionParameters["to"],
+                    "data": transactionParameters["data"],
+                  }
+                ];
+
+                String method = "eth_sendTransaction";
+
+                await launchUrl(
+                    Uri.parse(
+                        widget.metamaskProvider!.connector.session.toUri()),
+                    mode: LaunchMode.externalApplication);
+
+                final signature =
+                    await widget.metamaskProvider!.connector.sendCustomRequest(
+                  method: method,
+                  params: params,
+                );
+
+                print("signature:" + signature);
+              } catch (e) {
+                print(e.toString() + " ERROR while /stop-auction");
+              }
             },
           ),
         ],
@@ -694,6 +775,8 @@ class _AuctionPageState extends State<AuctionPage> {
     if (_alreadyAucted) {
       return Column(
         children: [
+          endDateSection(),
+          SizedBox(height: 20),
           highestBidSection(),
           SizedBox(height: 20),
           stopAuctionSection(),
@@ -729,48 +812,61 @@ class _AuctionPageState extends State<AuctionPage> {
           icon: Icon(Icons.arrow_back),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        title: Text(
-          "Ticket Auction",
-          style: TextStyle(
-            color: Color(0xff050a31),
-            fontSize: 25,
-            fontWeight: FontWeight.bold,
-          ),
+        title: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              "Ticket Auction",
+              style: TextStyle(
+                color: Color(0xff050a31),
+                fontSize: 25,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            SizedBox(width: 5),
+            _isLoading
+                ? SizedBox()
+                : (_alreadyAucted
+                    ? Container(
+                        padding: EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color: Colors.green,
+                          borderRadius: BorderRadius.circular(5),
+                        ),
+                        child: Text("Live"),
+                      )
+                    : SizedBox())
+          ],
         ),
         centerTitle: true,
       ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          child: Container(
-            padding: EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                eventPreviewContainer(),
-                SizedBox(height: 10),
-                // _isLoading
-                //     ? Center(
-                //         child: Text("Loading..."),
-                //       )
-                //     : widget.userProvider!.user!.publicAddress !=
-                //             widget.item!["ticketOwner"]!
-                //         ? ticketOwnerSection()
-                //         : bidderSection(),
-
-                _isLoading
-                    ? Center(
-                        child: Text("Loading..."),
-                      )
-                    : Column(
-                        children: [
-                          ticketOwnerSection(),
-                          Divider(thickness: 1),
-                          bidderSection(),
-                        ],
-                      )
-              ],
+        child: RefreshIndicator(
+          onRefresh: () async {
+            await fetchAuctionDetails();
+          },
+          child: ListView(children: [
+            Container(
+              padding: EdgeInsets.all(20),
+              child: Center(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    eventPreviewContainer(),
+                    SizedBox(height: 10),
+                    _isLoading
+                        ? Center(
+                            child: Text("Loading..."),
+                          )
+                        : widget.userProvider!.user!.publicAddress !=
+                                widget.item!["ticketOwner"]!
+                            ? ticketOwnerSection()
+                            : bidderSection(),
+                  ],
+                ),
+              ),
             ),
-          ),
+          ]),
         ),
       ),
     );
