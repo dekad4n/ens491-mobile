@@ -32,8 +32,23 @@ class _ViewAuctionsPageState extends State<ViewAuctionsPage> {
       _isLoading = true;
     });
 
+    // Fetch auctions
     List<dynamic> fetchedAuctions =
         await auctionService.getOngoingAuctions(widget.event!.integerId);
+
+    // Fetch auction details one by one
+    for (var auction in fetchedAuctions) {
+      //TODO: fetch from blockchain
+      // var auctionInfo =
+      //     await auctionService.getAuctionInfo(auction["auctionId"]);
+
+      var auctionInfo = {
+        "highestBid": 0,
+      };
+      auction["highestBid"] = auctionInfo["highestBid"];
+    }
+
+    print(fetchedAuctions);
 
     setState(() {
       auctions = fetchedAuctions;
@@ -41,11 +56,11 @@ class _ViewAuctionsPageState extends State<ViewAuctionsPage> {
     });
   }
 
-  ticketsGridView(color) {
+  auctionsGridView(color) {
     if (_isLoading) {
       return Center(child: Text("Loading auctions..."));
     } else {
-      List<Widget> tickets = auctions.map((item) {
+      List<Widget> auctionWidgets = auctions.map((item) {
         return GestureDetector(
           behavior: HitTestBehavior.opaque,
           onTap: () {},
@@ -124,7 +139,7 @@ class _ViewAuctionsPageState extends State<ViewAuctionsPage> {
                                 color: Colors.white,
                               ),
                               Text(
-                                "${item["price"]}",
+                                "${item["highestBid"]}",
                                 style: TextStyle(color: Colors.white),
                               ),
                             ],
@@ -140,8 +155,6 @@ class _ViewAuctionsPageState extends State<ViewAuctionsPage> {
         );
       }).toList();
 
-      print(tickets);
-
       return Container(
         width: double.infinity,
         height: ((auctions.length / 3).ceil() + 1) * 70,
@@ -153,7 +166,7 @@ class _ViewAuctionsPageState extends State<ViewAuctionsPage> {
             crossAxisSpacing: 10,
             mainAxisSpacing: 10,
             crossAxisCount: 3,
-            children: tickets),
+            children: auctionWidgets),
       );
     }
   }
@@ -184,7 +197,7 @@ class _ViewAuctionsPageState extends State<ViewAuctionsPage> {
           ),
           Divider(thickness: 1),
           SizedBox(height: 10),
-          ticketsGridView(Colors.grey[700]),
+          auctionsGridView(Colors.grey[700]),
         ],
       ),
     );

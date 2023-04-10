@@ -1,8 +1,11 @@
+import 'package:alchemy_web3/alchemy_web3.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:tickrypt/models/event_model.dart';
 import 'package:tickrypt/providers/metamask.dart';
 import 'package:tickrypt/providers/user_provider.dart';
+import 'package:tickrypt/services/auction.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class AuctionPage extends StatefulWidget {
   final Map<dynamic, dynamic>? item;
@@ -23,13 +26,43 @@ class AuctionPage extends StatefulWidget {
 }
 
 class _AuctionPageState extends State<AuctionPage> {
+  AuctionService auctionService = AuctionService();
+
+  final alchemy = Alchemy();
+
   List<dynamic> auctions = [];
-  bool _isLoading = true;
+  bool _isLoading = false;
 
   double _startPrice = 0;
   double _bid = 0;
+  int _timeSeconds = 0;
 
   bool _isHighestBidder = true;
+
+  bool _alreadyAucted = false;
+
+  void checkAlreadyAucted() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    // Fetch all auction items at once
+    List<dynamic> fetchedAuctions =
+        await auctionService.getOngoingAuctions(widget.event!.integerId);
+
+    // Check if this ticket's id exists in the fetched auctions
+    fetchedAuctions.forEach((auction) {
+      if (auction["ticketId"] == widget.item!["tokenID"]) {
+        setState(() {
+          _alreadyAucted = true;
+        });
+      }
+    });
+
+    setState(() {
+      _isLoading = false;
+    });
+  }
 
   eventPreviewContainer() {
     return Column(
@@ -72,7 +105,7 @@ class _AuctionPageState extends State<AuctionPage> {
     );
   }
 
-  priceContainer(double input) {
+  priceContainer(String varName) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -102,28 +135,82 @@ class _AuctionPageState extends State<AuctionPage> {
                       decoration: InputDecoration(
                         border: null,
                       ),
-                      // The validator receives the text that the user has entered.
+                      keyboardType: TextInputType.number,
+                      onChanged: (value) {
+                        if (value != null && value != "") {
+                          if (varName == "price") {
+                            setState(() {
+                              _startPrice = double.parse(value);
+                            });
+                          } else if (varName == "bid") {
+                            setState(() {
+                              _bid = double.parse(value);
+                            });
+                          }
+                        } else {
+                          if (varName == "price") {
+                            setState(() {
+                              _startPrice = 0;
+                            });
+                          } else if (varName == "bid") {
+                            setState(() {
+                              _bid = 0;
+                            });
+                          }
+                        }
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  timeSecondsContainer() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Container(
+          padding: EdgeInsets.all(8),
+          width: 150,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Text(
+                    "Days ",
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
+                    ),
+                  ),
+                  Expanded(
+                    child: TextFormField(
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      decoration: InputDecoration(
+                        border: null,
+                      ),
                       keyboardType: TextInputType.number,
                       onChanged: (value) {
                         if (value != null && value != "") {
                           setState(() {
-                            input = double.parse(value);
+                            _timeSeconds = int.parse(value) * 24 * 60 * 60;
                           });
                         } else {
                           setState(() {
-                            input = 0;
+                            _timeSeconds = 0;
                           });
                         }
-                      },
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return '';
-                        } else {
-                          setState(() {
-                            input = double.parse(value);
-                          });
-                        }
-                        return null;
                       },
                     ),
                   ),
@@ -202,7 +289,7 @@ class _AuctionPageState extends State<AuctionPage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                priceContainer(_bid),
+                priceContainer("bid"),
                 SizedBox(width: 10),
                 GestureDetector(
                   behavior: HitTestBehavior.opaque,
@@ -306,7 +393,7 @@ class _AuctionPageState extends State<AuctionPage> {
     );
   }
 
-  // TICKET OWNER SECTION----------------------------------------------
+  // TICKET OWNER ----------------------------------------------
   startAuctionSection() {
     return Container(
       padding: EdgeInsets.all(20),
@@ -318,11 +405,12 @@ class _AuctionPageState extends State<AuctionPage> {
       child: Column(
         children: [
           Text(
-            "Start an auction by setting a price:",
+            "Start an auction by setting a price and lifetime:",
             style: TextStyle(color: Colors.black),
           ),
           SizedBox(height: 10),
-          priceContainer(_startPrice),
+          priceContainer("price"),
+          timeSecondsContainer(),
           SizedBox(height: 10),
           GestureDetector(
             behavior: HitTestBehavior.opaque,
@@ -352,8 +440,53 @@ class _AuctionPageState extends State<AuctionPage> {
                 ],
               ),
             ),
-            onTap: () {
-              print("create auction");
+            onTap: () async {
+              try {
+                dynamic transactionParameters =
+                    await auctionService.createBidItem(
+                  widget.item!["tokenID"],
+                  widget.event!.integerId,
+                  _startPrice,
+                  _timeSeconds,
+                  widget.userProvider!.token,
+                );
+
+                print(
+                    "transcationParamters:" + transactionParameters.toString());
+
+                alchemy.init(
+                  httpRpcUrl:
+                      "https://polygon-mumbai.g.alchemy.com/v2/jq6Um8Vdb_j-F0vwzpqBjvjHiz3-v5wy",
+                  wsRpcUrl:
+                      "wss://polygon-mumbai.g.alchemy.com/v2/jq6Um8Vdb_j-F0vwzpqBjvjHiz3-v5wy",
+                  verbose: true,
+                );
+
+                List<dynamic> params = [
+                  {
+                    "from": transactionParameters["from"],
+                    "to": transactionParameters["to"],
+                    "data": transactionParameters["data"],
+                  }
+                ];
+
+                String method = "eth_sendTransaction";
+
+                await launchUrl(
+                    Uri.parse(
+                        widget.metamaskProvider!.connector.session.toUri()),
+                    mode: LaunchMode.externalApplication);
+
+                final signature =
+                    await widget.metamaskProvider!.connector.sendCustomRequest(
+                  method: method,
+                  params: params,
+                );
+
+                print("signature:" + signature);
+              } catch (e) {
+                print(e.toString() + " ERROR while /sell");
+              }
             },
           ),
         ],
@@ -415,17 +548,30 @@ class _AuctionPageState extends State<AuctionPage> {
   }
 
   ticketOwnerSection() {
-    return Column(
-      children: [
-        highestBidSection(),
-        SizedBox(height: 20),
-        startAuctionSection(),
-        SizedBox(height: 20),
-        stopAuctionSection(),
-      ],
-    );
+    if (_alreadyAucted) {
+      return Column(
+        children: [
+          highestBidSection(),
+          SizedBox(height: 20),
+          stopAuctionSection(),
+        ],
+      );
+    } else {
+      return Column(
+        children: [
+          startAuctionSection(),
+        ],
+      );
+    }
   }
   //------------------------------------------------------------------
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    checkAlreadyAucted();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -459,10 +605,14 @@ class _AuctionPageState extends State<AuctionPage> {
               children: [
                 eventPreviewContainer(),
                 SizedBox(height: 10),
-                widget.userProvider!.user!.publicAddress !=
-                        widget.item!["ticketOwner"]!
-                    ? ticketOwnerSection()
-                    : bidderSection(),
+                _isLoading
+                    ? Center(
+                        child: Text("Loading..."),
+                      )
+                    : widget.userProvider!.user!.publicAddress !=
+                            widget.item!["ticketOwner"]!
+                        ? ticketOwnerSection()
+                        : bidderSection(),
               ],
             ),
           ),

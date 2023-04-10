@@ -20,14 +20,14 @@ class AuctionService {
     return body;
   }
 
-  dynamic createBidItem(ticketId, eventId, price, time, auth) async {
+  dynamic createBidItem(ticketId, eventId, startPrice, time, auth) async {
     final String authUrl = '${backendUrl!}/auction/create-bid-item';
     try {
       Response res = await post(Uri.parse(authUrl),
           body: jsonEncode({
             "ticketId": ticketId,
             "eventId": eventId,
-            "price": price,
+            "startPrice": startPrice,
             "time": time
           }),
           headers: {"Authorization": "jwt $auth", ...headers});
@@ -49,12 +49,11 @@ class AuctionService {
     } catch (e) {}
   }
 
-  dynamic getAuctionInfo(auctionId, auth) async {
+  dynamic getAuctionInfo(auctionId) async {
     final String authUrl =
         '${backendUrl!}/auction/get-auction-info?auctionId=${auctionId}';
 
-    Response res = await get(Uri.parse(authUrl),
-        headers: {"Authorization": "jwt $auth", ...headers});
+    Response res = await get(Uri.parse(authUrl), headers: headers);
     var body = jsonDecode(res.body);
     return body;
   }
