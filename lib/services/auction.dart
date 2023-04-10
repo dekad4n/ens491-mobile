@@ -51,10 +51,11 @@ class AuctionService {
 
   dynamic getAuctionInfo(auctionId) async {
     final String authUrl =
-        '${backendUrl!}/auction/get-auction-info?auctionId=${auctionId}';
+        '${backendUrl!}/auction/get-auction?auctionId=${auctionId}';
 
     Response res = await get(Uri.parse(authUrl), headers: headers);
     var body = jsonDecode(res.body);
+
     return body;
   }
 

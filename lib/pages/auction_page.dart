@@ -40,6 +40,11 @@ class _AuctionPageState extends State<AuctionPage> {
   bool _isHighestBidder = true;
 
   bool _alreadyAucted = false;
+  Map _alreadyAuctedItem = {};
+
+  Map _auctionInfo = {};
+
+  List _prevBids = [];
 
   void checkAlreadyAucted() async {
     setState(() {
@@ -51,13 +56,23 @@ class _AuctionPageState extends State<AuctionPage> {
         await auctionService.getOngoingAuctions(widget.event!.integerId);
 
     // Check if this ticket's id exists in the fetched auctions
-    fetchedAuctions.forEach((auction) {
+    for (var auction in fetchedAuctions) {
       if (auction["ticketId"] == widget.item!["tokenID"]) {
+        // If it is already aucted, fetch auction info then
+        Map auctionInfo =
+            await auctionService.getAuctionInfo(auction["auctionId"]);
+
         setState(() {
           _alreadyAucted = true;
+          _alreadyAuctedItem = auction;
+          _auctionInfo = auctionInfo;
+
+          _isLoading = false;
         });
+        print(auctionInfo);
+        return;
       }
-    });
+    }
 
     setState(() {
       _isLoading = false;
