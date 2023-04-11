@@ -24,6 +24,24 @@ class MarketService {
     return body["marketItemsAll"];
   }
 
+  Future<dynamic> getSingleMarketItem(tokenId) async {
+    final String url = '${backendUrl!}/market/market-item?tokenId=$tokenId';
+
+    var headers = {
+      "Access-Control-Allow-Origin": '*',
+    };
+
+    Response res = await get(
+      Uri.parse(url),
+      headers: headers,
+    );
+
+    var body = jsonDecode(res.body);
+
+    print(body);
+    return body["marketItem"];
+  }
+
   Future<List<dynamic>> getTransferableIds(auth, eventId, publicAddress) async {
     final String url =
         '${backendUrl!}/market/transferable-ids?eventId=$eventId&publicAddress=$publicAddress';

@@ -896,8 +896,9 @@ class _AuctionPageState extends State<AuctionPage> {
                         ? Center(
                             child: Text("Loading..."),
                           )
-                        : widget.userProvider!.user!.publicAddress !=
-                                widget.item!["ticketOwner"]!
+                        : widget.userProvider!.user!.publicAddress
+                                    .toLowerCase() ==
+                                widget.item!["ticketOwner"].toLowerCase()
                             ? ticketOwnerSection()
                             : bidderSection(),
                   ],

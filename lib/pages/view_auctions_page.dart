@@ -5,6 +5,7 @@ import 'package:tickrypt/pages/auction_page.dart';
 import 'package:tickrypt/providers/metamask.dart';
 import 'package:tickrypt/providers/user_provider.dart';
 import 'package:tickrypt/services/auction.dart';
+import 'package:tickrypt/services/market.dart';
 
 class ViewAuctionsPage extends StatefulWidget {
   final Event? event;
@@ -24,6 +25,7 @@ class ViewAuctionsPage extends StatefulWidget {
 
 class _ViewAuctionsPageState extends State<ViewAuctionsPage> {
   AuctionService auctionService = AuctionService();
+  MarketService marketService = MarketService();
 
   List<dynamic> auctions = [];
   bool _isLoading = true;
@@ -37,7 +39,11 @@ class _ViewAuctionsPageState extends State<ViewAuctionsPage> {
     List<dynamic> fetchedAuctions =
         await auctionService.getAuctionsByEventId(widget.event!.integerId);
 
-    print(fetchedAuctions);
+    for (var auction in fetchedAuctions) {
+      var ticket = await marketService.getSingleMarketItem(auction["ticketId"]);
+
+      auction["ticket"] = ticket;
+    }
 
     setState(() {
       auctions = fetchedAuctions;
@@ -53,15 +59,15 @@ class _ViewAuctionsPageState extends State<ViewAuctionsPage> {
         return GestureDetector(
           behavior: HitTestBehavior.opaque,
           onTap: () {
-            // Navigator.push(context, MaterialPageRoute(
-            //   builder: (context) {
-            //     return AuctionPage(
-            //         userProvider: widget.userProvider,
-            //         metamaskProvider: widget.metamaskProvider,
-            //         event: widget.event,
-            //         item: ticket item here!!!);
-            //   },
-            // ));
+            Navigator.push(context, MaterialPageRoute(
+              builder: (context) {
+                return AuctionPage(
+                    userProvider: widget.userProvider,
+                    metamaskProvider: widget.metamaskProvider,
+                    event: widget.event,
+                    item: item["ticket"]);
+              },
+            ));
           },
           child: Container(
             decoration: BoxDecoration(
