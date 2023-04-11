@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:tickrypt/models/event_model.dart';
+import 'package:tickrypt/pages/auction_page.dart';
 import 'package:tickrypt/providers/metamask.dart';
 import 'package:tickrypt/providers/user_provider.dart';
 import 'package:tickrypt/services/auction.dart';
@@ -34,19 +35,7 @@ class _ViewAuctionsPageState extends State<ViewAuctionsPage> {
 
     // Fetch auctions
     List<dynamic> fetchedAuctions =
-        await auctionService.getOngoingAuctions(widget.event!.integerId);
-
-    // Fetch auction details one by one
-    for (var auction in fetchedAuctions) {
-      //TODO: fetch from blockchain
-      // var auctionInfo =
-      //     await auctionService.getAuctionInfo(auction["auctionId"]);
-
-      var auctionInfo = {
-        "highestBid": 0,
-      };
-      auction["highestBid"] = auctionInfo["highestBid"];
-    }
+        await auctionService.getAuctionsByEventId(widget.event!.integerId);
 
     print(fetchedAuctions);
 
@@ -63,7 +52,17 @@ class _ViewAuctionsPageState extends State<ViewAuctionsPage> {
       List<Widget> auctionWidgets = auctions.map((item) {
         return GestureDetector(
           behavior: HitTestBehavior.opaque,
-          onTap: () {},
+          onTap: () {
+            // Navigator.push(context, MaterialPageRoute(
+            //   builder: (context) {
+            //     return AuctionPage(
+            //         userProvider: widget.userProvider,
+            //         metamaskProvider: widget.metamaskProvider,
+            //         event: widget.event,
+            //         item: ticket item here!!!);
+            //   },
+            // ));
+          },
           child: Container(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(5),
@@ -71,6 +70,7 @@ class _ViewAuctionsPageState extends State<ViewAuctionsPage> {
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Container(
                   padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -85,18 +85,9 @@ class _ViewAuctionsPageState extends State<ViewAuctionsPage> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text("Auction", style: TextStyle(color: Colors.white)),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            "id:",
-                            style: TextStyle(color: Colors.white),
-                          ),
-                          Text(
-                            "${item["auctionId"]}",
-                            style: TextStyle(color: Colors.white),
-                          ),
-                        ],
+                      Text(
+                        "${item["auctionId"]}",
+                        style: TextStyle(color: Colors.white),
                       ),
                     ],
                   ),
@@ -122,7 +113,7 @@ class _ViewAuctionsPageState extends State<ViewAuctionsPage> {
                               //   style: TextStyle(color: Colors.white),
                               // ),
                               Text(
-                                "${item["ticketId"]}",
+                                "id: ${item["ticketId"]}",
                                 style: TextStyle(color: Colors.white),
                               ),
                             ],
@@ -149,6 +140,25 @@ class _ViewAuctionsPageState extends State<ViewAuctionsPage> {
                     ),
                   ],
                 ),
+                item["seller"].toLowerCase() ==
+                        widget.userProvider!.user!.publicAddress.toLowerCase()
+                    ? Container(
+                        padding: EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.only(
+                            bottomLeft: Radius.circular(5),
+                            bottomRight: Radius.circular(5),
+                          ),
+                          color: Colors.green,
+                        ),
+                        child: Center(
+                          child: Text("Your auction",
+                              style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold)),
+                        ),
+                      )
+                    : SizedBox()
               ],
             ),
           ),

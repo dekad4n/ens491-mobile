@@ -10,8 +10,8 @@ class AuctionService {
     'Content-Type': 'application/json',
   };
 
-  Future<List<dynamic>> getOngoingAuctions(eventId) async {
-    String url = '${backendUrl!}/auction/ongoing/${eventId}';
+  Future<List<dynamic>> getAuctionsByEventId(eventId) async {
+    String url = '${backendUrl!}/auction/auctions-by-event-id/${eventId}';
 
     Response res = await get(Uri.parse(url), headers: headers);
 

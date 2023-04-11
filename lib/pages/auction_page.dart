@@ -1,6 +1,7 @@
 import 'package:alchemy_web3/alchemy_web3.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:tickrypt/models/event_model.dart';
 import 'package:tickrypt/providers/metamask.dart';
 import 'package:tickrypt/providers/user_provider.dart';
@@ -42,8 +43,6 @@ class _AuctionPageState extends State<AuctionPage> {
   bool _alreadyAucted = false;
   Map _alreadyAuctedItem = {};
 
-  Map _auctionInfo = {};
-
   List _prevBids = [];
 
   double _myTotalPrevBids = 0;
@@ -52,24 +51,35 @@ class _AuctionPageState extends State<AuctionPage> {
 
   Future<void> fetchAuctionDetails() async {
     setState(() {
+      _alreadyAucted = false;
+      _alreadyAuctedItem = {};
+      _isHighestBidder = false;
+      _prevBids = [];
+      _myTotalPrevBids = 0;
+      _endAt = DateTime.now();
+
       _isLoading = true;
     });
 
     try {
       // Fetch all auction items at once
       List<dynamic> fetchedAuctions =
-          await auctionService.getOngoingAuctions(widget.event!.integerId);
+          await auctionService.getAuctionsByEventId(widget.event!.integerId);
 
       // Check if this ticket's id exists in the fetched auctions
       for (var auction in fetchedAuctions) {
         if (auction["ticketId"] == widget.item!["tokenID"]) {
           // If it is already aucted, fetch auction info then
-          Map auctionInfo =
-              await auctionService.getAuctionInfo(auction["auctionId"]);
+          // Map auctionInfo =
+          //     await auctionService.getAuctionInfo(auction["auctionId"]);
 
-          // Parse endAt to DateTime
+          // print(auctionInfo);
+
+          // Parse endAt to DateTime (convert to UTC then to user's local time zone)
           var endAt = DateTime.fromMillisecondsSinceEpoch(
-              int.parse(auctionInfo["endAt"]) * 1000);
+                  int.parse(auction["endAt"]) * 1000)
+              .toUtc()
+              .toLocal();
 
           // And fetch all previous bids
           List prevBids = await auctionService.listPrevBids(
@@ -88,14 +98,13 @@ class _AuctionPageState extends State<AuctionPage> {
           setState(() {
             _alreadyAucted = true;
             _alreadyAuctedItem = auction;
-            _auctionInfo = auctionInfo;
             _endAt = endAt;
 
             _prevBids = prevBids;
 
             _myTotalPrevBids = myTotalPrevBids;
 
-            if ((auctionInfo["highestBidder"].toLowerCase() ==
+            if ((auction["highestBidder"].toLowerCase() ==
                     widget.userProvider!.user!.publicAddress.toLowerCase()) &&
                 prevBids.length > 0) {
               _isHighestBidder = true;
@@ -103,6 +112,8 @@ class _AuctionPageState extends State<AuctionPage> {
 
             _isLoading = false;
           });
+
+          print(_endAt);
           return;
         }
       }
@@ -160,7 +171,7 @@ class _AuctionPageState extends State<AuctionPage> {
     );
   }
 
-  priceContainer(String varName) {
+  priceInputContainer(String varName) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -225,7 +236,7 @@ class _AuctionPageState extends State<AuctionPage> {
     );
   }
 
-  timeSecondsContainer() {
+  timeInputContainer() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -279,6 +290,7 @@ class _AuctionPageState extends State<AuctionPage> {
   }
 
   highestBidSection() {
+    print(_alreadyAuctedItem);
     return Container(
       padding: EdgeInsets.all(20),
       width: MediaQuery.of(context).size.width * 0.8,
@@ -295,7 +307,7 @@ class _AuctionPageState extends State<AuctionPage> {
               children: [
                 _prevBids.length > 0
                     ? Text(
-                        "There are 5 bids on this item.",
+                        "There are ${_prevBids.length} bids on this item.",
                         style: TextStyle(color: Color(0xFF050A31)),
                       )
                     : Text(
@@ -332,7 +344,7 @@ class _AuctionPageState extends State<AuctionPage> {
                       ),
                 SizedBox(height: 5),
                 Text(
-                  "MATIC  ${_auctionInfo['highestBid']}",
+                  "MATIC  ${_alreadyAuctedItem['highestBid']}",
                   style: TextStyle(
                       color: Color.fromARGB(255, 165, 134, 227),
                       fontSize: 20,
@@ -345,9 +357,12 @@ class _AuctionPageState extends State<AuctionPage> {
   }
 
   endDateSection() {
-    int days = _endAt.day;
-    int hours = _endAt.hour;
-    int minutes = _endAt.minute;
+    int year = _endAt.year;
+    int month = _endAt.month;
+    int day = _endAt.day;
+
+    int hour = _endAt.hour;
+    int minute = _endAt.minute;
 
     return Container(
       padding: EdgeInsets.all(20),
@@ -359,9 +374,15 @@ class _AuctionPageState extends State<AuctionPage> {
       child: Center(
           child: Column(
         children: [
-          Text("Ends in"),
+          Text("This auction will end at"),
           Divider(thickness: 1),
-          Text("${days} days ${hours} hours ${minutes} minutes")
+          Text(
+            "$year/$month/$day   $hour:$minute",
+            style: TextStyle(
+              color: Color(0xFF050A31),
+              fontSize: 18,
+            ),
+          ),
         ],
       )),
     );
@@ -382,7 +403,7 @@ class _AuctionPageState extends State<AuctionPage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                priceContainer("bid"),
+                priceInputContainer("bid"),
                 SizedBox(width: 10),
                 GestureDetector(
                   behavior: HitTestBehavior.opaque,
@@ -408,7 +429,7 @@ class _AuctionPageState extends State<AuctionPage> {
                     try {
                       dynamic transactionParameters =
                           await auctionService.placeBid(
-                        _auctionInfo['auctionId'],
+                        _alreadyAuctedItem['auctionId'],
                         _bid,
                         widget.userProvider!.token,
                       );
@@ -468,7 +489,7 @@ class _AuctionPageState extends State<AuctionPage> {
       child: Column(
         children: [
           Text(
-            "You have total bid on this item:",
+            "You have total bid:",
             style: TextStyle(color: Colors.grey),
           ),
           SizedBox(height: 10),
@@ -510,7 +531,7 @@ class _AuctionPageState extends State<AuctionPage> {
                     try {
                       dynamic transactionParameters =
                           await auctionService.paybackPrevBids(
-                        _auctionInfo['auctionId'],
+                        _alreadyAuctedItem['auctionId'],
                         widget.userProvider!.token,
                       );
 
@@ -565,6 +586,8 @@ class _AuctionPageState extends State<AuctionPage> {
       padding: EdgeInsets.all(12),
       child: Column(
         children: [
+          endDateSection(),
+          SizedBox(height: 20),
           highestBidSection(),
           SizedBox(height: 20),
           placeBidSection(),
@@ -591,8 +614,8 @@ class _AuctionPageState extends State<AuctionPage> {
             style: TextStyle(color: Colors.black),
           ),
           SizedBox(height: 10),
-          priceContainer("price"),
-          timeSecondsContainer(),
+          priceInputContainer("price"),
+          timeInputContainer(),
           SizedBox(height: 10),
           GestureDetector(
             behavior: HitTestBehavior.opaque,
@@ -724,7 +747,7 @@ class _AuctionPageState extends State<AuctionPage> {
               try {
                 dynamic transactionParameters =
                     await auctionService.stopAuction(
-                  _auctionInfo['auctionId'],
+                  _alreadyAuctedItem['auctionId'],
                   widget.userProvider!.token,
                 );
 
@@ -812,8 +835,7 @@ class _AuctionPageState extends State<AuctionPage> {
           icon: Icon(Icons.arrow_back),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        title: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
+        title: Column(
           children: [
             Text(
               "Ticket Auction",
@@ -823,19 +845,35 @@ class _AuctionPageState extends State<AuctionPage> {
                 fontWeight: FontWeight.bold,
               ),
             ),
-            SizedBox(width: 5),
             _isLoading
                 ? SizedBox()
                 : (_alreadyAucted
-                    ? Container(
+                    ? (_endAt.compareTo(DateTime.now()) > 0)
+                        ? Container(
+                            padding: EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              color: Colors.green,
+                              borderRadius: BorderRadius.circular(5),
+                            ),
+                            child: Text("Active"),
+                          )
+                        : Container(
+                            padding: EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              color: Colors.red,
+                              borderRadius: BorderRadius.circular(5),
+                            ),
+                            child: Text("Expired"),
+                          )
+                    : Container(
                         padding: EdgeInsets.all(4),
                         decoration: BoxDecoration(
-                          color: Colors.green,
+                          color: Color.fromARGB(255, 175, 137, 76),
                           borderRadius: BorderRadius.circular(5),
                         ),
-                        child: Text("Live"),
-                      )
-                    : SizedBox())
+                        child:
+                            Text("No Auction", style: TextStyle(fontSize: 14)),
+                      ))
           ],
         ),
         centerTitle: true,
