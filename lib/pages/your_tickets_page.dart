@@ -6,7 +6,6 @@ import 'package:tickrypt/models/event_model.dart';
 import 'package:tickrypt/pages/auction_page.dart';
 import 'package:tickrypt/pages/qr_page.dart';
 import 'package:tickrypt/pages/resell_ticket_page.dart';
-import 'package:tickrypt/pages/transfer_page.dart';
 import 'package:tickrypt/providers/metamask.dart';
 import 'package:tickrypt/providers/user_provider.dart';
 import 'package:tickrypt/services/market.dart';

@@ -11,7 +11,6 @@ import 'package:tickrypt/pages/mint_ticket_page.dart';
 import 'package:tickrypt/pages/set_ticket_controller.dart';
 import 'package:tickrypt/pages/view_auctions_page.dart';
 import 'package:tickrypt/pages/your_tickets_page.dart';
-import 'package:tickrypt/pages/transfer_page.dart';
 import 'package:tickrypt/providers/metamask.dart';
 import 'package:tickrypt/providers/user_provider.dart';
 import 'package:tickrypt/services/event.dart';

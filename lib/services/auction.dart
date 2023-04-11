@@ -103,6 +103,7 @@ class AuctionService {
     Response res = await get(Uri.parse(authUrl),
         headers: {"Authorization": "jyw $auth", ...headers});
     var body = jsonDecode(res.body);
-    return body;
+
+    return body["prevBids"];
   }
 }

@@ -61,67 +61,66 @@ class _AuctionPageState extends State<AuctionPage> {
       _isLoading = true;
     });
 
-    try {
-      // Fetch all auction items at once
-      List<dynamic> fetchedAuctions =
-          await auctionService.getAuctionsByEventId(widget.event!.integerId);
+    // Fetch all auction items at once
+    List<dynamic> fetchedAuctions =
+        await auctionService.getAuctionsByEventId(widget.event!.integerId);
 
-      // Check if this ticket's id exists in the fetched auctions
-      for (var auction in fetchedAuctions) {
-        if (auction["ticketId"] == widget.item!["tokenID"]) {
-          // If it is already aucted, fetch auction info then
-          // Map auctionInfo =
-          //     await auctionService.getAuctionInfo(auction["auctionId"]);
+    // Check if this ticket's id exists in the fetched auctions
+    for (var auction in fetchedAuctions) {
+      if (auction["ticketId"] == widget.item!["tokenID"]) {
+        // If it is already aucted, fetch auction info then
+        // Map auctionInfo =
+        //     await auctionService.getAuctionInfo(auction["auctionId"]);
 
-          // print(auctionInfo);
+        // print(auctionInfo);
 
-          // Parse endAt to DateTime (convert to UTC then to user's local time zone)
-          var endAt = DateTime.fromMillisecondsSinceEpoch(
-                  int.parse(auction["endAt"]) * 1000)
-              .toUtc()
-              .toLocal();
+        // Parse endAt to DateTime (convert to UTC then to user's local time zone)
+        var endAt = DateTime.fromMillisecondsSinceEpoch(
+                int.parse(auction["endAt"]) * 1000)
+            .toUtc()
+            .toLocal();
 
-          // And fetch all previous bids
-          List prevBids = await auctionService.listPrevBids(
-              auction["auctionId"], widget.userProvider!.token!);
+        // And fetch all previous bids
+        List prevBids = await auctionService.listPrevBids(
+            auction["auctionId"], widget.userProvider!.token!);
 
-          double myTotalPrevBids = 0;
-          // Calculate my total prev bids
-          for (var bidItem in prevBids) {
-            if (bidItem["bidder"].toLowerCase() ==
-                    widget.userProvider!.user!.publicAddress.toLowerCase() &&
-                bidItem["isBack"] == false) {
-              myTotalPrevBids += double.parse(bidItem["bid"]);
-            }
+        double myTotalPrevBids = 0;
+        // Calculate my total prev bids
+        for (var bidItem in prevBids) {
+          print(bidItem);
+          if (bidItem["bidder"].toLowerCase() ==
+                  widget.userProvider!.user!.publicAddress.toLowerCase() &&
+              bidItem["isBack"] == false) {
+            myTotalPrevBids += double.parse(bidItem["bid"]);
+          }
+        }
+
+        // Don't forget to add the amount of the highest bid, if you are current highest bidder
+        if (auction["highestBidder"].toLowerCase() ==
+            widget.userProvider!.user!.publicAddress.toLowerCase()) {
+          myTotalPrevBids += auction["highestBid"];
+        }
+
+        setState(() {
+          _alreadyAucted = true;
+          _alreadyAuctedItem = auction;
+          _endAt = endAt;
+
+          _prevBids = prevBids;
+
+          _myTotalPrevBids = myTotalPrevBids;
+
+          if ((auction["highestBidder"].toLowerCase() ==
+                  widget.userProvider!.user!.publicAddress.toLowerCase()) &&
+              prevBids.length > 0) {
+            _isHighestBidder = true;
           }
 
-          setState(() {
-            _alreadyAucted = true;
-            _alreadyAuctedItem = auction;
-            _endAt = endAt;
+          _isLoading = false;
+        });
 
-            _prevBids = prevBids;
-
-            _myTotalPrevBids = myTotalPrevBids;
-
-            if ((auction["highestBidder"].toLowerCase() ==
-                    widget.userProvider!.user!.publicAddress.toLowerCase()) &&
-                prevBids.length > 0) {
-              _isHighestBidder = true;
-            }
-
-            _isLoading = false;
-          });
-
-          print(_endAt);
-          return;
-        }
+        return;
       }
-    } catch (e) {
-      print(e);
-      setState(() {
-        _isLoading = false;
-      });
     }
 
     setState(() {
@@ -290,7 +289,6 @@ class _AuctionPageState extends State<AuctionPage> {
   }
 
   highestBidSection() {
-    print(_alreadyAuctedItem);
     return Container(
       padding: EdgeInsets.all(20),
       width: MediaQuery.of(context).size.width * 0.8,
@@ -426,49 +424,80 @@ class _AuctionPageState extends State<AuctionPage> {
                             style: TextStyle(color: Colors.white))),
                   ),
                   onTap: () async {
-                    try {
-                      dynamic transactionParameters =
-                          await auctionService.placeBid(
-                        _alreadyAuctedItem['auctionId'],
-                        _bid,
-                        widget.userProvider!.token,
+                    if (_alreadyAuctedItem["highestBid"] > _bid) {
+                      // Show error saying that input must be greater than highest bid
+                      showDialog<void>(
+                        context: context,
+                        barrierDismissible: false, // user must tap button!
+                        builder: (BuildContext context) {
+                          return AlertDialog(
+                            title: const Text("Invalid Bid!"),
+                            content: SingleChildScrollView(
+                              child: ListBody(
+                                children: const <Widget>[
+                                  Text(
+                                      'Your bid must be greater than the highest bid!'),
+                                ],
+                              ),
+                            ),
+                            actions: <Widget>[
+                              TextButton(
+                                child: const Text('Close'),
+                                onPressed: () {
+                                  Navigator.of(context).pop();
+                                },
+                              ),
+                            ],
+                          );
+                        },
                       );
+                    } else {
+                      try {
+                        dynamic transactionParameters =
+                            await auctionService.placeBid(
+                          _alreadyAuctedItem['auctionId'],
+                          _bid,
+                          widget.userProvider!.token,
+                        );
 
-                      print("transcationParamters:" +
-                          transactionParameters.toString());
+                        print("transcationParamters:" +
+                            transactionParameters.toString());
 
-                      alchemy.init(
-                        httpRpcUrl:
-                            "https://polygon-mumbai.g.alchemy.com/v2/jq6Um8Vdb_j-F0vwzpqBjvjHiz3-v5wy",
-                        wsRpcUrl:
-                            "wss://polygon-mumbai.g.alchemy.com/v2/jq6Um8Vdb_j-F0vwzpqBjvjHiz3-v5wy",
-                        verbose: true,
-                      );
+                        alchemy.init(
+                          httpRpcUrl:
+                              "https://polygon-mumbai.g.alchemy.com/v2/jq6Um8Vdb_j-F0vwzpqBjvjHiz3-v5wy",
+                          wsRpcUrl:
+                              "wss://polygon-mumbai.g.alchemy.com/v2/jq6Um8Vdb_j-F0vwzpqBjvjHiz3-v5wy",
+                          verbose: true,
+                        );
 
-                      List<dynamic> params = [
-                        {
-                          "from": transactionParameters["from"],
-                          "to": transactionParameters["to"],
-                          "data": transactionParameters["data"],
-                        }
-                      ];
+                        List<dynamic> params = [
+                          {
+                            "from": transactionParameters["from"],
+                            "to": transactionParameters["to"],
+                            "data": transactionParameters["data"],
+                            "value": transactionParameters["value"],
+                          }
+                        ];
 
-                      String method = "eth_sendTransaction";
+                        String method = "eth_sendTransaction";
 
-                      await launchUrl(
-                          Uri.parse(widget.metamaskProvider!.connector.session
-                              .toUri()),
-                          mode: LaunchMode.externalApplication);
+                        await launchUrl(
+                            Uri.parse(widget.metamaskProvider!.connector.session
+                                .toUri()),
+                            mode: LaunchMode.externalApplication);
 
-                      final signature = await widget.metamaskProvider!.connector
-                          .sendCustomRequest(
-                        method: method,
-                        params: params,
-                      );
+                        final signature = await widget
+                            .metamaskProvider!.connector
+                            .sendCustomRequest(
+                          method: method,
+                          params: params,
+                        );
 
-                      print("signature:" + signature);
-                    } catch (e) {
-                      print(e.toString() + " ERROR while /bid");
+                        print("signature:" + signature);
+                      } catch (e) {
+                        print(e.toString() + " ERROR while /bid");
+                      }
                     }
                   },
                 ),
