@@ -91,7 +91,7 @@ class _AuctionPageState extends State<AuctionPage> {
           if (bidItem["bidder"].toLowerCase() ==
                   widget.userProvider!.user!.publicAddress.toLowerCase() &&
               bidItem["isBack"] == false) {
-            myTotalPrevBids += double.parse(bidItem["bid"]);
+            myTotalPrevBids += bidItem["bid"];
           }
         }
 
@@ -978,23 +978,32 @@ class _AuctionPageState extends State<AuctionPage> {
             _isLoading
                 ? SizedBox()
                 : (_alreadyAucted
-                    ? (_endAt.compareTo(DateTime.now()) > 0)
+                    ? (_alreadyAuctedItem["ended"]
                         ? Container(
                             padding: EdgeInsets.all(4),
                             decoration: BoxDecoration(
-                              color: Colors.green,
+                              color: Colors.blue,
                               borderRadius: BorderRadius.circular(5),
                             ),
-                            child: Text("Active"),
+                            child: Text("Ended"),
                           )
-                        : Container(
-                            padding: EdgeInsets.all(4),
-                            decoration: BoxDecoration(
-                              color: Colors.red,
-                              borderRadius: BorderRadius.circular(5),
-                            ),
-                            child: Text("Expired"),
-                          )
+                        : (_endAt.compareTo(DateTime.now()) > 0)
+                            ? Container(
+                                padding: EdgeInsets.all(4),
+                                decoration: BoxDecoration(
+                                  color: Colors.green,
+                                  borderRadius: BorderRadius.circular(5),
+                                ),
+                                child: Text("Active"),
+                              )
+                            : Container(
+                                padding: EdgeInsets.all(4),
+                                decoration: BoxDecoration(
+                                  color: Colors.red,
+                                  borderRadius: BorderRadius.circular(5),
+                                ),
+                                child: Text("Expired"),
+                              ))
                     : Container(
                         padding: EdgeInsets.all(4),
                         decoration: BoxDecoration(

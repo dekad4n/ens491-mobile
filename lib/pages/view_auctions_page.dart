@@ -124,47 +124,69 @@ class _ViewAuctionsPageState extends State<ViewAuctionsPage> {
                               ),
                             ],
                           ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              // Text(
-                              //   "price:",
-                              //   style: TextStyle(color: Colors.white),
-                              // ),
-                              Icon(
-                                Icons.payments_sharp,
-                                color: Colors.white,
-                              ),
-                              Text(
-                                "${item["highestBid"]}",
-                                style: TextStyle(color: Colors.white),
-                              ),
-                            ],
-                          )
+                          item["ended"]
+                              ? SizedBox()
+                              : Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    // Text(
+                                    //   "price:",
+                                    //   style: TextStyle(color: Colors.white),
+                                    // ),
+                                    Icon(
+                                      Icons.payments_sharp,
+                                      color: Colors.white,
+                                    ),
+                                    Text(
+                                      "${item["highestBid"]}",
+                                      style: TextStyle(color: Colors.white),
+                                    ),
+                                  ],
+                                )
                         ],
                       ),
                     ),
                   ],
                 ),
-                item["seller"].toLowerCase() ==
-                        widget.userProvider!.user!.publicAddress.toLowerCase()
-                    ? Container(
-                        padding: EdgeInsets.all(4),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.only(
-                            bottomLeft: Radius.circular(5),
-                            bottomRight: Radius.circular(5),
-                          ),
-                          color: Colors.green,
-                        ),
-                        child: Center(
-                          child: Text("Your auction",
-                              style: TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold)),
-                        ),
-                      )
-                    : SizedBox()
+                Column(
+                  children: [
+                    item["ended"]
+                        ? Container(
+                            padding: EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              color: Colors.blue,
+                            ),
+                            child: Center(
+                              child: Text("Ended",
+                                  style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold)),
+                            ),
+                          )
+                        : SizedBox(),
+                    item["seller"].toLowerCase() ==
+                            widget.userProvider!.user!.publicAddress
+                                .toLowerCase()
+                        ? Container(
+                            padding: EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.only(
+                                bottomLeft: Radius.circular(5),
+                                bottomRight: Radius.circular(5),
+                              ),
+                              color: Colors.green[300],
+                            ),
+                            child: Center(
+                              child: Text("Your auction",
+                                  style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold)),
+                            ),
+                          )
+                        : SizedBox()
+                  ],
+                ),
               ],
             ),
           ),
