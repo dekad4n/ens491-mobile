@@ -711,20 +711,29 @@ class _AuctionPageState extends State<AuctionPage> {
   }
 
   bidderSection() {
-    return Container(
-      padding: EdgeInsets.all(12),
-      child: Column(
-        children: [
-          endDateSection(),
-          SizedBox(height: 20),
-          highestBidSection(),
-          SizedBox(height: 20),
-          placeBidSection(),
-          SizedBox(height: 20),
-          claimSection(),
-        ],
-      ),
-    );
+    if (_alreadyAuctedItem["ended"]) {
+      return Container(
+        padding: EdgeInsets.all(12),
+        child: Column(
+          children: [endedSection()],
+        ),
+      );
+    } else {
+      return Container(
+        padding: EdgeInsets.all(12),
+        child: Column(
+          children: [
+            endDateSection(),
+            SizedBox(height: 20),
+            highestBidSection(),
+            SizedBox(height: 20),
+            placeBidSection(),
+            SizedBox(height: 20),
+            claimSection(),
+          ],
+        ),
+      );
+    }
   }
 
   // IF TICKET OWNER, RENDER THESE ----------------------------------------------
@@ -925,15 +934,19 @@ class _AuctionPageState extends State<AuctionPage> {
 
   ticketOwnerSection() {
     if (_alreadyAucted) {
-      return Column(
-        children: [
-          endDateSection(),
-          SizedBox(height: 20),
-          highestBidSection(),
-          SizedBox(height: 20),
-          _endAt.isAfter(DateTime.now()) ? stopAuctionSection() : SizedBox(),
-        ],
-      );
+      if (_alreadyAuctedItem["ended"]) {
+        return endedSection();
+      } else {
+        return Column(
+          children: [
+            endDateSection(),
+            SizedBox(height: 20),
+            highestBidSection(),
+            SizedBox(height: 20),
+            _endAt.isAfter(DateTime.now()) ? stopAuctionSection() : SizedBox(),
+          ],
+        );
+      }
     } else {
       return Column(
         children: [
@@ -945,76 +958,71 @@ class _AuctionPageState extends State<AuctionPage> {
   //------------------------------------------------------------------
 
   endedSection() {
-    if (_alreadyAucted) {
-      if (widget.userProvider!.user!.publicAddress.toLowerCase() ==
-          widget.item!["ticketOwner"].toLowerCase()) {
-        // If ticket owner, show basically nothing
-        return Container(
-          padding: EdgeInsets.all(20),
-          width: MediaQuery.of(context).size.width * 0.8,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(15),
-            color: Colors.grey.withOpacity(0.3),
+    if (widget.userProvider!.user!.publicAddress.toLowerCase() ==
+        widget.item!["ticketOwner"].toLowerCase()) {
+      // If ticket owner, show basically nothing
+      return Container(
+        padding: EdgeInsets.all(20),
+        width: MediaQuery.of(context).size.width * 0.8,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(15),
+          color: Colors.grey.withOpacity(0.3),
+        ),
+        child: Center(
+          child: Column(
+            children: [
+              Text("This auctions is already ended.",
+                  style: TextStyle(color: Colors.black)),
+            ],
           ),
-          child: Center(
-            child: Column(
-              children: [
-                Text("This auctions is already ended.",
-                    style: TextStyle(color: Colors.black)),
-              ],
+        ),
+      );
+    } else {
+      // If bidder, show if you are winner, (and if you are, show the button to claim the ticket ??)
+      // Also, if you are not the winner, show the 'claim your prev bids' button
+
+      if (!_isHighestBidder) {
+        return Column(
+          children: [
+            Container(
+              padding: EdgeInsets.all(20),
+              width: MediaQuery.of(context).size.width * 0.8,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(15),
+                color: Colors.grey.withOpacity(0.3),
+              ),
+              child: Column(
+                children: [
+                  Text("This auctions is already ended"),
+                  Divider(thickness: 1),
+                  Text("You did not win the auction"),
+                ],
+              ),
             ),
-          ),
+            claimSection(),
+          ],
         );
       } else {
-        // If bidder, show if you are winner, (and if you are, show the button to claim the ticket ??)
-        // Also, if you are not the winner, show the 'claim your prev bids' button
-
-        if (!_isHighestBidder) {
-          return Column(
-            children: [
-              Container(
-                padding: EdgeInsets.all(20),
-                width: MediaQuery.of(context).size.width * 0.8,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(15),
-                  color: Colors.grey.withOpacity(0.3),
-                ),
-                child: Column(
-                  children: [
-                    Text("This auctions is already ended"),
-                    Divider(thickness: 1),
-                    Text("You did not win the auction"),
-                  ],
-                ),
+        return Column(
+          children: [
+            Container(
+              padding: EdgeInsets.all(20),
+              width: MediaQuery.of(context).size.width * 0.8,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(15),
+                color: Colors.grey.withOpacity(0.3),
               ),
-              claimSection(),
-            ],
-          );
-        } else {
-          return Column(
-            children: [
-              Container(
-                padding: EdgeInsets.all(20),
-                width: MediaQuery.of(context).size.width * 0.8,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(15),
-                  color: Colors.grey.withOpacity(0.3),
-                ),
-                child: Column(
-                  children: [
-                    Text("This auctions is already ended"),
-                    Divider(thickness: 1),
-                    Text("You won the auction!",
-                        style: TextStyle(fontSize: 20)),
-                  ],
-                ),
+              child: Column(
+                children: [
+                  Text("This auctions is already ended"),
+                  Divider(thickness: 1),
+                  Text("You won the auction!", style: TextStyle(fontSize: 20)),
+                ],
               ),
-            ],
-          );
-        }
+            ),
+          ],
+        );
       }
-    } else {
-      return SizedBox();
     }
   }
 
@@ -1108,20 +1116,11 @@ class _AuctionPageState extends State<AuctionPage> {
                         ? Center(
                             child: Text("Loading..."),
                           )
-                        : _alreadyAucted
-                            ? _alreadyAuctedItem["ended"]
-                                ? endedSection()
-                                : widget.userProvider!.user!.publicAddress
-                                            .toLowerCase() ==
-                                        widget.item!["ticketOwner"]
-                                            .toLowerCase()
-                                    ? ticketOwnerSection()
-                                    : bidderSection()
-                            : widget.userProvider!.user!.publicAddress
-                                        .toLowerCase() ==
-                                    widget.item!["ticketOwner"].toLowerCase()
-                                ? ticketOwnerSection()
-                                : bidderSection()
+                        : widget.userProvider!.user!.publicAddress
+                                    .toLowerCase() ==
+                                widget.item!["ticketOwner"].toLowerCase()
+                            ? ticketOwnerSection()
+                            : bidderSection()
                   ],
                 ),
               ),
