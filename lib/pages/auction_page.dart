@@ -87,7 +87,6 @@ class _AuctionPageState extends State<AuctionPage> {
         double myTotalPrevBids = 0;
         // Calculate my total prev bids
         for (var bidItem in prevBids) {
-          print(bidItem);
           if (bidItem["bidder"].toLowerCase() ==
                   widget.userProvider!.user!.publicAddress.toLowerCase() &&
               bidItem["isBack"] == false) {
@@ -945,6 +944,80 @@ class _AuctionPageState extends State<AuctionPage> {
   }
   //------------------------------------------------------------------
 
+  endedSection() {
+    if (_alreadyAucted) {
+      if (widget.userProvider!.user!.publicAddress.toLowerCase() ==
+          widget.item!["ticketOwner"].toLowerCase()) {
+        // If ticket owner, show basically nothing
+        return Container(
+          padding: EdgeInsets.all(20),
+          width: MediaQuery.of(context).size.width * 0.8,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(15),
+            color: Colors.grey.withOpacity(0.3),
+          ),
+          child: Center(
+            child: Column(
+              children: [
+                Text("This auctions is already ended.",
+                    style: TextStyle(color: Colors.black)),
+              ],
+            ),
+          ),
+        );
+      } else {
+        // If bidder, show if you are winner, (and if you are, show the button to claim the ticket ??)
+        // Also, if you are not the winner, show the 'claim your prev bids' button
+
+        if (!_isHighestBidder) {
+          return Column(
+            children: [
+              Container(
+                padding: EdgeInsets.all(20),
+                width: MediaQuery.of(context).size.width * 0.8,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(15),
+                  color: Colors.grey.withOpacity(0.3),
+                ),
+                child: Column(
+                  children: [
+                    Text("This auctions is already ended"),
+                    Divider(thickness: 1),
+                    Text("You did not win the auction"),
+                  ],
+                ),
+              ),
+              claimSection(),
+            ],
+          );
+        } else {
+          return Column(
+            children: [
+              Container(
+                padding: EdgeInsets.all(20),
+                width: MediaQuery.of(context).size.width * 0.8,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(15),
+                  color: Colors.grey.withOpacity(0.3),
+                ),
+                child: Column(
+                  children: [
+                    Text("This auctions is already ended"),
+                    Divider(thickness: 1),
+                    Text("You won the auction!",
+                        style: TextStyle(fontSize: 20)),
+                  ],
+                ),
+              ),
+            ],
+          );
+        }
+      }
+    } else {
+      return SizedBox();
+    }
+  }
+
   @override
   void initState() {
     // TODO: implement initState
@@ -1035,11 +1108,20 @@ class _AuctionPageState extends State<AuctionPage> {
                         ? Center(
                             child: Text("Loading..."),
                           )
-                        : widget.userProvider!.user!.publicAddress
-                                    .toLowerCase() ==
-                                widget.item!["ticketOwner"].toLowerCase()
-                            ? ticketOwnerSection()
-                            : bidderSection(),
+                        : _alreadyAucted
+                            ? _alreadyAuctedItem["ended"]
+                                ? endedSection()
+                                : widget.userProvider!.user!.publicAddress
+                                            .toLowerCase() ==
+                                        widget.item!["ticketOwner"]
+                                            .toLowerCase()
+                                    ? ticketOwnerSection()
+                                    : bidderSection()
+                            : widget.userProvider!.user!.publicAddress
+                                        .toLowerCase() ==
+                                    widget.item!["ticketOwner"].toLowerCase()
+                                ? ticketOwnerSection()
+                                : bidderSection()
                   ],
                 ),
               ),
