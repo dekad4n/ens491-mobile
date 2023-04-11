@@ -362,28 +362,129 @@ class _AuctionPageState extends State<AuctionPage> {
     int hour = _endAt.hour;
     int minute = _endAt.minute;
 
-    return Container(
-      padding: EdgeInsets.all(20),
-      width: MediaQuery.of(context).size.width * 0.8,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(15),
-        color: Color.fromARGB(255, 185, 244, 178).withOpacity(0.3),
-      ),
-      child: Center(
-          child: Column(
-        children: [
-          Text("This auction will end at"),
-          Divider(thickness: 1),
-          Text(
-            "$year/$month/$day   $hour:$minute",
-            style: TextStyle(
-              color: Color(0xFF050A31),
-              fontSize: 18,
-            ),
+    if (_endAt.isBefore(DateTime.now())) {
+      return Container(
+          padding: EdgeInsets.all(20),
+          width: MediaQuery.of(context).size.width * 0.8,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(15),
+            color: Color.fromARGB(255, 185, 244, 178).withOpacity(0.3),
           ),
-        ],
-      )),
-    );
+          child: Center(
+              child: Column(
+            children: [
+              Text(
+                "This auction is expired",
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              SizedBox(height: 5),
+              Text(
+                "Press the button below to complete transactions",
+                textAlign: TextAlign.center,
+              ),
+              Divider(thickness: 1),
+              GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                child: Container(
+                  width: 150,
+                  padding: EdgeInsets.all(15),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(8),
+                    color: Color(0xFF050A31),
+                    boxShadow: [
+                      BoxShadow(
+                        offset: Offset(-2, 2),
+                        blurRadius: 4,
+                        spreadRadius: 2,
+                        color: Color.fromRGBO(5, 10, 49, 0.1),
+                      ),
+                    ],
+                  ),
+                  child: Center(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text("Finish Auction",
+                            style: TextStyle(
+                                color: Color.fromARGB(255, 177, 254, 186))),
+                        Icon(CupertinoIcons.check_mark_circled_solid,
+                            color: Color.fromARGB(255, 177, 254, 186)),
+                      ],
+                    ),
+                  ),
+                ),
+                onTap: () async {
+                  try {
+                    dynamic transactionParameters =
+                        await auctionService.finishBid(
+                      _alreadyAuctedItem['auctionId'],
+                      widget.userProvider!.token,
+                    );
+
+                    print("transcationParamters:" +
+                        transactionParameters.toString());
+
+                    alchemy.init(
+                      httpRpcUrl:
+                          "https://polygon-mumbai.g.alchemy.com/v2/jq6Um8Vdb_j-F0vwzpqBjvjHiz3-v5wy",
+                      wsRpcUrl:
+                          "wss://polygon-mumbai.g.alchemy.com/v2/jq6Um8Vdb_j-F0vwzpqBjvjHiz3-v5wy",
+                      verbose: true,
+                    );
+
+                    List<dynamic> params = [
+                      {
+                        "from": transactionParameters["from"],
+                        "to": transactionParameters["to"],
+                        "data": transactionParameters["data"],
+                      }
+                    ];
+
+                    String method = "eth_sendTransaction";
+
+                    await launchUrl(
+                        Uri.parse(
+                            widget.metamaskProvider!.connector.session.toUri()),
+                        mode: LaunchMode.externalApplication);
+
+                    final signature = await widget.metamaskProvider!.connector
+                        .sendCustomRequest(
+                      method: method,
+                      params: params,
+                    );
+
+                    print("signature:" + signature);
+                  } catch (e) {
+                    print(e.toString() + " ERROR while /stop-auction");
+                  }
+                },
+              ),
+            ],
+          )));
+    } else {
+      return Container(
+        padding: EdgeInsets.all(20),
+        width: MediaQuery.of(context).size.width * 0.8,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(15),
+          color: Color.fromARGB(255, 185, 244, 178).withOpacity(0.3),
+        ),
+        child: Center(
+            child: Column(
+          children: [
+            Text("This auction will end at"),
+            Divider(thickness: 1),
+            Text(
+              "$year/$month/$day   $hour:$minute",
+              style: TextStyle(
+                color: Color(0xFF050A31),
+                fontSize: 18,
+              ),
+            ),
+          ],
+        )),
+      );
+    }
   }
 
   // IF BIDDER, RENDER THESE  ---------------------------------------------------------
@@ -831,7 +932,7 @@ class _AuctionPageState extends State<AuctionPage> {
           SizedBox(height: 20),
           highestBidSection(),
           SizedBox(height: 20),
-          stopAuctionSection(),
+          _endAt.isAfter(DateTime.now()) ? stopAuctionSection() : SizedBox(),
         ],
       );
     } else {
